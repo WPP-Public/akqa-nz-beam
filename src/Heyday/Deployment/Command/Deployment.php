@@ -189,34 +189,39 @@ class Deployment {
 	private function generate_exclude_properties_file() {
 
 		// Set up exclude patterns
-		$project_applications = $this->deploy_properties_obj['exclude']['applications'];
+		$exclude_patterns = "";
+		$exclude_patterns_file = __DIR__ . "/../../../../config/exclude-patterns.json";
+		$json_string = file_get_contents( $exclude_patterns_file );
+		if ($exclude_patterns_json = json_decode( $json_string, true ) ) {
 
-		$rsync_exclude_patterns = $this->deploy_properties_obj['exclude']['patterns'];
+			$project_applications = array_merge( array('_base'), $this->deploy_properties_obj['exclude']['applications'] );
+			foreach ( $exclude_patterns_json as $name => $patterns) {
 
-		$patterns_path = realpath( dirname(__FILE__) ) . "/../assets/deploy/patterns/";
-		$base_pattern_file = $patterns_path . "_base.properties";
+				if ( array_search($name, $project_applications) !== false ) {
+					$exclude_patterns .= implode(PHP_EOL, $patterns).PHP_EOL;
+				}
 
+			}
+
+		} else {
+
+			$this->output('Invalid exclude-patterns.json file', Deployment::ERROR);
+
+		}
+
+		// Set path of exclude.properties file
 		$this->exclude_properties_file = $this->project_path . '/exclude.properties';
 
-		// Delete current exclude.properties
+		// Delete current exclude.properties if it exists
 		if(file_exists($this->exclude_properties_file)) {
 			unlink($this->exclude_properties_file);
 		}
-		// Copy the base properties file
-		copy( $base_pattern_file, $this->exclude_properties_file );
-
-		// Append application patterns files
-		$fp = fopen( $this->exclude_properties_file, 'a' );
-		foreach ( $project_applications as $application ) {
-			if ( !empty( $application) ) {
-				$application_pattern_file = $patterns_path . $application . ".properties";
-				fwrite($fp, file_get_contents($application_pattern_file));
-			}
-		}
 		
 		// Append any project-specific exclusions
-		fwrite( $fp, implode("\n", $rsync_exclude_patterns ) );
-		fclose( $fp );
+		$exclude_patterns .= implode(PHP_EOL, $this->deploy_properties_obj['exclude']['patterns'] );
+		
+		// Output the file
+		file_put_contents($this->exclude_properties_file, $exclude_patterns);
 
 	}
 
