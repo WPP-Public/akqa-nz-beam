@@ -1,0 +1,21 @@
+{
+    "name": "heyday/deployment",
+    "description": "A set of tools for deploying sites",
+    "minimum-stability": "stable",
+    "authors": [
+        {
+            "name": "Shane Garelja",
+            "email": "shane@heyday.co.nz"
+        }
+    ],
+    "require": {
+        "kevinlebrun/colors.php": "0.*",
+        "symfony/console": "2.1.*"
+    },
+    "autoload": {
+        "psr-0": {
+            "Heyday\\Deployment": "src/"
+        }
+    },
+    "bin": [ "bin/deploy", "bin/console" ]
+}
