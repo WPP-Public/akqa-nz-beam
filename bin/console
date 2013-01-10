@@ -1,9 +1,9 @@
 #!/usr/local/bin/php -q
 <?php
 
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../../../autoload.php';
 
-use Deploy\Command\GenDeploy;
+use Heyday\Deployment\Command\GenDeploy;
 use Symfony\Component\Console\Application;
 
 $application = new Application();

@@ -1,5 +1,5 @@
 <?php
-namespace Heyday\Deploy\Command;
+namespace Heyday\Deployment\Command;
 
 use Colors\Color;
 
