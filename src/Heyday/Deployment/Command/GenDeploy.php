@@ -19,7 +19,7 @@ class GenDeploy extends Command
             ->addArgument(
                 'client_code',
                 InputArgument::OPTIONAL,
-                'Client code for corresponding xxx.properties file (located in ~/build/config)'
+                'Option client code for corresponding xxx.properties file (located in ~/build/config/~/build/sync)'
             )
             ->addOption(
                 'replace',
