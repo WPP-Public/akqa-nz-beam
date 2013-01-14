@@ -10,7 +10,8 @@
     ],
     "require": {
         "kevinlebrun/colors.php": "0.*",
-        "symfony/console": "2.1.*"
+        "symfony/console": "2.1.*",
+        "symfony/process": "2.1.*"
     },
     "autoload": {
         "psr-0": {
