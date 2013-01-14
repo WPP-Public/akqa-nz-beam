@@ -58,7 +58,7 @@ class Deployment
         preg_match('#' . $this->sites_path . '/(.*?)/.*?#', getcwd(), $project_dir);
 
         if (!array_key_exists(1, $project_dir)) {
-            $this->output('Something went horribly wrong!', Deployment::ERROR);
+            $this->output('Deploy must be run inside ~/Sites/[project]/[source folder]', Deployment::ERROR);
         }
 
         // Set root project path
@@ -378,9 +378,9 @@ class Deployment
                 $path = $path . '/';
             }
 
-            $full_include_path = $path . '**';
+            $full_include_path = $path;
             $include_path = $full_include_path;
-            $rsync_include_path = '--include "' . $full_include_path . '"';
+            $rsync_include_path = '--include="' . $full_include_path . '" --exclude="/*"';
 
             // Read file into array
             $fileArr = file($this->exclude_properties_file);
@@ -399,11 +399,11 @@ class Deployment
 
         // Build the rsync command
         $rsync = sprintf(
-            'rsync -avz %s/ %s --exclude-from="%s" %s',
+            'rsync -avz %s/ %s %s --exclude-from="%s"',
             $source_path,
             $destination_path,
-            $this->exclude_properties_file,
-            $rsync_include_path
+            $rsync_include_path,
+            $this->exclude_properties_file
         );
 
         // Are we doing a dry run?
