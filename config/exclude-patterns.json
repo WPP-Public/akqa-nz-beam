@@ -2,7 +2,8 @@
 	"_base": [
 		"*~",
 		".DS_Store",
-		".svn,.git",
+		".svn",
+		".git",
 		"README.md",
 		"sftp-config.json",
 		"deploy.json",

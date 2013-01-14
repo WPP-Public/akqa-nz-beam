@@ -1,7 +1,9 @@
 <?php
+
 namespace Heyday\Deployment\Command;
 
 use Colors\Color;
+use Symfony\Component\Process\Process;
 
 class Deployment
 {
@@ -102,7 +104,13 @@ class Deployment
 
         } elseif (array_key_exists('b', $this->arguments)) {
 
-            exec('git branch', $valid_branches);
+            $git_branch_process = new Process('git branch');
+            $git_branch_process->run();
+            if (!$git_branch_process->isSuccessful()) {
+                throw new \RuntimeException($git_branch_process->getErrorOutput());
+            }
+            $valid_branches = explode("\n", $git_branch_process->getOutput());
+
             array_walk($valid_branches, array($this, 'gitTidyBranchName'));
             if (in_array($this->arguments['b'], $valid_branches)) {
                 $git_branch = $this->arguments['b'];
@@ -112,8 +120,12 @@ class Deployment
 
         } else {
 
-            exec('git branch 2> /dev/null | sed -e \'/^[^*]/d\' -e \'s/* \(.*\)/\1/\'', $output);
-            $git_branch = $output[0];
+            $git_branch_process = new Process('git rev-parse --abbrev-ref HEAD');
+            $git_branch_process->run();
+            if (!$git_branch_process->isSuccessful()) {
+                throw new \RuntimeException($git_branch_process->getErrorOutput());
+            }
+            $git_branch = $git_branch_process->getOutput();
 
         }
 
@@ -123,8 +135,14 @@ class Deployment
 
             // Safeguard: Only allow deletetions of _deploy directories
             if (preg_match('#^/Users/.*/Sites/.*/_deploy$#', $project_sync_path)) {
+
                 $this->output("Removing TEMP folder: <magenta>$project_sync_path</magenta>", Deployment::INFO);
-                exec('rm -rf "' . $project_sync_path . '"');
+                $rm_dir_process = new Process('rm -rf "' . $project_sync_path . '"');
+                $rm_dir_process->run();
+                if (!$rm_dir_process->isSuccessful()) {
+                    throw new \RuntimeException($rm_dir_process->getErrorOutput());
+                }
+
             } else {
                 $this->output(
                     "Invalid _deploy directory detected: <magenta>$project_sync_path</magenta",
@@ -142,8 +160,12 @@ class Deployment
             $this->output("Updating <magenta>$git_branch</magenta>", Deployment::INFO);
             $branch_parts = explode("/", $git_branch);
             $cmd_git_update = sprintf('(cd %s && git remote update --prune %s)', $git_repo_path, $branch_parts[1]);
-            $this->output("$cmd_git_update", Deployment::DATA);
-            exec($cmd_git_update);
+            $this->output($cmd_git_update, Deployment::DATA);
+            $git_process = new Process($cmd_git_update);
+            $git_process->run();
+            if (!$git_process->isSuccessful()) {
+                throw new \RuntimeException($git_process->getErrorOutput());
+            }
 
         }
 
@@ -155,8 +177,13 @@ class Deployment
             $git_branch,
             $project_sync_path
         );
-        $this->output("$cmd_git_archive", Deployment::DATA);
-        exec($cmd_git_archive);
+        $this->output($cmd_git_archive, Deployment::DATA);
+
+        $git_archive_process = new Process($cmd_git_archive);
+        $git_archive_process->run();
+        if (!$git_archive_process->isSuccessful()) {
+            throw new \RuntimeException($git_archive_process->getErrorOutput());
+        }
 
         return $project_sync_path;
 
@@ -429,9 +456,20 @@ class Deployment
             $this->output("Syncing files...", Deployment::INFO);
             // Only want to show files that will change or directories that will be deleted,
             // not directories that will change
-            system(
+            $rsync_process = new Process(
                 $rsync . " | grep -E '^deleting|[^/]$' | sed -e 's/^.*$/\033[90mdata\033[97m:\t    \033[90m&\033[0m/'"
             );
+            $rsync_process->run(function ($type, $buffer) {
+                if ('err' === $type) {
+                    echo 'ERR > '.$buffer;
+                } else {
+                    echo 'OUT > '.$buffer;
+                }
+            });
+            if (!$rsync_process->isSuccessful()) {
+                throw new \RuntimeException($rsync_process->getErrorOutput());
+            }
+
         }
 
         $this->output("deployment <green><bold>ok</bold></green>", Deployment::INFO);
@@ -552,7 +590,7 @@ class Deployment
     private function gitTidyBranchName (&$value)
     {
 
-        $value = str_replace(array('*', ' '), array('', ''), $value);
+        $value = str_replace(array('*', ' '), array(' ', ''), $value);
 
     }
 }
