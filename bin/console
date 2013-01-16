@@ -3,11 +3,6 @@
 
 require_once __DIR__ . '/../../../autoload.php';
 
-// REMOVE ME!!
-require_once __DIR__ . '/../src/Heyday/Component/Beam/Command/Beam.php';
-require_once __DIR__ . '/../src/Heyday/Component/Beam/Command/GenDeploy.php';
-
-
 use Heyday\Component\Beam\Command\Beam;
 use Heyday\Component\Beam\Command\GenDeploy;
 use Symfony\Component\Console\Application;
