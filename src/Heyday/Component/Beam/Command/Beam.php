@@ -186,7 +186,11 @@ class Beam extends Command
         if ($this->source_root_path = $this->findSourceRoot()) {
             $deploy_properties_obj = $this->parseJSONConfFile($this->source_root_path, $this->config_file_name);
         } else {
-            $this->output('Config file ' . $this->config_file_name . ' not found!! `Beam` must be run inside project source directory or deeper', Beam::ERROR);
+            $this->output(
+                'Config file ' . $this->config_file_name .
+                ' not found!! `Beam` must be run inside project source directory or deeper',
+                Beam::ERROR
+            );
         }
 
         $project_application_pattern_ids = array_merge(
@@ -194,7 +198,11 @@ class Beam extends Command
             $deploy_properties_obj['exclude']['applications']
         );
         $exclude_properties_file_path = realpath($this->source_root_path . '/../exclude.properties');
-        $this->generateExcludePropertiesFile($exclude_properties_file_path, $project_application_pattern_ids, $deploy_properties_obj['exclude']['patterns']);
+        $this->generateExcludePropertiesFile(
+            $exclude_properties_file_path,
+            $project_application_pattern_ids,
+            $deploy_properties_obj['exclude']['patterns']
+        );
 
         $remote_server_user = null;
         $remote_server_host = null;
@@ -418,8 +426,11 @@ class Beam extends Command
     /**
      * Generate exclude.properties file
      */
-    private function generateExcludePropertiesFile($exclude_properties_file_path, $project_application_pattern_ids, $project_exclude_patterns_array)
-    {
+    private function generateExcludePropertiesFile(
+        $exclude_properties_file_path,
+        $project_application_pattern_ids,
+        $project_exclude_patterns_array
+    ) {
         $exclude_patterns = "";
         $exclude_patterns_file = realpath(__DIR__ . "/../../../../../config/exclude-patterns.json");
         $json_string = file_get_contents($exclude_patterns_file);
@@ -445,8 +456,15 @@ class Beam extends Command
     /**
      * Sync files using rsync
      */
-    public function syncFiles($source_path, $destination_path, $exclude_properties_file_path, $sync_sub_directory = null, $dryrun = false, $delete = false, $fast = false)
-    {
+    public function syncFiles(
+        $source_path,
+        $destination_path,
+        $exclude_properties_file_path,
+        $sync_sub_directory = null,
+        $dryrun = false,
+        $delete = false,
+        $fast = false
+    ) {
 
         $include_path = '';
         $rsync_include_path = '';
@@ -485,12 +503,15 @@ class Beam extends Command
 
         if ($this->is_dryrun) {
             $rsync = $rsync . ' --dry-run';
-            $this->output("##################################################\n".
+            $this->output(
+                "##################################################\n".
                 "\t#                                                #\n".
                 "\t#                   TEST MODE                    #\n".
                 "\t#          NO FILES WILL BE TRANSFERRED          #\n".
                 "\t#                                                #\n".
-                "\t##################################################", Beam::WARN);
+                "\t##################################################",
+                Beam::WARN
+            );
         }
 
         if ($this->is_delete) {
