@@ -346,7 +346,7 @@ class Beam extends Command
 
         if (stripos($branch, 'remotes') === 0) {
             if ($this->is_upload_from_workingcopy) {
-                $this->output("You cannot upload to a production server from your local working copy", Beam::ERROR);
+                $this->output("You cannot upload from your local working copy to a server that is locked to a branch", Beam::ERROR);
             }
             $this->updateRemoteGitBranch($this->source_root_path, $git_branch);
         } else {
