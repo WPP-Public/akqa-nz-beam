@@ -4,6 +4,7 @@
 		".DS_Store",
 		".svn",
 		".git",
+		".gitignore",
 		"README.md",
 		"sftp-config.json",
 		"deploy.json",
