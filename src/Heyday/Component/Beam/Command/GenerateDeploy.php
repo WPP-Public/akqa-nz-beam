@@ -1,6 +1,6 @@
 <?php
 
-namespace Heyday\Deployment\Command;
+namespace Heyday\Component\Beam\Command;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -8,7 +8,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class GenDeploy extends Command
+class GenerateDeploy extends Command
 {
 
     protected function configure()
@@ -33,8 +33,6 @@ class GenDeploy extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
 
-        // Get dialog object
-        $dialog = $this->getHelperSet()->get('dialog');
 
 
         // Check a deploy.json file doesn't already exist
@@ -116,6 +114,7 @@ class GenDeploy extends Command
         } else {
 
             // If no client code is specified then ask a a default deploy.json shoul dbe created
+            $dialog = $this->getHelperSet()->get('dialog');
             if (!$dialog->askConfirmation(
                 $output,
                 "<question>You haven't sepcified a client code, would you like to generate a default deploy.json file?".

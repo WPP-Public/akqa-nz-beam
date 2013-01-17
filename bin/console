@@ -3,9 +3,11 @@
 
 require_once __DIR__ . '/../../../autoload.php';
 
-use Heyday\Deployment\Command\GenDeploy;
+use Heyday\Component\Beam\Command\Beam;
+use Heyday\Component\Beam\Command\GenerateDeploy;
 use Symfony\Component\Console\Application;
 
 $application = new Application();
-$application->add(new GenDeploy);
+$application->add(new Beam());
+$application->add(new GenerateDeploy());
 $application->run();
