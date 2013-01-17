@@ -18,5 +18,5 @@
             "Heyday\\Deployment": "src/"
         }
     },
-    "bin": [ "bin/deploy", "bin/console" ]
+    "bin": [ "bin/console" ]
 }

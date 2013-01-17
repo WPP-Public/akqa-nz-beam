@@ -8,6 +8,8 @@
 		"sftp-config.json",
 		"deploy.json",
 		"deploy.properties",
+		"exclude.properties",
+		".mergesources.yml",
 		"/access-logs/",
 		"/cgi-bin/"
 	],
