@@ -1,7 +1,7 @@
 {
     "name": "heyday/deployment",
     "description": "A set of tools for deploying sites",
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "authors": [
         {
             "name": "Shane Garelja",
@@ -9,7 +9,7 @@
         }
     ],
     "require": {
-        "kevinlebrun/colors.php": "0.*",
+        "kevinlebrun/colors.php": "dev-master",
         "symfony/console": "2.1.*",
         "symfony/process": "2.1.*"
     },
