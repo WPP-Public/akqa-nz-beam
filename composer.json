@@ -15,7 +15,7 @@
     },
     "autoload": {
         "psr-0": {
-            "Heyday\\Deployment": "src/"
+            "Heyday\\Component": "src/"
         }
     },
     "bin": [ "bin/console" ]
