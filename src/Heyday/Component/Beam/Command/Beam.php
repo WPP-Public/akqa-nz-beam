@@ -52,6 +52,7 @@ class Beam extends Command
     private $source_root_path;
     private $config_file_name = 'deploy.json';
     private $git_export_dir = '_temp';
+    private $colors;
 
 
     /**
@@ -114,26 +115,28 @@ class Beam extends Command
                 'dryrun',
                 'd',
                 InputOption::VALUE_NONE,
-                'If set, no files will be beamed'
+                'If set, no files will be transferred'
             )
             ->addOption(
                 'fast',
                 'f',
                 InputOption::VALUE_NONE,
-                'Turns off checksum comparison and uses the faster, timestamp/filesize comparison'
+                'Skips the pre-sync check prior to syncing files'
             )
             ->addOption(
                 'delete',
-                'D',
+                '',
                 InputOption::VALUE_NONE,
                 'USE WITH CAUTION!! adds the delete flag to remove items that don\'t exist at the destination'
             )
             ->addOption(
                 'workingcopy',
-                'W',
+                '',
                 InputOption::VALUE_NONE,
-                'USE WITH CAUTION!! adds the delete flag to remove items that don\'t exist at the destination'
+                'When uploading, syncs files from the working copy rather than exported git copy'
             );
+
+        $this->setThemeColors();
     }
 
 
@@ -145,15 +148,21 @@ class Beam extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->output("starting...", Beam::WARN);
+        $this->output("Starting...", Beam::WARN);
 
         $this->direction = $input->getArgument('direction');
+        if ($this->direction != 'up' && $this->direction != 'down') {
+            $this->output(
+                "Invalid direction specified - should be 'up' or 'down'",
+                Beam::ERROR
+            );
+        }
         $this->remote_conf_name = $input->getArgument('remote_conf_name');
         if ($input->getOption('branch')) {
-            $this->git_branch = str_replace('=', '', $input->getOption('branch'));
+            $this->git_branch = $input->getOption('branch');
         }
         if ($input->getOption('path')) {
-            $this->sync_sub_directory = str_replace('=', '', $input->getOption('path'));
+            $this->sync_sub_directory = $input->getOption('path');
         }
         if ($input->getOption('dryrun')) {
             $this->is_dryrun = true;
@@ -171,16 +180,15 @@ class Beam extends Command
             $this->is_upload_from_workingcopy = true;
         }
 
-        $this->transfer();
+        $this->process();
     }
 
 
     /**
      * Perform deployment
      */
-    private function transfer()
+    private function process()
     {
-
         $deploy_properties_obj = null;
         $this->output("Current directory: <magenta>" . getcwd() . "</magenta>", Beam::INFO);
         if ($this->source_root_path = $this->findSourceRoot()) {
@@ -193,6 +201,10 @@ class Beam extends Command
             );
         }
 
+        $include_path = '';
+        if ($this->sync_sub_directory) {
+            $include_path = '/' . trim($this->sync_sub_directory, '/') . '/';
+        }
         $project_application_pattern_ids = array_merge(
             array('_base'),
             $deploy_properties_obj['exclude']['applications']
@@ -201,7 +213,8 @@ class Beam extends Command
         $this->generateExcludePropertiesFile(
             $exclude_properties_file_path,
             $project_application_pattern_ids,
-            $deploy_properties_obj['exclude']['patterns']
+            $deploy_properties_obj['exclude']['patterns'],
+            $include_path
         );
 
         $remote_server_user = null;
@@ -209,7 +222,6 @@ class Beam extends Command
         $remote_server_path = null;
         $branch = null;
         $valid_servers = array();
-
         foreach ($deploy_properties_obj['servers'] as $key => $config) {
             if ($key == $this->remote_conf_name) {
                 $remote_server_user = $config['user'];
@@ -221,7 +233,6 @@ class Beam extends Command
             }
             array_push($valid_servers, $key);
         }
-
         if (!isset($remote_server_user) || !isset($remote_server_host) || !isset($remote_server_path)) {
             $this->output(
                 "Server config not specified or not found. Valid servers for this project are: <magenta>" .
@@ -230,7 +241,6 @@ class Beam extends Command
             );
         }
 
-
         $local_sync_path = '';
         $server_sync_path = sprintf('%s@%s:%s', $remote_server_user, $remote_server_host, $remote_server_path);
         if (file_exists($this->source_root_path . '/.git') && $this->direction == 'up') {
@@ -238,7 +248,6 @@ class Beam extends Command
         } else {
             $local_sync_path = $this->source_root_path;
         }
-
         $source_dir = null;
         $destination_dir = null;
         if ($this->direction == 'down') {
@@ -247,22 +256,61 @@ class Beam extends Command
         } elseif ($this->direction == 'up') {
             $source_dir = $local_sync_path;
             $destination_dir = $server_sync_path;
-        } else {
-            $this->output(
-                "Invalid direction argument specified - should be 'up' or 'down'",
-                Beam::ERROR
-            );
         }
 
-        $this->syncFiles(
-            $source_dir,
-            $destination_dir,
-            $exclude_properties_file_path,
-            $this->sync_sub_directory,
-            $this->is_dryrun,
-            $this->is_delete,
-            $this->is_fast
-        );
+        $this->perform($source_dir, $destination_dir, $include_path, $exclude_properties_file_path);
+
+    }
+
+
+    /**
+     * Perform deployment
+     */
+    private function perform($source_dir, $destination_dir, $include_path, $exclude_properties_file_path)
+    {
+
+        if ($this->is_delete) {
+            $this->output('DELETE option enabled - files at destination may be deleted', Beam::WARN);
+        }
+        if ($this->is_dryrun) {
+            $this->output('DRYRUN option enabled - no files will be transferred', Beam::WARN);
+        } else {
+            $this->output('You\'re about to sync files between', Beam::WARN);
+        }
+        $this->output("FROM:\t<magenta>$source_dir$include_path</magenta>", Beam::WARN);
+        $this->output("TO:\t<magenta>$destination_dir$include_path</magenta>", Beam::WARN);
+
+        if ($this->is_fast) {
+            $this->output("Running in `fast` mode so skipping pre-check...", Beam::WARN);
+        } else {
+            $this->output("The following files ".($this->is_dryrun ? "would" : "will")." be modified:", Beam::WARN);
+            $rsync = $this->runRSYNC(
+                $source_dir,
+                $destination_dir,
+                $exclude_properties_file_path,
+                $include_path,
+                true,
+                $this->is_delete,
+                true
+            );
+            $this->output("CMD:\t$rsync", Beam::DATA);
+        }
+
+        if (!$this->is_dryrun) {
+            if ($this->confirmAction("is this ok? (y/n)")) {
+                $this->output("Syncing files...", Beam::INFO);
+                $this->runRSYNC(
+                    $source_dir,
+                    $destination_dir,
+                    $exclude_properties_file_path,
+                    $include_path,
+                    false,
+                    $this->is_delete,
+                    false
+                );
+                $this->output("STATUS: <green><bold>ok</bold></green>", Beam::WARN);
+            }
+        }
     }
 
 
@@ -346,7 +394,10 @@ class Beam extends Command
 
         if (stripos($branch, 'remotes') === 0) {
             if ($this->is_upload_from_workingcopy) {
-                $this->output("You cannot upload from your local working copy to a server that is locked to a branch", Beam::ERROR);
+                $this->output(
+                    "You cannot upload from your local working copy to a server that is locked to a remnote branch",
+                    Beam::ERROR
+                );
             }
             $this->updateRemoteGitBranch($this->source_root_path, $git_branch);
         } else {
@@ -367,9 +418,9 @@ class Beam extends Command
     {
         $this->output("Updating <magenta>$branch</magenta>", Beam::INFO);
         $branch_parts = explode("/", $branch);
-        $cmd_git_update = sprintf('(cd %s && git remote update --prune %s)', $path, $branch_parts[1]);
+        $cmd_git_update = sprintf('(git remote update --prune %s)', $branch_parts[1]);
         $this->output($cmd_git_update, Beam::DATA);
-        $git_process = new Process($cmd_git_update);
+        $git_process = new Process($cmd_git_update, $path);
         $git_process->run();
         if (!$git_process->isSuccessful()) {
             throw new RuntimeException($git_process->getErrorOutput());
@@ -385,13 +436,12 @@ class Beam extends Command
         $this->createGitExportDirectory($export_path);
         $this->output("Exporting branch <magenta>$branch</magenta>", Beam::INFO);
         $cmd_git_archive = sprintf(
-            '(cd %s && git archive %s) | (cd %s && tar -xf -)',
-            $path,
+            '(git archive %s) | (cd %s && tar -xf -)',
             $branch,
             $export_path
         );
         $this->output($cmd_git_archive, Beam::DATA);
-        $git_archive_process = new Process($cmd_git_archive);
+        $git_archive_process = new Process($cmd_git_archive, $path);
         $git_archive_process->run();
         if (!$git_archive_process->isSuccessful()) {
             throw new RuntimeException($git_archive_process->getErrorOutput());
@@ -429,139 +479,85 @@ class Beam extends Command
     private function generateExcludePropertiesFile(
         $exclude_properties_file_path,
         $project_application_pattern_ids,
-        $project_exclude_patterns_array
+        $project_exclude_patterns_array,
+        $sync_sub_directory
     ) {
-        $exclude_patterns = "";
+        if (file_exists($exclude_properties_file_path)) {
+            unlink($exclude_properties_file_path);
+        }
+
+        $exclude_patterns = array();
         $exclude_patterns_file = realpath(__DIR__ . "/../../../../../config/exclude-patterns.json");
         $json_string = file_get_contents($exclude_patterns_file);
         if ($exclude_patterns_json = json_decode($json_string, true)) {
-            
             foreach ($exclude_patterns_json as $name => $patterns) {
                 if (array_search($name, $project_application_pattern_ids) !== false) {
-                    $exclude_patterns .= implode(PHP_EOL, $patterns).PHP_EOL;
+                    $exclude_patterns = array_merge($exclude_patterns, $patterns);
                 }
             }
         } else {
             $this->output('Invalid exclude-patterns.json file', Beam::ERROR);
         }
-
-        if (file_exists($exclude_properties_file_path)) {
-            unlink($exclude_properties_file_path);
+        $exclude_patterns = array_merge($exclude_patterns, $project_exclude_patterns_array);
+        if ($sync_sub_directory) {
+            foreach ($exclude_patterns as $key => $value) {
+                if (trim($value) == $sync_sub_directory) {
+                    unset($exclude_patterns[$key]);
+                }
+            }
         }
-        $exclude_patterns .= implode(PHP_EOL, $project_exclude_patterns_array);
-        file_put_contents($exclude_properties_file_path, $exclude_patterns);
+        $exclude_patterns_str = implode(PHP_EOL, $exclude_patterns).PHP_EOL;
+        file_put_contents($exclude_properties_file_path, $exclude_patterns_str);
     }
 
 
     /**
      * Sync files using rsync
      */
-    public function syncFiles(
+    private function runRSYNC(
         $source_path,
         $destination_path,
         $exclude_properties_file_path,
         $sync_sub_directory = null,
         $dryrun = false,
         $delete = false,
-        $fast = false
+        $output = true
     ) {
 
-        $include_path = '';
-        $rsync_include_path = '';
+        $rsync = sprintf('rsync -az %s/ %s --delay-updates --checksum', $source_path, $destination_path);
+
         if ($sync_sub_directory) {
-            $path = trim($sync_sub_directory);
+            $rsync .= sprintf(' --include="%s" --exclude="/*"', '/' . trim($sync_sub_directory, '/') . '/');
+        }
+        $rsync .= sprintf(' --exclude-from="%s"', $exclude_properties_file_path);
+        if ($dryrun) {
+            $rsync .= ' --dry-run';
+        }
+        if ($delete) {
+            $rsync .= ' --delete';
+        }
+        if ($output) {
+            $rsync .= ' --verbose';
+        }
 
-            // Ensure path starts with a slash
-            if (substr($path, 0, 1) != '/') {
-                $path = "/" . $path;
-            }
-            // Add trailing slash if required
-            if (substr($path, -1) != '/') {
-                $path = $path . '/';
-            }
-
-            $full_include_path = $path;
-            $include_path = $full_include_path;
-            $rsync_include_path = '--include="' . $full_include_path . '" --exclude="/*"';
-
-            $fileArr = file($exclude_properties_file_path);
-            foreach ($fileArr as $key => $line) {
-                if (trim($line) == $path) {
-                    unset($fileArr[$key]);
+        $rsync_process = new Process(
+            $rsync . " | grep -E '^deleting|[^/]$' | sed -e 's/^.*$/\033[90mdata\033[97m:\t    \033[90m&\033[0m/'"
+        );
+        $rsync_process->setTimeout(300);
+        $rsync_process->run(
+            function ($type, $buffer) {
+                if ('err' === $type) {
+                    print "error:\t".$buffer;
+                } else {
+                    print $buffer;
                 }
             }
-            file_put_contents($exclude_properties_file_path, implode('', $fileArr));
-        }
-
-        $rsync = sprintf(
-            'rsync -avz %s/ %s %s --exclude-from="%s"',
-            $source_path,
-            $destination_path,
-            $rsync_include_path,
-            $exclude_properties_file_path
         );
-
-        if ($this->is_dryrun) {
-            $rsync = $rsync . ' --dry-run';
-            $this->output(
-                "##################################################\n".
-                "\t#                                                #\n".
-                "\t#                   TEST MODE                    #\n".
-                "\t#          NO FILES WILL BE TRANSFERRED          #\n".
-                "\t#                                                #\n".
-                "\t##################################################",
-                Beam::WARN
-            );
+        if (!$rsync_process->isSuccessful()) {
+            throw new RuntimeException($rsync_process->getErrorOutput());
         }
 
-        if ($this->is_delete) {
-            $this->output("Running with --delete option - files at destination may be deleted", Beam::WARN);
-            $rsync = $rsync . ' --delete';
-        }
-
-        if (!$this->is_fast) {
-            $this->output("Running a fast comparison - modified files list may be inaccurate", Beam::WARN);
-            $rsync = $rsync . ' --checksum';
-        }
-
-        $c = new Color();
-        $c->setTheme(
-            array(
-                'setting' => 'yellow',
-                'warn' => 'red',
-           )
-        );
-        $this->output("This will sync files...", Beam::WARN);
-        $this->output("FROM:\t<magenta>$source_path$include_path</magenta>", Beam::WARN);
-        $this->output("TO:\t<magenta>$destination_path$include_path</magenta>", Beam::WARN);
-        $this->output("CMD:\t$rsync", Beam::DATA);
-        $this->output("<white>EXCLUSIONS:</white>", Beam::DATA);
-        $exclusions = file($exclude_properties_file_path);
-        foreach ($exclusions as $exclusion) {
-            $this->output("    " . trim("$exclusion"), Beam::DATA);
-        }
-        $rsync = $rsync . " --delay-updates";
-
-        if ($this->confirmAction("is this ok? (y/n)")) {
-            $this->output("Syncing files...", Beam::INFO);
-            $rsync_process = new Process(
-                $rsync . " | grep -E '^deleting|[^/]$' | sed -e 's/^.*$/\033[90mdata\033[97m:\t    \033[90m&\033[0m/'"
-            );
-            $rsync_process->setTimeout(300);
-            $rsync_process->run(
-                function ($type, $buffer) {
-                    if ('err' === $type) {
-                        print 'ERROR > '.$buffer;
-                    } else {
-                        print $buffer;
-                    }
-                }
-            );
-            if (!$rsync_process->isSuccessful()) {
-                throw new RuntimeException($rsync_process->getErrorOutput());
-            }
-        }
-        $this->output("STATUS: <green><bold>ok</bold></green>", Beam::WARN);
+        return $rsync;
     }
 
 
@@ -580,16 +576,9 @@ class Beam extends Command
     }
 
 
-    /**
-     * Print info message
-     */
-    private function output($message, $level)
+    private function setThemeColors()
     {
-        if ($this->is_verbose && ($level == Beam::INFO || $level == Beam::DATA)) {
-            return;
-        }
-
-        $colors =
+        $this->colors =
             array(
                 // Colours
                 'black' => 'black',
@@ -609,9 +598,20 @@ class Beam extends Command
                 'lightcyan' => 'lightcyan',
                 'white' => 'white'
            );
+    }
+
+    /**
+     * Print info message
+     */
+    private function output($message, $level)
+    {
+        if (!$this->is_verbose && ($level == Beam::INFO || $level == Beam::DATA)) {
+            return;
+        }
+
         $c = new Color();
         $c->setTheme(
-            $colors
+            $this->colors
         );
         $levels = array(
             Beam::INFO => array('name' => 'info', 'lcolor' => 'green', 'mcolor' => 'white'),
@@ -624,7 +624,7 @@ class Beam extends Command
             $levels[$level]['name']."</". $levels[$level]['lcolor']."><white>:\t</white>";
         $pattern = array();
         $replacement = array();
-        foreach ($colors as $color) {
+        foreach ($this->colors as $color) {
             $pattern[] = "#<$color>#";
             $pattern[] = "#</$color>#";
             $replacement[] = "<X-X-X/". $levels[$level]['mcolor'] ."><X-X-X$color>";

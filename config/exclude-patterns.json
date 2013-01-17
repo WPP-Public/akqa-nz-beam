@@ -1,6 +1,5 @@
 {
 	"_base": [
-		"exclude.properties",
 		"*~",
 		".DS_Store",
 		".svn",
@@ -9,6 +8,8 @@
 		"sftp-config.json",
 		"deploy.json",
 		"deploy.properties",
+		"exclude.properties",
+		".mergesources.yml",
 		"/access-logs/",
 		"/cgi-bin/"
 	],
