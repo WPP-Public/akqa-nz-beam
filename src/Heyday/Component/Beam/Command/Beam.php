@@ -52,6 +52,7 @@ class Beam extends Command
     private $source_root_path;
     private $config_file_name = 'deploy.json';
     private $git_export_dir = '_temp';
+    private $exclude_props_file_name = 'exclude.properties';
     private $colors;
 
 
@@ -62,7 +63,7 @@ class Beam extends Command
      *
      * @api
      */
-    public function setConfigFileName()
+    public function setConfigFileName($config_file_name)
     {
         $this->config_file_name = $config_file_name;
     }
@@ -75,9 +76,22 @@ class Beam extends Command
      *
      * @api
      */
-    public function setGitExportDir()
+    public function setGitExportDir($git_export_dir)
     {
         $this->git_export_dir = $git_export_dir;
+    }
+
+
+    /**
+     * Set the name of the exclude properties file
+     *
+     * @param string $exclude_props_file_name    The name of the exclude properties file
+     *
+     * @api
+     */
+    public function setExcludePropsFileName($exclude_props_file_name)
+    {
+        $this->exclude_props_file_name = $exclude_props_file_name;
     }
 
 
@@ -209,7 +223,7 @@ class Beam extends Command
             array('_base'),
             $deploy_properties_obj['exclude']['applications']
         );
-        $exclude_properties_file_path = realpath($this->source_root_path . '/../exclude.properties');
+        $exclude_properties_file_path = preg_replace('/\w+\/\.\.\//', '', $this->source_root_path . '/../' . $this->exclude_props_file_name);
         $this->generateExcludePropertiesFile(
             $exclude_properties_file_path,
             $project_application_pattern_ids,
@@ -366,7 +380,7 @@ class Beam extends Command
      */
     private function gitExport($branch)
     {
-        $local_sync_path = realpath($this->source_root_path . '/../' . $this->git_export_dir);
+        $local_sync_path = preg_replace('/\w+\/\.\.\//', '', $this->source_root_path . '/../' . $this->git_export_dir);
         $git_branch = '';
         if (isset($branch)) {
             $git_branch = $branch;
@@ -482,12 +496,12 @@ class Beam extends Command
         $project_exclude_patterns_array,
         $sync_sub_directory
     ) {
-        if (file_exists($exclude_properties_file_path)) {
+        if (file_exists($exclude_properties_file_path) && strpos($exclude_properties_file_path, $this->exclude_props_file_name) !== false) {
             unlink($exclude_properties_file_path);
         }
 
         $exclude_patterns = array();
-        $exclude_patterns_file = realpath(__DIR__ . "/../../../../../config/exclude-patterns.json");
+        $exclude_patterns_file = preg_replace('/\w+\/\.\.\//', '', __DIR__ . "/../../../../../config/exclude-patterns.json");
         $json_string = file_get_contents($exclude_patterns_file);
         if ($exclude_patterns_json = json_decode($json_string, true)) {
             foreach ($exclude_patterns_json as $name => $patterns) {
