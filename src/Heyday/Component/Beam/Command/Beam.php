@@ -414,6 +414,7 @@ class Beam extends Command
                 );
             }
             $this->updateRemoteGitBranch($this->source_root_path, $git_branch);
+            $this->exportGitBranch($this->source_root_path, $git_branch, $local_sync_path);
         } else {
             if ($this->is_upload_from_workingcopy) {
                 $local_sync_path = $this->source_root_path;
