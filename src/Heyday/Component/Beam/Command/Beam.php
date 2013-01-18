@@ -501,7 +501,7 @@ class Beam extends Command
         }
 
         $exclude_patterns = array();
-        $exclude_patterns_file = preg_replace('/\w+\/\.\.\//', '', __DIR__ . "/../../../../../config/exclude-patterns.json");
+        $exclude_patterns_file = realpath(__DIR__ . "/../../../../../config/exclude-patterns.json");
         $json_string = file_get_contents($exclude_patterns_file);
         if ($exclude_patterns_json = json_decode($json_string, true)) {
             foreach ($exclude_patterns_json as $name => $patterns) {
@@ -598,19 +598,19 @@ class Beam extends Command
                 'black' => 'black',
                 'red' => 'red',
                 'green' => 'green',
-                'brown' => 'brown',
+                'yellow' => 'yellow',
                 'blue' => 'blue',
                 'magenta' => 'magenta',
                 'cyan' => 'cyan',
-                'lightgray' => 'lightgray',
+                'white' => 'white',
                 'darkgray' => 'darkgray',
                 'lightred' => 'lightred',
                 'lightgreen' => 'lightgreen',
-                'yellow' => 'yellow',
+                'lightyellow' => 'lightyellow',
                 'lightblue' => 'lightblue',
                 'lightmagenta' => 'lightmagenta',
                 'lightcyan' => 'lightcyan',
-                'white' => 'white'
+                'brightwhite' => 'brightwhite'
            );
     }
 
@@ -628,14 +628,14 @@ class Beam extends Command
             $this->colors
         );
         $levels = array(
-            Beam::INFO => array('name' => 'info', 'lcolor' => 'green', 'mcolor' => 'white'),
-            Beam::WARN => array('name' => 'warn', 'lcolor' => 'brown', 'mcolor' => 'brown'),
+            Beam::INFO => array('name' => 'info', 'lcolor' => 'green', 'mcolor' => 'brightwhite'),
+            Beam::WARN => array('name' => 'warn', 'lcolor' => 'yellow', 'mcolor' => 'yellow'),
             Beam::ERROR => array('name' => 'error', 'lcolor' => 'red', 'mcolor' => 'red'),
             Beam::DATA => array('name' => 'data', 'lcolor' => 'darkgray', 'mcolor' => 'darkgray'),
-            Beam::PROMPT => array('name' => 'prompt', 'lcolor' => 'white', 'mcolor' => 'darkgray')
+            Beam::PROMPT => array('name' => 'prompt', 'lcolor' => 'brightwhite', 'mcolor' => 'darkgray')
         );
         $line = "<". $levels[$level]['lcolor'] .">".
-            $levels[$level]['name']."</". $levels[$level]['lcolor']."><white>:\t</white>";
+            $levels[$level]['name']."</". $levels[$level]['lcolor']."><brightwhite>:\t</brightwhite>";
         $pattern = array();
         $replacement = array();
         foreach ($this->colors as $color) {
@@ -654,7 +654,7 @@ class Beam extends Command
                 $line .= "<red>$message</red>";
                 break;
             case Beam::WARN:
-                $line .= "<brown>$message</brown>";
+                $line .= "<yellow>$message</yellow>";
                 break;
             case Beam::DATA:
                 $line .= "<darkgray>$message</darkgray>";
@@ -663,7 +663,7 @@ class Beam extends Command
                 $line .= "<darkgray>$message</darkgray>";
                 break;
             default:
-                $line .= "<white>$message</white>";
+                $line .= "<brightwhite>$message</brightwhite>";
         }
         $line = $c($line)->colorize();
         if ($level != Beam::PROMPT) {
