@@ -9,6 +9,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Process;
+use RuntimeException;
 
 /**
  * An tool for deploying files to a remote server using rsync and git.
@@ -388,7 +389,7 @@ class Beam extends Command
             $git_branch_process = new Process('git branch');
             $git_branch_process->run();
             if (!$git_branch_process->isSuccessful()) {
-                throw new \RuntimeException($git_branch_process->getErrorOutput());
+                throw new RuntimeException($git_branch_process->getErrorOutput());
             }
             $valid_branches = explode("\n", $git_branch_process->getOutput());
             array_walk($valid_branches, array($this, 'gitTidyBranchName'));
@@ -401,7 +402,7 @@ class Beam extends Command
             $git_branch_process = new Process('git rev-parse --abbrev-ref HEAD');
             $git_branch_process->run();
             if (!$git_branch_process->isSuccessful()) {
-                throw new \RuntimeException($git_branch_process->getErrorOutput());
+                throw new RuntimeException($git_branch_process->getErrorOutput());
             }
             $git_branch = trim($git_branch_process->getOutput());
         }
@@ -438,7 +439,7 @@ class Beam extends Command
         $git_process = new Process($cmd_git_update, $path);
         $git_process->run();
         if (!$git_process->isSuccessful()) {
-            throw new \RuntimeException($git_process->getErrorOutput());
+            throw new RuntimeException($git_process->getErrorOutput());
         }
     }
 
@@ -459,7 +460,7 @@ class Beam extends Command
         $git_archive_process = new Process($cmd_git_archive, $path);
         $git_archive_process->run();
         if (!$git_archive_process->isSuccessful()) {
-            throw new \RuntimeException($git_archive_process->getErrorOutput());
+            throw new RuntimeException($git_archive_process->getErrorOutput());
         }
     }
 
@@ -475,7 +476,7 @@ class Beam extends Command
                 $rm_dir_process = new Process('rm -rf "' . $export_path . '"');
                 $rm_dir_process->run();
                 if (!$rm_dir_process->isSuccessful()) {
-                    throw new \RuntimeException($rm_dir_process->getErrorOutput());
+                    throw new RuntimeException($rm_dir_process->getErrorOutput());
                 }
             } else {
                 $this->output(
@@ -569,7 +570,7 @@ class Beam extends Command
             }
         );
         if (!$rsync_process->isSuccessful()) {
-            throw new \RuntimeException($rsync_process->getErrorOutput());
+            throw new RuntimeException($rsync_process->getErrorOutput());
         }
 
         return $rsync;
