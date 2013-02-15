@@ -243,6 +243,7 @@ class Beam extends Command
                 $remote_server_host = $config['host'];
                 $remote_server_path = $config['webroot'];
                 if (array_key_exists('branch', $config)) {
+                    // Branch is locked
                     $branch = $config['branch'];
                 }
             }
@@ -259,6 +260,9 @@ class Beam extends Command
         $local_sync_path = '';
         $server_sync_path = sprintf('%s@%s:%s', $remote_server_user, $remote_server_host, $remote_server_path);
         if (file_exists($this->source_root_path . '/.git') && $this->direction == 'up') {
+            if (!isset($branch)) {
+                $branch = $this->determineGitBranch();
+            }
             $local_sync_path = $this->gitExport($branch);
         } else {
             $local_sync_path = $this->source_root_path;
@@ -273,7 +277,7 @@ class Beam extends Command
             $destination_dir = $server_sync_path;
         }
 
-        $this->perform($source_dir, $destination_dir, $include_path, $exclude_properties_file_path);
+        $this->perform($source_dir, $destination_dir, $include_path, $exclude_properties_file_path, $branch);
 
     }
 
@@ -281,7 +285,7 @@ class Beam extends Command
     /**
      * Perform deployment
      */
-    private function perform($source_dir, $destination_dir, $include_path, $exclude_properties_file_path)
+    private function perform($source_dir, $destination_dir, $include_path, $exclude_properties_file_path, $branch)
     {
 
         if ($this->is_delete) {
@@ -292,13 +296,14 @@ class Beam extends Command
         } else {
             $this->output('You\'re about to sync files between', Beam::WARN);
         }
-        $this->output("FROM:\t<magenta>$source_dir$include_path</magenta>", Beam::WARN);
+        $this->output("FROM:\t<magenta>$source_dir$include_path</magenta> @ <magenta>$branch</magenta>", Beam::WARN);
         $this->output("TO:\t<magenta>$destination_dir$include_path</magenta>", Beam::WARN);
 
+        $files_to_update = true;
         if ($this->is_fast) {
             $this->output("Running in `fast` mode so skipping pre-check...", Beam::WARN);
-        } else {
-            $this->output("The following files ".($this->is_dryrun ? "would" : "will")." be modified:", Beam::WARN);
+        } else {        
+            $this->output("Determining list of files that ".($this->is_dryrun ? "would" : "will")." be modified...", Beam::WARN);
             $rsync = $this->runRSYNC(
                 $source_dir,
                 $destination_dir,
@@ -308,24 +313,36 @@ class Beam extends Command
                 $this->is_delete,
                 true
             );
-            $this->output("CMD:\t$rsync", Beam::DATA);
+
+            // Remove the console colouring from the output
+            $cleaned_output = preg_replace('/\\033\[[0-9]{1,2}m/', '', $rsync->output);
+            $files_to_update = (preg_match(
+                '/building file list \.\.\. done\s+data:\s+sent [0-9]+ bytes/m', 
+                $cleaned_output
+            ) !== 1);
+
+            if ($files_to_update) {
+                $this->output("CMD:\t".$rsync->command, Beam::DATA);
+            } else {
+                $this->output("The are no files to update", Beam::WARN);
+            }
+
         }
 
-        if (!$this->is_dryrun) {
-            if ($this->confirmAction("is this ok? (y/n)")) {
-                $this->output("Syncing files...", Beam::INFO);
-                $this->runRSYNC(
-                    $source_dir,
-                    $destination_dir,
-                    $exclude_properties_file_path,
-                    $include_path,
-                    false,
-                    $this->is_delete,
-                    false
-                );
-                $this->output("STATUS: <green><bold>ok</bold></green>", Beam::WARN);
-            }
+        if ($files_to_update && !$this->is_dryrun && $this->confirmAction("is this ok? (y/n)")) {
+            $this->output("Syncing files...", Beam::INFO);
+            $this->runRSYNC(
+                $source_dir,
+                $destination_dir,
+                $exclude_properties_file_path,
+                $include_path,
+                false,
+                $this->is_delete,
+                false
+            );
         }
+        
+        $this->output("STATUS: <green><bold>ok</bold></green>", Beam::WARN);
     }
 
 
@@ -347,7 +364,7 @@ class Beam extends Command
                 $found = true;
                 break;
             }
-            if (strpos('/', $dir) === false) {
+            if (strpos($dir, '/') === false) {
                 break; // not found
             }
             $dir = substr_replace($dir, '', strrpos($dir, '/'));
@@ -377,15 +394,13 @@ class Beam extends Command
 
 
     /**
-     * Export git repo to temp directory
+     * Determine which branch to export
      */
-    private function gitExport($branch)
+    private function determineGitBranch()
     {
-        $local_sync_path = preg_replace('/\w+\/\.\.\//', '', $this->source_root_path . '/../' . $this->git_export_dir);
         $git_branch = '';
-        if (isset($branch)) {
-            $git_branch = $branch;
-        } elseif ($this->git_branch) {
+        if (isset($this->git_branch)) {
+            // Check user has specified a valid branch
             $git_branch_process = new Process('git branch');
             $git_branch_process->run();
             if (!$git_branch_process->isSuccessful()) {
@@ -399,6 +414,7 @@ class Beam extends Command
                 $this->output("That branch is invalid", Beam::ERROR);
             }
         } else {
+            // Just export the branch they are on
             $git_branch_process = new Process('git rev-parse --abbrev-ref HEAD');
             $git_branch_process->run();
             if (!$git_branch_process->isSuccessful()) {
@@ -406,7 +422,16 @@ class Beam extends Command
             }
             $git_branch = trim($git_branch_process->getOutput());
         }
+        return $git_branch;
+    }
 
+
+    /**
+     * Export git repo to temp directory
+     */
+    private function gitExport($branch)
+    {
+        $local_sync_path = preg_replace('/\w+\/\.\.\//', '', $this->source_root_path . '/../' . $this->git_export_dir);
         if (stripos($branch, 'remotes') === 0) {
             if ($this->is_upload_from_workingcopy) {
                 $this->output(
@@ -414,13 +439,13 @@ class Beam extends Command
                     Beam::ERROR
                 );
             }
-            $this->updateRemoteGitBranch($this->source_root_path, $git_branch);
-            $this->exportGitBranch($this->source_root_path, $git_branch, $local_sync_path);
+            $this->updateRemoteGitBranch($this->source_root_path, $branch);
+            $this->exportGitBranch($this->source_root_path, $branch, $local_sync_path);
         } else {
             if ($this->is_upload_from_workingcopy) {
                 $local_sync_path = $this->source_root_path;
             } else {
-                $this->exportGitBranch($this->source_root_path, $git_branch, $local_sync_path);
+                $this->exportGitBranch($this->source_root_path, $branch, $local_sync_path);
             }
         }
         return $local_sync_path;
@@ -560,12 +585,14 @@ class Beam extends Command
             $rsync . " | grep -E '^deleting|[^/]$' | sed -e 's/^.*$/\033[90mdata\033[97m:\t    \033[90m&\033[0m/'"
         );
         $rsync_process->setTimeout(300);
+        $output = '';
         $rsync_process->run(
-            function ($type, $buffer) {
+            function ($type, $buffer) use(&$output) {
                 if ('err' === $type) {
                     print "error:\t".$buffer;
                 } else {
                     print $buffer;
+                    $output .= $buffer;
                 }
             }
         );
@@ -573,7 +600,10 @@ class Beam extends Command
             throw new RuntimeException($rsync_process->getErrorOutput());
         }
 
-        return $rsync;
+        $rsync_obj = new \stdClass();
+        $rsync_obj->command = $rsync;
+        $rsync_obj->output = $output;
+        return $rsync_obj;
     }
 
 
