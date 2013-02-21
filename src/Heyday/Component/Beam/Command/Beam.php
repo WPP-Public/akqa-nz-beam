@@ -44,7 +44,8 @@ class Beam extends Command
     private $git_branch;
     private $sync_sub_directory;
     private $is_dryrun = false;
-    private $is_fast = false;
+    private $is_prompt = true;
+    private $is_checksum = true;
     private $is_delete = false;
     private $is_verbose = false;
     private $is_upload_from_workingcopy = false;
@@ -133,10 +134,16 @@ class Beam extends Command
                 'If set, no files will be transferred'
             )
             ->addOption(
-                'fast',
-                'f',
+                'noprompt',
+                '',
                 InputOption::VALUE_NONE,
-                'Skips the pre-sync check prior to syncing files'
+                'Skips the pre-sync check and prompt'
+            )
+            ->addOption(
+                'nochecksum',
+                '',
+                InputOption::VALUE_NONE,
+                'Performs a faster file change check'
             )
             ->addOption(
                 'delete',
@@ -182,8 +189,11 @@ class Beam extends Command
         if ($input->getOption('dryrun')) {
             $this->is_dryrun = true;
         }
-        if ($input->getOption('fast')) {
-            $this->is_fast = true;
+        if ($input->getOption('noprompt')) {
+            $this->is_prompt = false;
+        }
+        if ($input->getOption('nochecksum')) {
+            $this->is_checksum = false;
         }
         if ($input->getOption('delete')) {
             $this->is_delete = true;
@@ -300,9 +310,7 @@ class Beam extends Command
         $this->output("TO:\t<magenta>$destination_dir$include_path</magenta>", Beam::WARN);
 
         $files_to_update = true;
-        if ($this->is_fast) {
-            $this->output("Running in `fast` mode so skipping pre-check...", Beam::WARN);
-        } else {        
+        if ($this->is_prompt) {
             $this->output("Determining list of files that ".($this->is_dryrun ? "would" : "will")." be modified...", Beam::WARN);
             $rsync = $this->runRSYNC(
                 $source_dir,
@@ -310,6 +318,7 @@ class Beam extends Command
                 $exclude_properties_file_path,
                 $include_path,
                 true,
+                $this->is_checksum,
                 $this->is_delete,
                 true
             );
@@ -326,10 +335,11 @@ class Beam extends Command
             } else {
                 $this->output("The are no files to update", Beam::WARN);
             }
-
+        } else {
+            $this->output("Running in `noprompt` mode so skipping pre-check...", Beam::WARN);
         }
 
-        if ($files_to_update && !$this->is_dryrun && $this->confirmAction("is this ok? (y/n)")) {
+        if ($files_to_update && !$this->is_dryrun && (!$this->is_prompt || $this->confirmAction("is this ok? (y/n)"))) {
             $this->output("Syncing files...", Beam::INFO);
             $this->runRSYNC(
                 $source_dir,
@@ -337,8 +347,9 @@ class Beam extends Command
                 $exclude_properties_file_path,
                 $include_path,
                 false,
+                $this->is_checksum,
                 $this->is_delete,
-                false
+                !$this->is_prompt
             );
         }
         
@@ -561,11 +572,12 @@ class Beam extends Command
         $exclude_properties_file_path,
         $sync_sub_directory = null,
         $dryrun = false,
+        $checksum = true,
         $delete = false,
         $output = true
     ) {
 
-        $rsync = sprintf('rsync -az %s/ %s --delay-updates --checksum', $source_path, $destination_path);
+        $rsync = sprintf('rsync -az %s/ %s --delay-updates', $source_path, $destination_path);
 
         if ($sync_sub_directory) {
             $rsync .= sprintf(' --include="%s" --exclude="/*"', '/' . trim($sync_sub_directory, '/') . '/');
@@ -573,6 +585,9 @@ class Beam extends Command
         $rsync .= sprintf(' --exclude-from="%s"', $exclude_properties_file_path);
         if ($dryrun) {
             $rsync .= ' --dry-run';
+        }
+        if ($checksum) {
+            $rsync .= ' --checksum';
         }
         if ($delete) {
             $rsync .= ' --delete';
