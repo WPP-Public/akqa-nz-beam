@@ -8,6 +8,7 @@
 		".svn",
 		"README.md",
 		"composer.json",
+		"composer.lock",
 		"deploy.json",
 		"deploy.properties",
 		"exclude.properties",
