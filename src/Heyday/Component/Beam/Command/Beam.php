@@ -580,7 +580,16 @@ class Beam extends Command
         $rsync = sprintf('rsync -az %s/ %s --delay-updates', $source_path, $destination_path);
 
         if ($sync_sub_directory) {
-            $rsync .= sprintf(' --include="%s" --exclude="/*"', '/' . trim($sync_sub_directory, '/') . '/');
+            $folders = explode('/', $sync_sub_directory);
+            $all_folders = '';
+            $includes_excludes = '';
+            foreach ($folders as $folder) {
+                if (!empty($folder)) {
+                    $all_folders .= "/" . $folder;
+                    $exclude = substr($all_folders, 0, strrpos($all_folders, "/"));
+                    $rsync .= sprintf(' --include="%s/" --exclude="%s/*"', $all_folders, $exclude);
+                }
+            }
         }
         $rsync .= sprintf(' --exclude-from="%s"', $exclude_properties_file_path);
         if ($dryrun) {
