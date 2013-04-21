@@ -15,7 +15,7 @@
 		"sftp-config.json",
 		"/access-logs/",
 		"/cgi-bin/",
-        "/.idea/"
+		"/.idea/"
 	],
 	"gear": [
 		"/images/repository/"
