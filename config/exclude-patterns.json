@@ -14,7 +14,8 @@
 		"exclude.properties",
 		"sftp-config.json",
 		"/access-logs/",
-		"/cgi-bin/"
+		"/cgi-bin/",
+        "/.idea/"
 	],
 	"gear": [
 		"/images/repository/"
