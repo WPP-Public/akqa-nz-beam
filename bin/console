@@ -1,13 +1,30 @@
 #!/usr/local/bin/php -q
 <?php
 
-require_once __DIR__ . '/../../../autoload.php';
+use Composer\Autoload\ClassLoader;
 
-use Heyday\Component\Beam\Command\Beam;
-use Heyday\Component\Beam\Command\GenerateDeploy;
-use Symfony\Component\Console\Application;
+$files = array(
+    __DIR__ . '/../vendor/autoload.php',
+    __DIR__ . '/../../../autoload.php'
+);
 
-$application = new Application();
-$application->add(new Beam());
-$application->add(new GenerateDeploy());
+/**
+ * Loop through the potential autoload locations
+ */
+foreach ($files as $file) {
+    if (file_exists($file)) {
+        $loader = require_once $file;
+        break;
+    }
+}
+
+/**
+ * If the autoloader isn't returning a autoload then error
+ */
+if (is_null($loader) || !$loader instanceof ClassLoader) {
+    echo 'You must first install the vendors using composer.' . PHP_EOL;
+    exit(1);
+}
+
+$application = new \Heyday\Component\Beam\Application();
 $application->run();

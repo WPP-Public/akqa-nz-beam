@@ -6,17 +6,30 @@
         {
             "name": "Shane Garelja",
             "email": "shane@heyday.co.nz"
+        },
+        {
+            "name": "Cam Spiers",
+            "email": "cameron@heyday.co.nz"
         }
     ],
     "require": {
         "kevinlebrun/colors.php": "dev-master",
-        "symfony/console": "2.1.*",
-        "symfony/process": "2.1.*"
+        "symfony/console": "~2.2.0",
+        "symfony/process": "~2.2.0",
+        "symfony/options-resolver": "~2.2.0",
+        "symfony/config": "~2.2.0",
+        "herzult/php-ssh": "~0.1.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~3.7",
+        "mikey179/vfsStream": "~1.2.0"
     },
     "autoload": {
         "psr-0": {
             "Heyday\\Component": "src/"
         }
     },
-    "bin": [ "bin/console" ]
+    "bin": [
+        "bin/console"
+    ]
 }

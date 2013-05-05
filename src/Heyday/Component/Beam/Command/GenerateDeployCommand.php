@@ -8,7 +8,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class GenerateDeploy extends Command
+class GenerateDeployCommand extends Command
 {
 
     protected function configure()
@@ -78,7 +78,7 @@ class GenerateDeploy extends Command
             $properties_file = $_SERVER['HOME'].'/build/config/' . $project_code . '.properties';
             if (!file_exists($properties_file)) {
 
-                $output->writeln("<error>Error: properties file $propertiesFile does not exist</error>");
+                $output->writeln("<error>Error: properties file $properties_file does not exist</error>");
                 exit;
 
             }
