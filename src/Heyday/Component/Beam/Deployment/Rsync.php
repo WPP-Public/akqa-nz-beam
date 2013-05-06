@@ -5,8 +5,15 @@ namespace Heyday\Component\Beam\Deployment;
 use Heyday\Component\Beam\Beam;
 use Symfony\Component\Process\Process;
 
+/**
+ * Class Rsync
+ * @package Heyday\Component\Beam\Deployment
+ */
 class Rsync implements DeploymentProvider
 {
+    /**
+     *
+     */
     const TIMEOUT = 300;
     /**
      * @var \Heyday\Component\Beam\Beam
