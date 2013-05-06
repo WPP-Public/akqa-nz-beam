@@ -1,5 +1,5 @@
 {
-    "hash": "c446415c7fb06e78eb4d9e91b861b804",
+    "hash": "f102ddf4781f5f9ccdc12c81a9113928",
     "packages": [
         {
             "name": "herzult/php-ssh",
@@ -49,56 +49,6 @@
                 "ssh2"
             ],
             "time": "2013-03-04 14:14:30"
-        },
-        {
-            "name": "kevinlebrun/colors.php",
-            "version": "dev-master",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/kevinlebrun/colors.php.git",
-                "reference": "0.3.0"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/kevinlebrun/colors.php/zipball/0.3.0",
-                "reference": "0.3.0",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.3.0"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "3.7.*",
-                "squizlabs/php_codesniffer": "1.*"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-0": {
-                    "Colors": "lib/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Kevin Le Brun",
-                    "email": "lebrun.k@gmail.com",
-                    "homepage": "http://kevinlebrun.fr",
-                    "role": "developer"
-                }
-            ],
-            "description": "Colors for PHP CLI scripts",
-            "homepage": "https://github.com/kevinlebrun/colors.php",
-            "keywords": [
-                "cli",
-                "color",
-                "colors",
-                "console",
-                "shell"
-            ],
-            "time": "2012-11-29 10:55:36"
         },
         {
             "name": "symfony/config",
@@ -562,12 +512,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "b2ba9a6fa005ef708495bbd7fa95f1f35e2f17b1"
+                "reference": "9cd4ff7461e18d8176d7515f803b7721054287ea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/b2ba9a6fa005ef708495bbd7fa95f1f35e2f17b1",
-                "reference": "b2ba9a6fa005ef708495bbd7fa95f1f35e2f17b1",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/9cd4ff7461e18d8176d7515f803b7721054287ea",
+                "reference": "9cd4ff7461e18d8176d7515f803b7721054287ea",
                 "shasum": ""
             },
             "require": {
@@ -628,7 +578,7 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2013-05-02 08:21:05"
+            "time": "2013-05-04 11:24:19"
         },
         {
             "name": "phpunit/phpunit-mock-objects",
@@ -678,6 +628,53 @@
                 "xunit"
             ],
             "time": "2013-02-05 07:46:41"
+        },
+        {
+            "name": "symfony/finder",
+            "version": "2.2.x-dev",
+            "target-dir": "Symfony/Component/Finder",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/Finder.git",
+                "reference": "v2.2.1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/Finder/zipball/v2.2.1",
+                "reference": "v2.2.1",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.3"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.2-dev"
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "Symfony\\Component\\Finder\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "http://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony Finder Component",
+            "homepage": "http://symfony.com",
+            "time": "2013-04-01 07:51:50"
         },
         {
             "name": "symfony/yaml",
@@ -731,9 +728,9 @@
 
     ],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "kevinlebrun/colors.php": 20
-    },
+    "stability-flags": [
+
+    ],
     "platform": [
 
     ],

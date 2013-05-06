@@ -1,4 +1,4 @@
-#!/usr/local/bin/php -q
+#!/usr/bin/env php
 <?php
 
 use Composer\Autoload\ClassLoader;
@@ -7,6 +7,8 @@ $files = array(
     __DIR__ . '/../vendor/autoload.php',
     __DIR__ . '/../../../autoload.php'
 );
+
+$loader = null;
 
 /**
  * Loop through the potential autoload locations

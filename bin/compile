@@ -1,0 +1,45 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Use the bootstrap to ensure all environment based configs and autoloader are ready
+ */
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use Heyday\Component\Beam\Compiler;
+
+error_reporting(-1);
+ini_set('display_errors', 1);
+
+try {
+    $compiler = new Compiler();
+    echo $compiler->compile(), PHP_EOL;
+    echo 'Publishing', PHP_EOL;
+    $beam = new \Heyday\Component\Beam\Beam(
+        array(
+            array(
+                'servers' => array(
+                    'dev' => array(
+                        'user' => 'cameron',
+                        'host' => 'cameron.local',
+                        'webroot' => 'Sites/beam'
+                    )
+                ),
+                'exclude' => array()
+            )
+        ),
+        array(
+            'remote' => 'dev',
+            'direction' => 'up',
+            'srcdir' => dirname(__DIR__),
+            'workingcopy' => true
+        )
+    );
+    $beam->run();
+    unlink(__DIR__ . '/../beam.phar');
+    unlink(__DIR__ . '/../beam.phar.version');
+
+} catch (\Exception $e) {
+    echo 'Failed to compile phar: ['.get_class($e).'] '.$e->getMessage().' at '.$e->getFile().':'.$e->getLine();
+    exit(1);
+}

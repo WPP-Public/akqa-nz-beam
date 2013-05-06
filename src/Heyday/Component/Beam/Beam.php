@@ -57,7 +57,6 @@ class Beam
         VcsProvider $vcsProvider = null,
         DeploymentProvider $deploymentProvider = null
     ) {
-
         $processor = new Processor();
 
         $this->config = $processor->processConfiguration(
@@ -303,7 +302,7 @@ class Beam
      */
     public function hasPath()
     {
-        return trim($this->options['path']) !== '';
+        return $this->options['path'] && $this->options['path'] !== '';
     }
     /**
      * Get the server config we are deploying to.
@@ -341,6 +340,7 @@ class Beam
         return $this->hasPath() ? $path . DIRECTORY_SEPARATOR . $this->options['path'] : $path;
     }
     /**
+     * TODO: Refactor
      * A helper method that returns a process with some defaults
      * @param      $commandline
      * @param null $cwd
@@ -358,6 +358,7 @@ class Beam
         );
     }
     /**
+     * TODO: Refactor
      * A helper method that runs a process and checks its success, erroring if it failed
      * @param Process  $process
      * @param callable $output
@@ -444,7 +445,7 @@ class Beam
             array(
                 'exportdir' => '_temp',
                 'excludesfile' => '.beam-excludes',
-                'path' => '',
+                'path' => false,
                 'dry-run' => false,
                 'delete' => false,
                 'checksum' => true,
@@ -459,7 +460,10 @@ class Beam
                 'srcdir' => 'string',
                 'exportdir' => 'string',
                 'excludesfile' => 'string',
-                'path' => 'string',
+                'path' => array(
+                    'string',
+                    'bool'
+                ),
                 'dry-run' => 'bool',
                 'checksum' => 'bool',
                 'workingcopy' => 'bool',
@@ -473,7 +477,7 @@ class Beam
                     return trim($value);
                 },
                 'path' => function ($options, $value) {
-                    return $value !== '' ? trim($value, '/') : ''; //TODO does this need a trailing slash
+                    return $value ? trim($value, '/') : '';
                 },
                 'exportdir' => function ($options, $value) {
                     return trim($value, '/');

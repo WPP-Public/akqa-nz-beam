@@ -58,7 +58,7 @@ class Rsync implements DeploymentProvider
                 if ($matches[1] == '*deleting') {
                     $change['update'] = 'deleted';
                     $change['filename'] = $matches[2];
-                    $change['filetype'] = preg_match('/.[\w]+$/', $matches[2]) ? 'file' : 'directory';
+                    $change['filetype'] = preg_match('/\/$/', $matches[2]) ? 'directory' : 'file';
                     $change['reason'] = array('notexist');
                 } else {
                     switch ($matches[3]) {
