@@ -16,6 +16,10 @@ use Symfony\Component\Console\Input\InputInterface;
 class Application extends BaseApplication
 {
     /**
+     * @var bool
+     */
+    protected $isSingleCommandApp = false;
+    /**
      *
      */
     public function __construct()
@@ -32,6 +36,7 @@ class Application extends BaseApplication
         if ($this->has($firstArg)) {
             return $firstArg;
         } else {
+            $this->isSingleCommandApp = true;
             return 'beam';
         }
     }
@@ -58,10 +63,12 @@ class Application extends BaseApplication
     /**
      * @return \Symfony\Component\Console\Input\InputDefinition
      */
-//    public function getDefinition()
-//    {
-//        $inputDefinition = parent::getDefinition();
-//        $inputDefinition->setArguments();
-//        return $inputDefinition;
-//    }
+    public function getDefinition()
+    {
+        $inputDefinition = parent::getDefinition();
+        if ($this->isSingleCommandApp) {
+            $inputDefinition->setArguments();
+        }
+        return $inputDefinition;
+    }
 }
