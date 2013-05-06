@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Heyday\Component\Beam\Helper;
 
 use Symfony\Component\Console\Helper\FormatterHelper;

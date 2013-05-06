@@ -11,8 +11,6 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Process\Process;
-use Symfony\Component\Console\Formatter\OutputFormatter;
 
 /**
  * Class BeamCommand
@@ -100,8 +98,8 @@ class BeamCommand extends Command
             );
     }
     /**
-     * @param InputInterface  $input
-     * @param OutputInterface $output
+     * @param  InputInterface  $input
+     * @param  OutputInterface $output
      * @return int|null|void
      */
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -261,7 +259,7 @@ class BeamCommand extends Command
 
     }
     /**
-     * @param InputInterface $input
+     * @param  InputInterface $input
      * @return mixed
      */
     protected function getConfig(InputInterface $input)
@@ -271,7 +269,7 @@ class BeamCommand extends Command
         );
     }
     /**
-     * @param InputInterface $input
+     * @param  InputInterface $input
      * @return array
      */
     protected function getOptions(InputInterface $input)
@@ -336,8 +334,8 @@ class BeamCommand extends Command
         return $this->jsonConfigLoader;
     }
     /**
-     * @param      $question
-     * @param null $default
+     * @param         $question
+     * @param  null   $default
      * @return string
      */
     protected function getQuestion($question, $default = null)
@@ -414,9 +412,9 @@ class BeamCommand extends Command
         );
     }
     /**
-     * @param OutputInterface $output
-     * @param                 $dialogHelper
-     * @param                 $formatterHelper
+     * @param  OutputInterface $output
+     * @param                  $dialogHelper
+     * @param                  $formatterHelper
      * @return mixed
      */
     protected function isOkay(OutputInterface $output, $dialogHelper, $formatterHelper)

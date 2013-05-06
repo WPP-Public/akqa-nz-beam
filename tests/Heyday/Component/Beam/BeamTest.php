@@ -36,9 +36,9 @@ class BeamTest extends \PHPUnit_Framework_TestCase
         );
     }
     /**
-     * @param bool   $exists
-     * @param array  $available
-     * @param string $current
+     * @param  bool                                     $exists
+     * @param  array                                    $available
+     * @param  string                                   $current
      * @return \PHPUnit_Framework_MockObject_MockObject
      */
     protected function getVcsProviderStub($exists = true, $available = array('master'), $current = 'master')
@@ -53,6 +53,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
         $vcsProviderStub->expects($this->any())
             ->method('exists')
             ->will($this->returnValue($exists));
+
         return $vcsProviderStub;
     }
     /**

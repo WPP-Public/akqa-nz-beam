@@ -29,11 +29,8 @@ class GenerateDeployCommand extends Command
             );
     }
 
-
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-
-
 
         // Check a deploy.json file doesn't already exist
         if (file_exists('deploy.json') && !$input->getOption('replace')) {
@@ -193,8 +190,7 @@ class GenerateDeployCommand extends Command
 
         for ($c = 0; $c < $len; $c++) {
             $char = $json[$c];
-            switch($char)
-            {
+            switch ($char) {
                 case '{':
                 case '[':
                     if (!$in_string) {

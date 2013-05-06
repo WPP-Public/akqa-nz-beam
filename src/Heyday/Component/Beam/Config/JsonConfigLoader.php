@@ -13,8 +13,8 @@ class JsonConfigLoader extends FileLoader
     /**
      * Loads a resource.
      *
-     * @param mixed  $resource The resource
-     * @param string $type     The resource type
+     * @param  mixed  $resource The resource
+     * @param  string $type     The resource type
      * @return array
      */
     public function load($resource, $type = null)
@@ -39,6 +39,7 @@ class JsonConfigLoader extends FileLoader
                 $resource
             );
         }
+
         return $this->locateCache[$resource];
     }
     /**

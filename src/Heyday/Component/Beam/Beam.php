@@ -47,8 +47,8 @@ class Beam
 
     /**
      * An array of configs, usually just one is expected. This config should be in the format defined in BeamConfigurtion
-     * @param array                                  $configs
-     * @param array                                  $options
+     * @param array $configs
+     * @param array $options
      */
     public function __construct(
         array $configs,
@@ -163,6 +163,7 @@ class Beam
             $this->prepareLocalPath();
             $this->runPreLocalCommands();
         }
+
         return $this->options['deploymentprovider']->deploy(
             null,
             true
@@ -199,6 +200,7 @@ class Beam
                 $this->options['exportdir'];
             // TODO: Think about making this not relative to the srcdir
         }
+
         return sprintf(
             '%s',
             $path
@@ -256,6 +258,7 @@ class Beam
     public function isServerLocked()
     {
         $server = $this->getServer();
+
         return isset($server['branch']) && $server['branch'];
     }
     /**
@@ -265,6 +268,7 @@ class Beam
     public function isServerLockedRemote()
     {
         $server = $this->getServer();
+
         return $this->isServerLocked() && $this->isRemote($server['branch']);
     }
     /**
@@ -309,6 +313,7 @@ class Beam
     public function getServerLockedBranch()
     {
         $server = $this->getServer();
+
         return $this->isServerLocked() ? $server['branch'] : false;
     }
     /**
@@ -329,9 +334,9 @@ class Beam
     }
     /**
      * A helper method that returns a process with some defaults
-     * @param      $commandline
-     * @param null $cwd
-     * @param int  $timeout
+     * @param          $commandline
+     * @param  null    $cwd
+     * @param  int     $timeout
      * @return Process
      */
     protected function getProcess($commandline, $cwd = null, $timeout = self::PROCESS_TIMEOUT)
@@ -346,8 +351,8 @@ class Beam
     }
     /**
      * A helper method that runs a process and checks its success, erroring if it failed
-     * @param Process  $process
-     * @param callable $output
+     * @param  Process           $process
+     * @param  callable          $output
      * @throws \RuntimeException
      */
     protected function runProcess(Process $process, \Closure $output = null)
@@ -441,7 +446,7 @@ class Beam
         }
     }
     /**
-     * @param          $command
+     * @param   $command
      */
     protected function runRemoteCommand($command)
     {
@@ -471,7 +476,7 @@ class Beam
         );
     }
     /**
-     * @param          $command
+     * @param   $command
      */
     protected function runLocalCommand($command)
     {
@@ -587,10 +592,12 @@ class Beam
                             $value = $value($options);
                         }
                         $value->setBeam($that);
+
                         return $value;
                     }
                 )
             );
+
         return $resolver;
     }
 

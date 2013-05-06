@@ -23,6 +23,7 @@ class Git implements VcsProvider
     public function getCurrentBranch()
     {
         $process = $this->process('git rev-parse --abbrev-ref HEAD');
+
         return trim($process->getOutput());
     }
     /**
@@ -33,6 +34,7 @@ class Git implements VcsProvider
         $process = $this->process('git branch -a');
         $matches = array();
         preg_match_all('/[^\n](?:[\s\*]*)([^\s]*)(?:.*)/', $process->getOutput(), $matches);
+
         return $matches[1];
     }
     /**
@@ -101,6 +103,7 @@ class Git implements VcsProvider
         if (!$process->isSuccessful()) {
             throw new \RuntimeException($process->getErrorOutput());
         }
+
         return $process;
     }
 }

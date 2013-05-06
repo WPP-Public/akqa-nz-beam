@@ -27,7 +27,7 @@ class Application extends BaseApplication
         parent::__construct('Beam', '~package_version~');
     }
     /**
-     * @param InputInterface $input
+     * @param  InputInterface $input
      * @return string
      */
     protected function getCommandName(InputInterface $input)
@@ -37,6 +37,7 @@ class Application extends BaseApplication
             return $firstArg;
         } else {
             $this->isSingleCommandApp = true;
+
             return 'beam';
         }
     }
@@ -49,6 +50,7 @@ class Application extends BaseApplication
         $commands[] = new BeamCommand();
         $commands[] = new GenerateDeployCommand();
         $commands[] = new SelfUpdateCommand();
+
         return $commands;
     }
     /**
@@ -58,6 +60,7 @@ class Application extends BaseApplication
     {
         $helperset = parent::getDefaultHelperSet();
         $helperset->set(new ChangesHelper());
+
         return $helperset;
     }
     /**
@@ -69,6 +72,7 @@ class Application extends BaseApplication
         if ($this->isSingleCommandApp) {
             $inputDefinition->setArguments();
         }
+
         return $inputDefinition;
     }
 }

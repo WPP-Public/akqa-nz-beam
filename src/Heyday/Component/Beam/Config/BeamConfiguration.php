@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Heyday\Component\Beam\Config;
 
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
@@ -183,6 +182,7 @@ class BeamConfiguration implements ConfigurationInterface
                                 }
                             }
                         }
+
                         return $v;
                     }
                 )
@@ -191,8 +191,8 @@ class BeamConfiguration implements ConfigurationInterface
         return $treeBuilder;
     }
     /**
-     * @param        $options
-     * @param string $enclosure
+     * @param         $options
+     * @param  string $enclosure
      * @return string
      */
     public function getFormattedOptions($options, $enclosure = '\'')

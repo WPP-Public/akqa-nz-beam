@@ -27,8 +27,8 @@ class Rsync implements DeploymentProvider
         $this->beam = $beam;
     }
     /**
-     * @param callable $output
-     * @param bool     $dryrun
+     * @param  callable          $output
+     * @param  bool              $dryrun
      * @throws \RuntimeException
      * @return array
      */
@@ -47,6 +47,7 @@ class Rsync implements DeploymentProvider
             throw new \RuntimeException($process->getErrorOutput());
         }
         $output = $process->getOutput();
+
         return $this->parseOutput($output);
     }
     /**
@@ -129,6 +130,7 @@ class Rsync implements DeploymentProvider
                 $changes[] = $change;
             }
         }
+
         return $changes;
     }
     /**
@@ -242,6 +244,7 @@ class Rsync implements DeploymentProvider
     public function getRemotePath()
     {
         $server = $this->beam->getServer();
+
         return sprintf(
             '%s@%s:%s',
             $server['user'],
