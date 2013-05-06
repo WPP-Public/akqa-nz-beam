@@ -460,10 +460,6 @@ class Beam
                 'srcdir' => 'string',
                 'exportdir' => 'string',
                 'excludesfile' => 'string',
-                'path' => array(
-                    'string',
-                    'bool'
-                ),
                 'dry-run' => 'bool',
                 'checksum' => 'bool',
                 'workingcopy' => 'bool',
@@ -477,7 +473,7 @@ class Beam
                     return trim($value);
                 },
                 'path' => function ($options, $value) {
-                    return $value ? trim($value, '/') : '';
+                    return is_string($value) ? trim($value, '/') : false;
                 },
                 'exportdir' => function ($options, $value) {
                     return trim($value, '/');

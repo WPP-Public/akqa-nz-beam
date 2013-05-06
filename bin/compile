@@ -7,6 +7,8 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use Heyday\Component\Beam\Compiler;
+use Ssh\SshConfigFileConfiguration;
+use Ssh\Session;
 
 error_reporting(-1);
 ini_set('display_errors', 1);
@@ -15,27 +17,35 @@ try {
     $compiler = new Compiler();
     echo $compiler->compile(), PHP_EOL;
     echo 'Publishing', PHP_EOL;
-    $beam = new \Heyday\Component\Beam\Beam(
-        array(
-            array(
-                'servers' => array(
-                    'dev' => array(
-                        'user' => 'cameron',
-                        'host' => 'cameron.local',
-                        'webroot' => 'Sites/beam'
-                    )
-                ),
-                'exclude' => array()
-            )
-        ),
-        array(
-            'remote' => 'dev',
-            'direction' => 'up',
-            'srcdir' => dirname(__DIR__),
-            'workingcopy' => true
+    if (isset($_SERVER['argv'][1]) && $_SERVER['argv'][1] == 'live') {
+        $server = array(
+            'host' => 'dev2.heyday.net.nz',
+            'user' => 'dev',
+            'path' => '/home/dev/subdomains/heyday/beam'
+        );
+    } else {
+        $server = array(
+            'host' => 'cameron.local',
+            'user' => 'cameron',
+            'path' => '/Users/cameron/Sites/beam'
+        );
+    }
+    $configuration = new SshConfigFileConfiguration(
+        '~/.ssh/config',
+        $server['host']
+    );
+    $session = new Session(
+        $configuration,
+        $configuration->getAuthentication(
+            null,
+            $server['user']
         )
     );
-    $beam->run();
+    $sftp = $session->getSftp();
+    echo 'Sending beam.phar', PHP_EOL;
+    $sftp->send(__DIR__ . '/../beam.phar', $server['path'] . '/beam.phar');
+    echo 'Sending beam.phar.version', PHP_EOL;
+    $sftp->send(__DIR__ . '/../beam.phar.version', $server['path'] . '/beam.phar.version');
     unlink(__DIR__ . '/../beam.phar');
     unlink(__DIR__ . '/../beam.phar.version');
 
