@@ -62,6 +62,8 @@ class SelfUpdateCommand extends Command
                 throw new \RuntimeException(sprintf('Could not deploy new file to "%s".', $_SERVER['argv'][0]));
             }
 
+            chmod($_SERVER['argv'][0], 0755);
+
             $output->writeln('Beam updated');
 
         } else {
