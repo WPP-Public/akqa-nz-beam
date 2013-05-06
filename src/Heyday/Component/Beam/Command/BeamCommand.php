@@ -3,7 +3,6 @@
 namespace Heyday\Component\Beam\Command;
 
 use Heyday\Component\Beam\Beam;
-use Colors\Color;
 use Heyday\Component\Beam\Config\JsonConfigLoader;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Console\Command\Command;
@@ -15,10 +14,20 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Console\Formatter\OutputFormatter;
 
+/**
+ * Class BeamCommand
+ * @package Heyday\Component\Beam\Command
+ */
 class BeamCommand extends Command
 {
+    /**
+     * @var
+     */
     protected $jsonConfigLoader;
 
+    /**
+     *
+     */
     protected function configure()
     {
         $this
@@ -107,11 +116,32 @@ class BeamCommand extends Command
 
         try {
 
+            $options = $this->getOptions($input);
+
+            $options['commandoutputhandler'] = function ($type, $data) use ($output, $formatterHelper) {
+                if ($type == 'out') {
+                    $output->write(
+                        $formatterHelper->formatSection(
+                            'command',
+                            $data
+                        )
+                    );
+                } elseif ($type == 'err') {
+                    $output->write(
+                        $formatterHelper->formatSection(
+                            'error',
+                            $data,
+                            'error'
+                        )
+                    );
+                }
+            };
+
             $beam = new Beam(
                 array(
                     $this->getConfig($input)
                 ),
-                $this->getOptions($input)
+                $options
             );
 
             $this->outputSummary(
@@ -135,28 +165,7 @@ class BeamCommand extends Command
             // Prompt the user with the affected files and a confirmation dialog
             if (!$input->getOption('noprompt')) {
                 // Get the affected files
-                $commandOutput = function ($type, $data) use ($output, $formatterHelper) {
-                    if ($type == 'out') {
-                        $output->write(
-                            $formatterHelper->formatSection(
-                                'command',
-                                $data
-                            )
-                        );
-                    } elseif ($type == 'err') {
-                        $output->write(
-                            $formatterHelper->formatSection(
-                                'error',
-                                $data,
-                                'error'
-                            )
-                        );
-                    }
-                };
-                $changedFiles = $beam->getChangedFiles(
-                    null,
-                    $commandOutput
-                );
+                $changedFiles = $beam->getChangedFiles();
                 // If there are any show them
                 $count = count($changedFiles);
                 // If there is more that 1 item there are updates,
@@ -176,8 +185,9 @@ class BeamCommand extends Command
                             )
                         );
                         $progressHelper->start($output, $count);
-                        $totalSteps = 0;
-                        $changedFiles = $beam->run(
+
+                        $beam->setOption(
+                            'deploymentoutputhandler',
                             function (
                                 $type,
                                 $data
@@ -185,9 +195,9 @@ class BeamCommand extends Command
                                 $output,
                                 $progressHelper,
                                 $formatterHelper,
-                                &$totalSteps,
                                 $count
                             ) {
+                                static $totalSteps = 0;
                                 if ($type == 'out') {
                                     // Advance 1 for each line we get in the data
                                     $steps = substr_count($data, PHP_EOL);
@@ -217,9 +227,11 @@ class BeamCommand extends Command
                                         )
                                     );
                                 }
-                            },
-                            $commandOutput
+                            }
                         );
+
+                        $changedFiles = $beam->run();
+
                         $changesHelper->outputChangesSummary(
                             $formatterHelper,
                             $output,

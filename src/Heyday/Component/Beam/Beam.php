@@ -10,6 +10,7 @@ use Heyday\Component\Beam\Vcs\VcsProvider;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Process\Process;
+use Symfony\Component\OptionsResolver\Options;
 use Ssh\SshConfigFileConfiguration;
 use Ssh\Session;
 
@@ -48,14 +49,10 @@ class Beam
      * An array of configs, usually just one is expected. This config should be in the format defined in BeamConfigurtion
      * @param array                                  $configs
      * @param array                                  $options
-     * @param \Heyday\Component\Beam\Vcs\VcsProvider $vcsProvider
-     * @param Deployment\DeploymentProvider          $deploymentProvider
      */
     public function __construct(
         array $configs,
-        array $options,
-        VcsProvider $vcsProvider = null,
-        DeploymentProvider $deploymentProvider = null
+        array $options
     ) {
         $processor = new Processor();
 
@@ -64,11 +61,7 @@ class Beam
             $configs
         );
 
-        $this->setup(
-            $options,
-            $vcsProvider,
-            $deploymentProvider
-        );
+        $this->setup($options);
     }
     /**
      * Uses the options resolver to set the options to the object from an array
@@ -79,20 +72,14 @@ class Beam
      *
      * This might be useful if you prep the options for a command via a staged process
      * for example an interactive command line tool
-     * @param                                        $options
-     * @param \Heyday\Component\Beam\Vcs\VcsProvider $vcsProvider
-     * @param Deployment\DeploymentProvider          $deploymentProvider
+     * @param  $options
      * @throws \InvalidArgumentException
      */
-    public function setup($options, VcsProvider $vcsProvider = null, DeploymentProvider $deploymentProvider = null)
+    public function setup($options)
     {
         $this->options = $this->getOptionsResolver()->resolve($options);
 
-        $this->vcsProvider = null !== $vcsProvider ? $vcsProvider : new Git($this->options['srcdir']);
-        $this->deploymentProvider = null !== $deploymentProvider ? $deploymentProvider : new Rsync();
-        $this->deploymentProvider->setBeam($this);
-
-        if (!$this->isWorkingCopy() && !$this->vcsProvider->exists()) {
+        if (!$this->isWorkingCopy() && !$this->options['vcsprovider']->exists()) {
             throw new \InvalidArgumentException('You can\'t use beam without a vcs.');
         }
 
@@ -100,7 +87,7 @@ class Beam
             if ($this->isServerLocked()) {
                 $this->options['branch'] = $this->getServerLockedBranch();
             } else {
-                $this->options['branch'] = $this->vcsProvider->getCurrentBranch();
+                $this->options['branch'] = $this->options['vcsprovider']->getCurrentBranch();
             }
         }
 
@@ -123,7 +110,7 @@ class Beam
                 );
             }
 
-            $branches = $this->vcsProvider->getAvailableBranches();
+            $branches = $this->options['vcsprovider']->getAvailableBranches();
 
             if (!in_array($this->options['branch'], $branches)) {
                 throw new \InvalidArgumentException(
@@ -149,39 +136,37 @@ class Beam
         }
     }
     /**
-     * @param callable $deploymentOutput
-     * @param callable $commandOutput
-     * @internal param callable $output
      * @return mixed
      */
-    public function run(\Closure $deploymentOutput = null, \Closure $commandOutput = null)
+    public function run()
     {
         if (!$this->isPrepared() && !$this->isWorkingCopy()) {
             $this->prepareLocalPath();
-            $this->runPreLocalCommands($commandOutput);
+            $this->runPreLocalCommands();
         }
 
-        $this->runPreRemoteCommands($commandOutput);
+        $this->runPreRemoteCommands();
 
-        $changedFiles = $this->deploymentProvider->deploy($deploymentOutput);
+        $changedFiles = $this->options['deploymentprovider']->deploy($this->options['deploymentoutputhandler']);
 
-        $this->runPostLocalCommands($commandOutput);
-        $this->runPostRemoteCommands($commandOutput);
+        $this->runPostLocalCommands();
+        $this->runPostRemoteCommands();
 
         return $changedFiles;
     }
     /**
-     * @param callable $output
-     * @param callable $commandOutput
      * @return mixed
      */
-    public function getChangedFiles(\Closure $output = null, \Closure $commandOutput = null)
+    public function getChangedFiles()
     {
         if (!$this->isPrepared() && !$this->isWorkingCopy()) {
             $this->prepareLocalPath();
-            $this->runPreLocalCommands($commandOutput);
+            $this->runPreLocalCommands();
         }
-        return $this->deploymentProvider->deploy($output, true);
+        return $this->options['deploymentprovider']->deploy(
+            null,
+            true
+        );
     }
     /**
      * Ensures that the correct content is at the local path
@@ -189,9 +174,12 @@ class Beam
     protected function prepareLocalPath()
     {
         if ($this->isServerLockedRemote()) {
-            $this->vcsProvider->updateBranch($this->options['branch']); //TODO: This might be wrong
+            $this->options['vcsprovider']->updateBranch($this->options['branch']); //TODO: This might be wrong
         }
-        $this->vcsProvider->exportBranch($this->options['branch'], $this->getLocalPath());
+        $this->options['vcsprovider']->exportBranch(
+            $this->options['branch'],
+            $this->getLocalPath()
+        );
 
         $this->setPrepared(true);
     }
@@ -221,7 +209,7 @@ class Beam
      */
     public function getRemotePath()
     {
-        return $this->getCombinedPath($this->deploymentProvider->getRemotePath());
+        return $this->getCombinedPath($this->options['deploymentprovider']->getRemotePath());
     }
     /**
      * @param boolean $prepared
@@ -340,7 +328,6 @@ class Beam
         return $this->hasPath() ? $path . DIRECTORY_SEPARATOR . $this->options['path'] : $path;
     }
     /**
-     * TODO: Refactor
      * A helper method that returns a process with some defaults
      * @param      $commandline
      * @param null $cwd
@@ -358,7 +345,6 @@ class Beam
         );
     }
     /**
-     * TODO: Refactor
      * A helper method that runs a process and checks its success, erroring if it failed
      * @param Process  $process
      * @param callable $output
@@ -370,6 +356,21 @@ class Beam
         if (!$process->isSuccessful()) {
             throw new \RuntimeException($process->getErrorOutput());
         }
+    }
+    /**
+     * @param $key
+     * @param $value
+     */
+    public function setOption($key, $value)
+    {
+        $this->options = $this->options = $this->getOptionsResolver()->resolve(
+            array_merge(
+                $this->options,
+                array(
+                    $key => $value
+                )
+            )
+        );
     }
     /**
      * @param $option
@@ -407,142 +408,42 @@ class Beam
             );
         }
     }
-    /**
-     * This returns an options resolver that will ensure required options are set and that all options set are valid
-     * @return OptionsResolver
-     */
-    protected function getOptionsResolver()
-    {
-        $resolver = new OptionsResolver();
-        $resolver->setRequired(
-            array(
-                'direction',
-                'remote',
-                'srcdir'
-            )
-        )->setOptional(
-            array(
-                'exportdir',
-                'branch',
-                'path',
-                'dry-run',
-                'checksum',
-                'delete',
-                'workingcopy',
-                'excludesfile',
-                'archive',
-                'compress'
-            )
-        )->setAllowedValues(
-            array(
-                'direction' => array(
-                    'up',
-                    'down'
-                ),
-                'remote' => array_keys($this->config['servers'])
-            )
-        )->setDefaults(
-            array(
-                'exportdir' => '_temp',
-                'excludesfile' => '.beam-excludes',
-                'path' => false,
-                'dry-run' => false,
-                'delete' => false,
-                'checksum' => true,
-                'workingcopy' => false,
-                'archive' => true,
-                'compress' => true,
-                'delay-updates' => true
-            )
-        )->setAllowedTypes(
-            array(
-                'branch' => 'string',
-                'srcdir' => 'string',
-                'exportdir' => 'string',
-                'excludesfile' => 'string',
-                'dry-run' => 'bool',
-                'checksum' => 'bool',
-                'workingcopy' => 'bool',
-                'archive' => 'bool',
-                'compress' => 'bool',
-                'delay-updates' => 'bool'
-            )
-        )->setNormalizers(
-            array(
-                'branch' => function ($options, $value) {
-                    return trim($value);
-                },
-                'path' => function ($options, $value) {
-                    return is_string($value) ? trim($value, '/') : false;
-                },
-                'exportdir' => function ($options, $value) {
-                    return trim($value, '/');
-                },
-                'excludesfile' => function ($options, $value) {
-                    return trim($value, '/');
-                }
-            )
-        );
-        return $resolver;
-    }
-
-    /**
-     * Returns the beam configuration definition for validating the config
-     * @return BeamConfiguration
-     */
-    protected function getConfigurationDefinition()
-    {
-        return new BeamConfiguration();
-    }
-    /**
-     * @param callable $commandOutput
-     */
-    protected function runPostLocalCommands(\Closure $commandOutput = null)
+    protected function runPostLocalCommands()
     {
         foreach ($this->config['commands'] as $command) {
             if ($command['phase'] == 'post' && $command['location'] == 'local') {
-                $this->runLocalCommand($commandOutput, $command);
+                $this->runLocalCommand($command);
             }
         }
     }
-    /**
-     * @param callable $commandOutput
-     */
-    protected function runPreLocalCommands(\Closure $commandOutput = null)
+    protected function runPreLocalCommands()
     {
         foreach ($this->config['commands'] as $command) {
             if ($command['phase'] == 'pre' && $command['location'] == 'local') {
-                $this->runLocalCommand($commandOutput, $command);
+                $this->runLocalCommand($command);
             }
         }
     }
-    /**
-     * @param callable $commandOutput
-     */
-    protected function runPreRemoteCommands(\Closure $commandOutput = null)
+    protected function runPreRemoteCommands()
     {
         foreach ($this->config['commands'] as $command) {
             if ($command['phase'] == 'pre' && $command['location'] == 'remote') {
-                $this->runRemoteCommand($commandOutput, $command);
+                $this->runRemoteCommand($command);
             }
         }
     }
-    /**
-     * @param callable $commandOutput
-     */
-    protected function runPostRemoteCommands(\Closure $commandOutput = null)
+    protected function runPostRemoteCommands()
     {
         foreach ($this->config['commands'] as $command) {
             if ($command['phase'] == 'post' && $command['location'] == 'remote') {
-                $this->runRemoteCommand($commandOutput, $command);
+                $this->runRemoteCommand($command);
             }
         }
     }
     /**
-     * @param callable $commandOutput
      * @param          $command
      */
-    protected function runRemoteCommand(\Closure $commandOutput, $command)
+    protected function runRemoteCommand($command)
     {
         $server = $this->getServer();
         $configuration = new SshConfigFileConfiguration(
@@ -558,7 +459,7 @@ class Beam
         );
         $exec = $session->getExec();
         call_user_func(
-            $commandOutput,
+            $this->options['commandoutputhandler'],
             'out',
             $exec->run(
                 sprintf(
@@ -570,17 +471,135 @@ class Beam
         );
     }
     /**
-     * @param callable $commandOutput
      * @param          $command
      */
-    protected function runLocalCommand(\Closure $commandOutput, $command)
+    protected function runLocalCommand($command)
     {
         $this->runProcess(
             $this->getProcess(
                 $command['command'],
                 $this->getLocalPath()
             ),
-            $commandOutput
+            $this->options['commandoutputhandler']
         );
+    }
+    /**
+     * This returns an options resolver that will ensure required options are set and that all options set are valid
+     * @return OptionsResolver
+     */
+    protected function getOptionsResolver()
+    {
+        $that = $this;
+        $resolver = new OptionsResolver();
+        $resolver->setRequired(
+            array(
+                'direction',
+                'remote',
+                'srcdir'
+            )
+        )->setOptional(
+                array(
+                    'exportdir',
+                    'branch',
+                    'path',
+                    'dry-run',
+                    'checksum',
+                    'delete',
+                    'workingcopy',
+                    'excludesfile',
+                    'archive',
+                    'compress',
+                    'vcsprovider',
+                    'deploymentprovider',
+                    'deploymentoutputhandler',
+                    'commandoutputhandler'
+                )
+            )->setAllowedValues(
+                array(
+                    'direction' => array(
+                        'up',
+                        'down'
+                    ),
+                    'remote' => array_keys($this->config['servers'])
+                )
+            )->setDefaults(
+                array(
+                    'exportdir' => '_temp',
+                    'excludesfile' => '.beam-excludes',
+                    'path' => false,
+                    'dry-run' => false,
+                    'delete' => false,
+                    'checksum' => true,
+                    'workingcopy' => false,
+                    'archive' => true,
+                    'compress' => true,
+                    'delay-updates' => true,
+                    'vcsprovider' => function (Options $options) {
+                        return new Git($options['srcdir']);
+                    },
+                    'deploymentprovider' => function () {
+                        return new Rsync();
+                    },
+                    'deploymentoutputhandler' => function ($type, $data) {
+                        if ($type == 'out') {
+                            echo $data;
+                        }
+                    },
+                    'commandoutputhandler' => function ($type, $data) {
+                        if ($type == 'out') {
+                            echo $data;
+                        }
+                    }
+                )
+            )->setAllowedTypes(
+                array(
+                    'branch' => 'string',
+                    'srcdir' => 'string',
+                    'exportdir' => 'string',
+                    'excludesfile' => 'string',
+                    'dry-run' => 'bool',
+                    'checksum' => 'bool',
+                    'workingcopy' => 'bool',
+                    'archive' => 'bool',
+                    'compress' => 'bool',
+                    'delay-updates' => 'bool',
+                    'vcsprovider' => __NAMESPACE__ . '\Vcs\VcsProvider',
+                    'deploymentprovider' => __NAMESPACE__ . '\Deployment\DeploymentProvider',
+                    'deploymentoutputhandler' => 'callable',
+                    'commandoutputhandler' => 'callable'
+                )
+            )->setNormalizers(
+                array(
+                    'branch' => function (Options $options, $value) {
+                        return trim($value);
+                    },
+                    'path' => function (Options $options, $value) {
+                        return is_string($value) ? trim($value, '/') : false;
+                    },
+                    'exportdir' => function (Options $options, $value) {
+                        return trim($value, '/');
+                    },
+                    'excludesfile' => function (Options $options, $value) {
+                        return trim($value, '/');
+                    },
+                    'deploymentprovider' => function (Options $options, $value) use ($that) {
+                        if (is_callable($value)) {
+                            $value = $value($options);
+                        }
+                        $value->setBeam($that);
+                        return $value;
+                    }
+                )
+            );
+        return $resolver;
+    }
+
+    /**
+     * Returns the beam configuration definition for validating the config
+     * @return BeamConfiguration
+     */
+    protected function getConfigurationDefinition()
+    {
+        return new BeamConfiguration();
     }
 }
