@@ -62,14 +62,14 @@ class Rsync implements DeploymentProvider
             if ($line !== '') {
                 $change = array();
                 $matches = array();
-                preg_match('/(?:(\*deleting){1} (.*))?(?:([<>.ch]{1})([fdLDS]{1})([.?+cstTpogz]{7}) (.*))?/', $line, $matches);
+                preg_match('/(?:(^\*[\w]+)|([<>.ch])([fdLDS])([.?+c][.?+s][.?+t][.?+p][.?+o][.?+g][.?+]?[.?+a]?[.?+x]?)) (.*)/', $line, $matches);
                 if ($matches[1] == '*deleting') {
                     $change['update'] = 'deleted';
-                    $change['filename'] = $matches[2];
-                    $change['filetype'] = preg_match('/\/$/', $matches[2]) ? 'directory' : 'file';
+                    $change['filename'] = $matches[5];
+                    $change['filetype'] = preg_match('/\/$/', $matches[5]) ? 'directory' : 'file';
                     $change['reason'] = array('notexist');
                 } else {
-                    switch ($matches[3]) {
+                    switch ($matches[2]) {
                         case '<':
                             $change['update'] = 'sent';
                             break;
@@ -86,7 +86,7 @@ class Rsync implements DeploymentProvider
                             $change['update'] = 'nochange';
                             break;
                     }
-                    switch ($matches[4]) {
+                    switch ($matches[3]) {
                         case 'f':
                             $change['filetype'] = 'file';
                             break;
@@ -104,28 +104,34 @@ class Rsync implements DeploymentProvider
                             break;
                     }
                     $reason = array();
-                    if ($matches[5][0] == 'c') {
+                    if ($matches[4][0] == 'c') {
                         $reason[] = 'checksum';
-                    } elseif ($matches[5][0] == '+') {
+                    } elseif ($matches[4][0] == '+') {
                         $reason[] = 'new';
                     }
-                    if ($matches[5][1] == 's') {
+                    if ($matches[4][1] == 's') {
                         $reason[] = 'size';
                     }
-                    if ($matches[5][2] == 't') {
+                    if ($matches[4][2] == 't') {
                         $reason[] = 'time';
                     }
-                    if ($matches[5][3] == 'p') {
+                    if ($matches[4][3] == 'p') {
                         $reason[] = 'permissions';
                     }
-                    if ($matches[5][4] == 'o') {
+                    if ($matches[4][4] == 'o') {
                         $reason[] = 'owner';
                     }
-                    if ($matches[5][5] == 'g') {
+                    if ($matches[4][5] == 'g') {
                         $reason[] = 'group';
                     }
+                    if (isset($matches[4][7]) && $matches[4][7] == 'a') {
+                        $reason[] = 'acl';
+                    }
+                    if (isset($matches[4][8]) && $matches[4][8] == 'x') {
+                        $reason[] = 'extended';
+                    }
                     $change['reason'] = $reason;
-                    $change['filename'] = $matches[6];
+                    $change['filename'] = $matches[5];
                 }
                 $changes[] = $change;
             }
