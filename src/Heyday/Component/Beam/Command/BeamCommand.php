@@ -107,8 +107,7 @@ class BeamCommand extends Command
         $helperset = $this->getHelperSet();
         $formatterHelper = $helperset->get('formatter');
         $progressHelper = $helperset->get('progress');
-        $progressHelper->setFormat('[%bar%] %percent%% %elapsed%');
-        $progressHelper->setBarWidth(50);
+        $progressHelper->setFormat('[%bar%] %current%/%max% %percent%% %elapsed%');
         $changesHelper = $helperset->get('changes');
         $dialogHelper = $helperset->get('dialog');
 
@@ -176,6 +175,7 @@ class BeamCommand extends Command
                     // If we have confirmation do the beam
                     if ($this->isOkay($output, $dialogHelper, $formatterHelper)) {
                         // Set the frequency of redraws to be a unit that produces 100 updates or less
+                        $progressHelper->setBarWidth(exec('tput cols') - (strlen($count) * 2 + 18));
                         $progressHelper->setRedrawFrequency(
                             max(
                                 floor($count / 100),
