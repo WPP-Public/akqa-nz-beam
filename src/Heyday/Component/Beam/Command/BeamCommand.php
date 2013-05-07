@@ -182,6 +182,7 @@ class BeamCommand extends Command
                                 1
                             )
                         );
+                        // Start the progress bar
                         $progressHelper->start($output, $count);
 
                         $beam->setOption(
