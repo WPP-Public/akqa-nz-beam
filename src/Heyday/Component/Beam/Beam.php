@@ -140,17 +140,26 @@ class Beam
      */
     public function run()
     {
+        $isUp = $this->isUp();
+
         if (!$this->isPrepared() && !$this->isWorkingCopy()) {
             $this->prepareLocalPath();
-            $this->runPreLocalCommands();
+
+            if ($isUp) {
+                $this->runPreLocalCommands();
+            }
         }
 
-        $this->runPreRemoteCommands();
+        if ($isUp) {
+            $this->runPreRemoteCommands();
+        }
 
         $changedFiles = $this->options['deploymentprovider']->deploy($this->options['deploymentoutputhandler']);
 
-        $this->runPostLocalCommands();
-        $this->runPostRemoteCommands();
+        if ($isUp) {
+            $this->runPostLocalCommands();
+            $this->runPostRemoteCommands();
+        }
 
         return $changedFiles;
     }
