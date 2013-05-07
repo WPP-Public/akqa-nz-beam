@@ -499,7 +499,7 @@ class Beam
         $resolver->setRequired(
             array(
                 'direction',
-                'remote',
+                'remote', // TODO: rename to target
                 'srcdir'
             )
         )->setOptional(

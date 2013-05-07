@@ -26,6 +26,7 @@ class BeamConfiguration implements ConfigurationInterface
             'composer.json',
             'composer.lock',
             'deploy.json',
+            'beam.json',
             'deploy.properties',
             'exclude.properties',
             'sftp-config.json',

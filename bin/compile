@@ -54,6 +54,7 @@ try {
         PHP_EOL
     );
     $sftp->send(__DIR__ . '/../beam.phar.version', $server['path'] . '/beam.phar.version');
+    // TODO: Add option to skip
     unlink(__DIR__ . '/../beam.phar');
     unlink(__DIR__ . '/../beam.phar.version');
 
