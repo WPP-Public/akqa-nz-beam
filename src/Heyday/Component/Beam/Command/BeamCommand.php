@@ -175,15 +175,6 @@ class BeamCommand extends Command
                     // If we have confirmation do the beam
                     if ($this->isOkay($output, $dialogHelper, $formatterHelper)) {
                         // Set the frequency of redraws to be a unit that produces 100 updates or less
-                        $progressHelper->setBarWidth(exec('tput cols') - (strlen($count) * 2 + 18));
-                        $progressHelper->setRedrawFrequency(
-                            max(
-                                floor($count / 100),
-                                1
-                            )
-                        );
-                        // Start the progress bar
-                        $progressHelper->start($output, $count);
 
                         $beam->setOption(
                             'deploymentoutputhandler',
@@ -197,6 +188,17 @@ class BeamCommand extends Command
                                 $count
                             ) {
                                 static $totalSteps = 0;
+                                if ($totalSteps == 0) {
+                                    $progressHelper->setBarWidth(exec('tput cols') - (strlen($count) * 2 + 18));
+                                    $progressHelper->setRedrawFrequency(
+                                        max(
+                                            floor($count / 100),
+                                            1
+                                        )
+                                    );
+                                    // Start the progress bar
+                                    $progressHelper->start($output, $count);
+                                }
                                 if ($type == 'out') {
                                     // Advance 1 for each line we get in the data
                                     $steps = substr_count($data, PHP_EOL);
