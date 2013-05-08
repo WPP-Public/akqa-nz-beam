@@ -2,11 +2,12 @@
 
 namespace Heyday\Component\Beam\Command;
 
+use Heyday\Component\Beam\Config\BeamConfiguration;
 use Heyday\Component\Beam\Utils;
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Config\Definition\Processor;
 
 class MakeChecksumsCommand extends Command
 {
@@ -30,19 +31,18 @@ class MakeChecksumsCommand extends Command
                 'checksums.json'
             )
             ->addOption(
-                'bzip2',
-                'b',
-                InputOption::VALUE_OPTIONAL,
-                'Bzip2 to save download time',
-                true
-            )
-            ->addOption(
                 'gzip',
                 'g',
-                InputOption::VALUE_OPTIONAL,
-                'Gzip to save download time',
-                false
-            );
+                InputOption::VALUE_NONE,
+                'Gzip to save download time'
+            )
+            ->addOption(
+                'nocompress',
+                'nc',
+                InputOption::VALUE_NONE,
+                'Don\'t compress'
+            )
+            ->addConfigOption();
     }
     /**
      * @param InputInterface  $input
@@ -51,28 +51,50 @@ class MakeChecksumsCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $processor = new Processor();
+
+        $config = $processor->processConfiguration(
+            new BeamConfiguration(),
+            array(
+                $this->getConfig($input)
+            )
+        );
+
         $dir = $input->getOption('path');
-        $files = Utils::getAllFiles($dir);
+        $files = Utils::getAllFiles(
+            function ($file) use ($config, $dir) {
+                return ($file->isFile() || $file->isLink()) && !Utils::isExcluded(
+                    $config['exclude'],
+                    Utils::getRelativePath(
+                        $dir,
+                        $file->getPathname()
+                    )
+                );
+            },
+            $dir
+        );
+
         $json = array();
         foreach ($files as $file) {
-            $path = $file->getPathname();
-            $json[$path] = md5_file($path);
+            $path = str_replace($dir . '/', '', $file->getPathname());
+            $json[$path] = md5_file($file);
         }
-        $file = rtrim($dir, '/') . '/' . $input->getOption('checksumfile');
-        if ($input->getOption('bzip2')) {
+
+        $jsonfile = rtrim($dir, '/') . '/' . $input->getOption('checksumfile');
+        if ($input->getOption('gzip')) {
             file_put_contents(
-                $file . '.bz2',
-                bzcompress(json_encode($json))
+                $jsonfile . '.gz',
+                gzencode(json_encode($json), 9)
             );
-        } elseif ($input->getOption('gzip')) {
+        } elseif ($input->getOption('nocompress')) {
             file_put_contents(
-                $file . '.gz',
-                gzencode(json_encode($json))
+                $jsonfile,
+                json_encode($json)
             );
         } else {
             file_put_contents(
-                $file,
-                json_encode($json)
+                $jsonfile . '.bz2',
+                bzcompress(json_encode($json), 9)
             );
         }
     }

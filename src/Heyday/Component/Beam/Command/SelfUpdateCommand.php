@@ -2,11 +2,11 @@
 
 namespace Heyday\Component\Beam\Command;
 
-use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Command\Command as SymfonyCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class SelfUpdateCommand extends Command
+class SelfUpdateCommand extends SymfonyCommand
 {
     /**
      * Configure the commands options

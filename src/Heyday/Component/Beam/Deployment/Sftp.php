@@ -4,6 +4,7 @@ namespace Heyday\Component\Beam\Deployment;
 
 use Heyday\Component\Beam\Beam;
 use Heyday\Component\Beam\Deployment\DeploymentProvider;
+use Heyday\Component\Beam\Utils;
 use Ssh\SshConfigFileConfiguration;
 use Ssh\Session;
 
@@ -51,6 +52,7 @@ class Sftp implements DeploymentProvider
     {
         $sftp = $this->getSftp();
         $files = $this->getFromFiles();
+        $rootpath = $this->beam->getLocalPath();
 
         $checksumfile = $this->getRemoteFilePath('checksums.json');
         $checksums = false;
@@ -73,13 +75,14 @@ class Sftp implements DeploymentProvider
         $changes = array();
 
         foreach ($files as $file) {
-            $remotefile = $this->getRemoteFilePath($file);
-            $relativefilename = $this->getRelativePath($file);
+            $path = $file->getPathname();
+            $remotefile = $this->getRemoteFilePath($path);
+            $relativefilename = Utils::getRelativePath($rootpath, $path);
             if ($sftp->exists($remotefile)) {
                 $remoteStat = $sftp->stat($remotefile);
-                $localStat = stat($file);
-                if ($checksums && $checksums[$remotefile] != md5_file($file)) {
-                    $synclist[$file] = $remotefile;
+                $localStat = stat($path);
+                if ($checksums && $checksums[$relativefilename] != md5_file($path)) {
+                    $synclist[$path] = $remotefile;
                     $changes[] = array(
                         'update' => 'sent',
                         'filename' => $relativefilename,
@@ -87,7 +90,7 @@ class Sftp implements DeploymentProvider
                         'reason' => array('checksum')
                     );
                 } elseif ($remoteStat['size'] != $localStat['size']) {
-                    $synclist[$file] = $remotefile;
+                    $synclist[$path] = $remotefile;
                     $changes[] = array(
                         'update' => 'sent',
                         'filename' => $relativefilename,
@@ -96,7 +99,7 @@ class Sftp implements DeploymentProvider
                     );
                 }
             } else {
-                $synclist[$file] = $remotefile;
+                $synclist[$path] = $remotefile;
                 $changes[] = array(
                     'update' => 'created',
                     'filename' => $relativefilename,
@@ -141,45 +144,23 @@ class Sftp implements DeploymentProvider
         }
     }
 
-    protected function getRelativePath($path)
-    {
-        return str_replace($this->beam->getLocalPath() . '/', '', $path);
-    }
-
     protected function getFromFiles()
     {
-        $files = array();
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($this->beam->getLocalPath()),
-            \RecursiveIteratorIterator::CHILD_FIRST
-        );
-        foreach ($iterator as $file) {
-            if (in_array($file->getBasename(), array('.', '..')) || $file->isDir()) {
-                continue;
-            } elseif ($file->isFile() && !$this->isExcluded($this->getRelativePath($file))) {
-                $files[] = $file->getPathname();
-            }
-        }
-        return $files;
-    }
-
-    protected function isExcluded($path)
-    {
         $excludes = $this->beam->getConfig('exclude');
-        foreach ($excludes as $exclude) {
-            if ($exclude[0] == '/' && substr($exclude, -1) == '/') {
-                if (strpos('/' . $path, $exclude) === 0) {
-                    return true;
-                }
-            } elseif(substr($exclude, -1) == '/') {
-                if (strpos('/' . $path, $exclude) !== false) {
-                    return true;
-                }
-            } elseif(fnmatch('*' . $exclude, $path)) {
-                return true;
-            }
-        }
-        return false;
+        $rootpath = $this->beam->getLocalPath();
+        $files = Utils::getAllFiles(
+            function ($file) use ($excludes, $rootpath) {
+                return $file->isFile() && !Utils::isExcluded(
+                    $excludes,
+                    Utils::getRelativePath(
+                        $rootpath,
+                        $file->getPathname()
+                    )
+                );
+            },
+            $this->beam->getLocalPath()
+        );
+        return $files;
     }
     /**
      * @return mixed

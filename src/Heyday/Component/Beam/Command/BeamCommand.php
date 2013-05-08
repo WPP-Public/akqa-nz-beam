@@ -3,9 +3,6 @@
 namespace Heyday\Component\Beam\Command;
 
 use Heyday\Component\Beam\Beam;
-use Heyday\Component\Beam\Config\JsonConfigLoader;
-use Symfony\Component\Config\FileLocator;
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\ProgressHelper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -20,10 +17,6 @@ use Heyday\Component\Beam\Deployment\Sftp;
  */
 class BeamCommand extends Command
 {
-    /**
-     * @var
-     */
-    protected $jsonConfigLoader;
 
     /**
      *
@@ -85,13 +78,7 @@ class BeamCommand extends Command
                 InputOption::VALUE_NONE,
                 'When uploading, syncs files from the working copy rather than exported git copy'
             )
-            ->addOption(
-                'configfile',
-                '',
-                InputOption::VALUE_REQUIRED,
-                'The config file name',
-                'beam.json'
-            )
+            ->addConfigOption()
             ->addOption(
                 'exportdir',
                 '',
@@ -272,16 +259,6 @@ class BeamCommand extends Command
     }
     /**
      * @param  InputInterface $input
-     * @return mixed
-     */
-    protected function getConfig(InputInterface $input)
-    {
-        return $this->getJsonConfigLoader()->load(
-            $input->getOption('configfile')
-        );
-    }
-    /**
-     * @param  InputInterface $input
      * @return array
      */
     protected function getOptions(InputInterface $input)
@@ -324,30 +301,6 @@ class BeamCommand extends Command
         }
 
         return $options;
-    }
-    /**
-     * @return JsonLoader
-     */
-    protected function getJsonConfigLoader()
-    {
-        if (null === $this->jsonConfigLoader) {
-
-            $paths = array();
-            $path = getcwd();
-
-            while ($path !== end($paths)) {
-                $paths[] = $path;
-                $path = dirname($path);
-            }
-
-            $this->jsonConfigLoader = new JsonConfigLoader(
-                new FileLocator(
-                    $paths
-                )
-            );
-        }
-
-        return $this->jsonConfigLoader;
     }
     /**
      * @param         $question
