@@ -56,7 +56,6 @@ class ChangesHelper extends Helper
             'sent' => 0,
             'received' => 0,
             'created' => 0,
-            'nochange' => 0,
             'deleted' => 0
         );
 

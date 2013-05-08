@@ -152,9 +152,14 @@ class Beam
 
         if ($isUp) {
             $this->runPreRemoteCommands();
+            $changedFiles = $this->options['deploymentprovider']->up(
+                $this->options['deploymentoutputhandler']
+            );
+        } else {
+            $changedFiles = $this->options['deploymentprovider']->down(
+                $this->options['deploymentoutputhandler']
+            );
         }
-
-        $changedFiles = $this->options['deploymentprovider']->deploy($this->options['deploymentoutputhandler']);
 
         if ($isUp) {
             $this->runPostLocalCommands();
@@ -164,19 +169,29 @@ class Beam
         return $changedFiles;
     }
     /**
+     * @param callable $output
      * @return mixed
      */
-    public function getChangedFiles()
+    public function getChangedFiles(\Closure $output = null)
     {
         if (!$this->isPrepared() && !$this->isWorkingCopy()) {
             $this->prepareLocalPath();
             $this->runPreLocalCommands();
         }
 
-        return $this->options['deploymentprovider']->deploy(
-            null,
-            true
-        );
+        if ($this->isUp()) {
+            $changedFiles = $this->options['deploymentprovider']->up(
+                $this->options['deploymentoutputhandler'],
+                true
+            );
+        } else {
+            $changedFiles = $this->options['deploymentprovider']->down(
+                $this->options['deploymentoutputhandler'],
+                true
+            );
+        }
+
+        return $changedFiles;
     }
     /**
      * Ensures that the correct content is at the local path
@@ -555,14 +570,8 @@ class Beam
                         return new Rsync();
                     },
                     'deploymentoutputhandler' => function ($type, $data) {
-                        if ($type == 'out') {
-                            echo $data;
-                        }
                     },
                     'commandoutputhandler' => function ($type, $data) {
-                        if ($type == 'out') {
-                            echo $data;
-                        }
                     }
                 )
             )->setAllowedTypes(

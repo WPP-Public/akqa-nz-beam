@@ -12,6 +12,8 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+use Heyday\Component\Beam\Deployment\Sftp;
+
 /**
  * Class BeamCommand
  * @package Heyday\Component\Beam\Command
@@ -95,6 +97,12 @@ class BeamCommand extends Command
                 '',
                 InputOption::VALUE_REQUIRED,
                 'The export directory name'
+            )
+            ->addOption(
+                'sftp',
+                '',
+                InputOption::VALUE_NONE,
+                'Switches to using sftp'
             );
     }
     /**
@@ -106,8 +114,8 @@ class BeamCommand extends Command
     {
         $helperset = $this->getHelperSet();
         $formatterHelper = $helperset->get('formatter');
-        $progressHelper = $helperset->get('progress');
-        $progressHelper->setFormat('[%bar%] %current%/%max% %percent%% %elapsed%');
+        $progressHelper = $helperset->get('contentprogress');
+        $progressHelper->setFormat('[%bar%] %current%/%max% files');
         $changesHelper = $helperset->get('changes');
         $dialogHelper = $helperset->get('dialog');
 
@@ -168,14 +176,12 @@ class BeamCommand extends Command
                 // If there is more that 1 item there are updates,
                 // If there is 1 and it is nochange treat it as no update
                 if ($count > 1 || (isset($changedFiles[0]) && $changedFiles[0]['update'] != 'nochange')) {
-                    // Output all the changes
                     $changesHelper->outputChanges($formatterHelper, $output, $changedFiles);
                     // Output a summary of the changes
                     $changesHelper->outputChangesSummary($formatterHelper, $output, $changedFiles);
                     // If we have confirmation do the beam
                     if ($this->isOkay($output, $dialogHelper, $formatterHelper)) {
-                        // Set the frequency of redraws to be a unit that produces 100 updates or less
-
+                        // Set the output handler for displaying the progress bar etc
                         $beam->setOption(
                             'deploymentoutputhandler',
                             function (
@@ -185,19 +191,14 @@ class BeamCommand extends Command
                                 $output,
                                 $progressHelper,
                                 $formatterHelper,
-                                $count
+                                $count,
+                                $changedFiles
                             ) {
                                 static $totalSteps = 0;
                                 if ($totalSteps == 0) {
-                                    $progressHelper->setBarWidth(exec('tput cols') - (strlen($count) * 2 + 18));
-                                    $progressHelper->setRedrawFrequency(
-                                        max(
-                                            floor($count / 100),
-                                            1
-                                        )
-                                    );
+                                    $progressHelper->setAutoWidth($count);
                                     // Start the progress bar
-                                    $progressHelper->start($output, $count);
+                                    $progressHelper->start($output, $count, 'File: ');
                                 }
                                 if ($type == 'out') {
                                     // Advance 1 for each line we get in the data
@@ -205,7 +206,7 @@ class BeamCommand extends Command
                                     // We call advance once per step as opposed to all steps at once
                                     // so the redrawFrequency can be applied correctly
                                     for ($i = 0; $i < $steps; $i++) {
-                                        $progressHelper->advance();
+                                        $progressHelper->advance(1, false, $changedFiles[$totalSteps + $i]['filename']);
                                     }
                                     $totalSteps += $steps;
                                     // Check if we have finished (rsync stops outputing data
@@ -230,7 +231,7 @@ class BeamCommand extends Command
                                 }
                             }
                         );
-
+                        // Run the deployment
                         $changedFiles = $beam->run();
 
                         $changesHelper->outputChangesSummary(
@@ -245,10 +246,18 @@ class BeamCommand extends Command
                     throw new \RuntimeException('No changed files');
                 }
             } else {
+                $changedFiles = $beam->run();
+
+                $changesHelper->outputChanges(
+                    $formatterHelper,
+                    $output,
+                    $changedFiles
+                );
+
                 $changesHelper->outputChangesSummary(
                     $formatterHelper,
                     $output,
-                    $beam->run()
+                    $changedFiles
                 );
             }
 
@@ -309,6 +318,10 @@ class BeamCommand extends Command
                 $input->getOption('configfile')
             )
         );
+
+        if ($input->getOption('sftp')) {
+            $options['deploymentprovider'] = new Sftp();
+        }
 
         return $options;
     }

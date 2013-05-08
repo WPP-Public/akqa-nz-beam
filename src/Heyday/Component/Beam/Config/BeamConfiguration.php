@@ -30,6 +30,7 @@ class BeamConfiguration implements ConfigurationInterface
             'deploy.properties',
             'exclude.properties',
             'sftp-config.json',
+            'checksums.json*',
             '/access-logs/',
             '/cgi-bin/',
             '/.idea/'
@@ -57,7 +58,7 @@ class BeamConfiguration implements ConfigurationInterface
             '/web/uploads/'
         ),
         'wordpress' => array(
-            'wp-content/uploads/*'
+            'wp-content/uploads/'
         ),
         'zend' => array(
             '/www/uploads/',

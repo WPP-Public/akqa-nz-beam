@@ -4,8 +4,10 @@ namespace Heyday\Component\Beam;
 
 use Heyday\Component\Beam\Command\BeamCommand;
 use Heyday\Component\Beam\Command\GenerateDeployCommand;
+use Heyday\Component\Beam\Command\MakeChecksumsCommand;
 use Heyday\Component\Beam\Command\SelfUpdateCommand;
 use Heyday\Component\Beam\Helper\ChangesHelper;
+use Heyday\Component\Beam\Helper\ContentProgressHelper;
 use Symfony\Component\Console\Application as BaseApplication;
 use Symfony\Component\Console\Input\InputInterface;
 
@@ -50,6 +52,7 @@ class Application extends BaseApplication
         $commands[] = new BeamCommand();
         $commands[] = new GenerateDeployCommand();
         $commands[] = new SelfUpdateCommand();
+        $commands[] = new MakeChecksumsCommand();
 
         return $commands;
     }
@@ -60,6 +63,7 @@ class Application extends BaseApplication
     {
         $helperset = parent::getDefaultHelperSet();
         $helperset->set(new ChangesHelper());
+        $helperset->set(new ContentProgressHelper());
 
         return $helperset;
     }
