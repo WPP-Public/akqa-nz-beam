@@ -4,7 +4,7 @@ namespace Heyday\Component\Beam;
 
 class Utils
 {
-    public static function getAllFiles(\Closure $condition, $dir)
+    public static function getAllFiles(\Closure $condition, $dir) //TODO: Rename function
     {
         $files = array();
         $iterator = new \RecursiveIteratorIterator(
