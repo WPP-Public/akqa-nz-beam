@@ -6,8 +6,15 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Heyday\Component\Beam\Deployment\Sftp;
 
+/**
+ * Class SftpCommand
+ * @package Heyday\Component\Beam\Command
+ */
 class SftpCommand extends BeamCommand
 {
+    /**
+     *
+     */
     protected function configure()
     {
         parent::configure();
@@ -21,11 +28,15 @@ class SftpCommand extends BeamCommand
                 'Does a more full check on the target, relying less on the checksums file'
             );
     }
+    /**
+     * @param  InputInterface $input
+     * @return array
+     */
     protected function getOptions(InputInterface $input)
     {
         $options = parent::getOptions($input);
         $options['deploymentprovider'] = new Sftp($input->getOption('full'));
+
         return $options;
     }
-
 }

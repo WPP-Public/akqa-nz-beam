@@ -228,11 +228,15 @@ class Beam
                 $this->getLocalPathname()
             );
         }
+
         return sprintf(
             '%s',
             $path
         );
     }
+    /**
+     * @return string
+     */
     public function getLocalPathname()
     {
         return sprintf(
@@ -447,6 +451,9 @@ class Beam
             );
         }
     }
+    /**
+     *
+     */
     protected function runPostLocalCommands()
     {
         foreach ($this->config['commands'] as $command) {
@@ -455,6 +462,9 @@ class Beam
             }
         }
     }
+    /**
+     *
+     */
     protected function runPreLocalCommands()
     {
         foreach ($this->config['commands'] as $command) {
@@ -463,6 +473,9 @@ class Beam
             }
         }
     }
+    /**
+     *
+     */
     protected function runPreTargetCommands()
     {
         foreach ($this->config['commands'] as $command) {
@@ -471,6 +484,9 @@ class Beam
             }
         }
     }
+    /**
+     *
+     */
     protected function runPostTargetCommands()
     {
         foreach ($this->config['commands'] as $command) {
@@ -542,11 +558,11 @@ class Beam
                     'branch',
                     'path',
                     'dry-run',
-                    'checksum',
-                    'delete',
+                    'checksum', //TODO: Move to deployment
+                    'delete', //TODO: Move to deployment
                     'workingcopy',
-                    'archive',
-                    'compress',
+                    'archive', //TODO: Move to deployment
+                    'compress', //TODO: Move to deployment
                     'vcsprovider',
                     'deploymentprovider',
                     'deploymentoutputhandler',

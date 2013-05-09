@@ -37,7 +37,7 @@ class Sftp implements DeploymentProvider
         $this->fullmode = $fullmode;
     }
     /**
-     * @param Beam $beam
+     * @param  Beam  $beam
      * @return mixed
      */
     public function setBeam(Beam $beam)
@@ -83,12 +83,13 @@ class Sftp implements DeploymentProvider
 
             $this->sftp = $session->getSftp();
         }
+
         return $this->sftp;
     }
     /**
-     * @param callable $output
-     * @param bool     $dryrun
-     * @param DeploymentResult $deploymentResult
+     * @param  callable         $output
+     * @param  bool             $dryrun
+     * @param  DeploymentResult $deploymentResult
      * @return mixed
      */
     public function up(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
@@ -220,8 +221,8 @@ class Sftp implements DeploymentProvider
         return $deploymentResult;
     }
     /**
-     * @param callable $output
-     * @param bool     $dryrun
+     * @param  callable $output
+     * @param  bool     $dryrun
      * @return mixed
      */
     public function down(\Closure $output = null, $dryrun = false)
@@ -249,6 +250,7 @@ class Sftp implements DeploymentProvider
     public function getTargetPath()
     {
         $server = $this->beam->getServer();
+
         return $server['webroot'];
     }
 }

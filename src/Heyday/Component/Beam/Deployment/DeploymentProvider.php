@@ -11,19 +11,19 @@ use Heyday\Component\Beam\Beam;
 interface DeploymentProvider
 {
     /**
-     * @param Beam $beam
+     * @param  Beam  $beam
      * @return mixed
      */
     public function setBeam(Beam $beam);
     /**
-     * @param callable $output
-     * @param bool     $dryrun
+     * @param  callable $output
+     * @param  bool     $dryrun
      * @return mixed
      */
     public function up(\Closure $output = null, $dryrun = false);
     /**
-     * @param callable $output
-     * @param bool     $dryrun
+     * @param  callable $output
+     * @param  bool     $dryrun
      * @return mixed
      */
     public function down(\Closure $output = null, $dryrun = false);

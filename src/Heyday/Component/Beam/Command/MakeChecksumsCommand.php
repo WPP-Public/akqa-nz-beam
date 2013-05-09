@@ -45,8 +45,8 @@ class MakeChecksumsCommand extends Command
             ->addConfigOption();
     }
     /**
-     * @param InputInterface  $input
-     * @param OutputInterface $output
+     * @param  InputInterface  $input
+     * @param  OutputInterface $output
      * @return int|null|void
      */
     protected function execute(InputInterface $input, OutputInterface $output)

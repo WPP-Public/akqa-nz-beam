@@ -2,8 +2,15 @@
 
 namespace Heyday\Component\Beam\Command;
 
+/**
+ * Class RsyncCommand
+ * @package Heyday\Component\Beam\Command
+ */
 class RsyncCommand extends BeamCommand
 {
+    /**
+     *
+     */
     protected function configure()
     {
         parent::configure();

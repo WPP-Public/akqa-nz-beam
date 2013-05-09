@@ -2,7 +2,6 @@
 
 namespace Heyday\Component\Beam;
 
-use Heyday\Component\Beam\Command\BeamCommand;
 use Heyday\Component\Beam\Command\CompileCommand;
 use Heyday\Component\Beam\Command\GenerateDeployCommand;
 use Heyday\Component\Beam\Command\MakeChecksumsCommand;

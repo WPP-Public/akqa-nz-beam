@@ -21,8 +21,8 @@ class DeploymentResultHelper extends Helper
         return 'deploymentresult';
     }
     /**
-     * @param FormatterHelper $formatter
-     * @param OutputInterface $output
+     * @param FormatterHelper  $formatter
+     * @param OutputInterface  $output
      * @param DeploymentResult $deploymentResult
      */
     public function outputChanges(FormatterHelper $formatter, OutputInterface $output, DeploymentResult $deploymentResult)
@@ -47,8 +47,8 @@ class DeploymentResultHelper extends Helper
         }
     }
     /**
-     * @param FormatterHelper $formatter
-     * @param OutputInterface $output
+     * @param FormatterHelper  $formatter
+     * @param OutputInterface  $output
      * @param DeploymentResult $deploymentResult
      */
     public function outputChangesSummary(FormatterHelper $formatter, OutputInterface $output, DeploymentResult $deploymentResult)

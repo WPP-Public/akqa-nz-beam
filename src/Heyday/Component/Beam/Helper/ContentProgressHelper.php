@@ -43,6 +43,7 @@ class ContentProgressHelper extends ProgressHelper
             $this->methods[$name] = new \ReflectionMethod('Symfony\Component\Console\Helper\ProgressHelper', $name);
             $this->methods[$name]->setAccessible(true);
         }
+
         return $this->methods[$name];
     }
 
@@ -56,6 +57,7 @@ class ContentProgressHelper extends ProgressHelper
             $this->properties[$name] = new \ReflectionProperty('Symfony\Component\Console\Helper\ProgressHelper', $name);
             $this->properties[$name]->setAccessible(true);
         }
+
         return $this->properties[$name];
     }
 
@@ -92,7 +94,7 @@ class ContentProgressHelper extends ProgressHelper
     }
 
     /**
-     * @param bool $finish
+     * @param  bool            $finish
      * @throws \LogicException
      */
     public function display($finish = false)

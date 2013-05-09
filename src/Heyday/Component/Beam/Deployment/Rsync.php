@@ -56,9 +56,9 @@ class Rsync implements DeploymentProvider
         );
     }
     /**
-     * @param          $command
-     * @param callable $output
-     * @param bool     $dryrun
+     * @param                    $command
+     * @param  callable          $output
+     * @param  bool              $dryrun
      * @return array
      * @throws \RuntimeException
      */

@@ -59,6 +59,7 @@ abstract class Command extends BaseCommand
             'The config file name',
             'beam.json'
         );
+
         return $this;
     }
 }

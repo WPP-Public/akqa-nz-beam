@@ -62,6 +62,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
     protected function getDeploymentProviderStub()
     {
         $deploymentProviderStub = $this->getMock('Heyday\Component\Beam\Deployment\DeploymentProvider');
+
         return $deploymentProviderStub;
     }
 

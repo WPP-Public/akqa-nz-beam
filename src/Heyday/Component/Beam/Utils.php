@@ -9,8 +9,8 @@ namespace Heyday\Component\Beam;
 class Utils
 {
     /**
-     * @param callable $condition
-     * @param          $dir
+     * @param  callable $condition
+     * @param           $dir
      * @return array
      */
     public static function getFilesFromDirectory(\Closure $condition, $dir)
@@ -27,6 +27,7 @@ class Utils
                 $files[] = $file;
             }
         }
+
         return $files;
     }
     /**
@@ -42,6 +43,7 @@ class Utils
                     $dir,
                     $file->getPathname()
                 );
+
                 return ($file->isFile() || $file->isLink()) && !Utils::isExcluded(
                     $excludes,
                     $path
@@ -62,6 +64,7 @@ class Utils
                 unset($checksums[$path]);
             }
         }
+
         return $checksums;
     }
     /**
@@ -76,14 +79,15 @@ class Utils
                 if (strpos('/' . $path, $exclude) === 0) {
                     return true;
                 }
-            } elseif(substr($exclude, -1) == '/') {
+            } elseif (substr($exclude, -1) == '/') {
                 if (strpos('/' . $path, $exclude) !== false) {
                     return true;
                 }
-            } elseif(fnmatch('*' . $exclude, $path)) {
+            } elseif (fnmatch('*' . $exclude, $path)) {
                 return true;
             }
         }
+
         return false;
     }
     /**
@@ -96,8 +100,8 @@ class Utils
         return str_replace($dir . '/', '', $path);
     }
     /**
-     * @param array $files
-     * @param       $dir
+     * @param  array $files
+     * @param        $dir
      * @return array
      */
     public static function checksumsFromFiles(array $files, $dir)
@@ -107,10 +111,11 @@ class Utils
             $path = $file->getPathname();
             $checksums[Utils::getRelativePath($dir, $path)] = md5_file($path);
         }
+
         return $checksums;
     }
     /**
-     * @param array $checksums
+     * @param  array $checksums
      * @return mixed
      */
     public static function checksumsToBz2(array $checksums)
@@ -126,7 +131,7 @@ class Utils
         return json_decode(bzdecompress($data), true);
     }
     /**
-     * @param array $checksums
+     * @param  array  $checksums
      * @return string
      */
     public static function checksumsToGz(array $checksums)
