@@ -52,18 +52,18 @@ class MakeChecksumsCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $processor = new Processor();
+        $path = $input->getOption('path');
 
         $config = $processor->processConfiguration(
             new BeamConfiguration(),
             array(
-                $this->getConfig($input)
+                $this->getConfig($input, $path)
             )
         );
 
-        $dir = $input->getOption('path');
-        $files = Utils::getAllowedFilesFromDirectory($config['exclude'], $dir);
-        $checksums = Utils::checksumsFromFiles($files, $dir);
-        $jsonfile = rtrim($dir, '/') . '/' . $input->getOption('checksumfile');
+        $files = Utils::getAllowedFilesFromDirectory($config['exclude'], $path);
+        $checksums = Utils::checksumsFromFiles($files, $path);
+        $jsonfile = rtrim($path, '/') . '/' . $input->getOption('checksumfile');
 
         if ($input->getOption('gzip')) {
             file_put_contents(

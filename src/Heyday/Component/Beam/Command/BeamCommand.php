@@ -125,7 +125,7 @@ class BeamCommand extends Command
 
             $beam = new Beam(
                 array(
-                    $this->getConfig($input)
+                    $this->getConfig($input, getcwd())
                 ),
                 $options
             );
@@ -282,7 +282,7 @@ class BeamCommand extends Command
         }
 
         $options['srcdir'] = dirname(
-            $this->getJsonConfigLoader()->locate(
+            $this->getJsonConfigLoader(getcwd())->locate(
                 $input->getOption('configfile')
             )
         );
