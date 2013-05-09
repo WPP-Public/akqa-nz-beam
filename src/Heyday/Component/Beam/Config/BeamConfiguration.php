@@ -18,10 +18,8 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
         '_base' => array(
             '*~',
             '.DS_Store',
-            '.git',
             '.gitignore',
             '.mergesources.yml',
-            '.svn',
             'README.md',
             'composer.json',
             'composer.lock',
@@ -32,7 +30,9 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
             'checksums.json*',
             '/access-logs/',
             '/cgi-bin/',
-            '/.idea/'
+            '/.idea/',
+            '.svn/',
+            '.git/'
         ),
         'gear' => array(
             '/images/repository/'
@@ -40,9 +40,9 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
         'silverstripe' => array(
             '/assets/',
             '/silverstripe-cache/',
+            '/assets-generated/',
             '/cache-include/cache/',
             '/heyday-cacheinclude/cache/',
-            '/assets-generated/',
             '/silverstripe-cacheinclude/cache/'
         ),
         'symfony' => array(

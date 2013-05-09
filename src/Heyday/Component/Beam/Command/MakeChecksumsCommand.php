@@ -61,7 +61,7 @@ class MakeChecksumsCommand extends Command
             )
         );
 
-        $files = Utils::getAllowedFilesFromDirectory($config['exclude'], $path);
+        $files = Utils::getAllowedFilesFromDirectory($config['exclude'], realpath($path));
         $checksums = Utils::checksumsFromFiles($files, $path);
         $jsonfile = rtrim($path, '/') . '/' . $input->getOption('checksumfile');
 
