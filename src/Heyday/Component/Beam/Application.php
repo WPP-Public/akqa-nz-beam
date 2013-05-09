@@ -7,8 +7,8 @@ use Heyday\Component\Beam\Command\CompileCommand;
 use Heyday\Component\Beam\Command\GenerateDeployCommand;
 use Heyday\Component\Beam\Command\MakeChecksumsCommand;
 use Heyday\Component\Beam\Command\SelfUpdateCommand;
-use Heyday\Component\Beam\Helper\ChangesHelper;
 use Heyday\Component\Beam\Helper\ContentProgressHelper;
+use Heyday\Component\Beam\Helper\DeploymentResultHelper;
 use Symfony\Component\Console\Application as BaseApplication;
 use Symfony\Component\Console\Input\InputInterface;
 
@@ -64,7 +64,7 @@ class Application extends BaseApplication
     protected function getDefaultHelperSet()
     {
         $helperset = parent::getDefaultHelperSet();
-        $helperset->set(new ChangesHelper());
+        $helperset->set(new DeploymentResultHelper());
         $helperset->set(new ContentProgressHelper());
 
         return $helperset;

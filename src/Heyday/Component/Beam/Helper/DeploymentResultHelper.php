@@ -5,8 +5,9 @@ namespace Heyday\Component\Beam\Helper;
 use Symfony\Component\Console\Helper\FormatterHelper;
 use Symfony\Component\Console\Helper\Helper;
 use Symfony\Component\Console\Output\OutputInterface;
+use Heyday\Component\Beam\Deployment\DeploymentResult;
 
-class ChangesHelper extends Helper
+class DeploymentResultHelper extends Helper
 {
     /**
      * Returns the canonical name of this helper.
@@ -17,16 +18,16 @@ class ChangesHelper extends Helper
      */
     public function getName()
     {
-        return 'changes';
+        return 'deploymentresult';
     }
     /**
      * @param FormatterHelper $formatter
      * @param OutputInterface $output
-     * @param                 $changes
+     * @param DeploymentResult $deploymentResult
      */
-    public function outputChanges(FormatterHelper $formatter, OutputInterface $output, $changes)
+    public function outputChanges(FormatterHelper $formatter, OutputInterface $output, DeploymentResult $deploymentResult)
     {
-        foreach ($changes as $change) {
+        foreach ($deploymentResult as $change) {
             if ($change['reason'] != array('time')) {
                 $output->writeLn(
                     $formatter->formatSection(
@@ -48,9 +49,9 @@ class ChangesHelper extends Helper
     /**
      * @param FormatterHelper $formatter
      * @param OutputInterface $output
-     * @param                 $changes
+     * @param DeploymentResult $deploymentResult
      */
-    public function outputChangesSummary(FormatterHelper $formatter, OutputInterface $output, $changes)
+    public function outputChangesSummary(FormatterHelper $formatter, OutputInterface $output, DeploymentResult $deploymentResult)
     {
         $totals = array(
             'sent' => 0,
@@ -60,7 +61,7 @@ class ChangesHelper extends Helper
             'nochange' => 0
         );
 
-        foreach ($changes as $change) {
+        foreach ($deploymentResult as $change) {
             $totals[$change['update']]++;
         }
 

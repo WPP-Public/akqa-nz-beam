@@ -9,7 +9,7 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
  * Class BeamConfiguration
  * @package Heyday\Component\Beam\Config
  */
-class BeamConfiguration implements ConfigurationInterface
+class BeamConfiguration extends Configuration implements ConfigurationInterface
 {
     /**
      * @var array
@@ -191,15 +191,6 @@ class BeamConfiguration implements ConfigurationInterface
             ->end();
 
         return $treeBuilder;
-    }
-    /**
-     * @param         $options
-     * @param  string $enclosure
-     * @return string
-     */
-    public function getFormattedOptions($options, $enclosure = '\'')
-    {
-        return $enclosure . implode("$enclosure, $enclosure", $options) . $enclosure;
     }
     /**
      * @param $value

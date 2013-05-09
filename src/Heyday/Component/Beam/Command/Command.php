@@ -8,7 +8,7 @@ use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 
-class Command extends BaseCommand
+abstract class Command extends BaseCommand
 {
     /**
      * @var

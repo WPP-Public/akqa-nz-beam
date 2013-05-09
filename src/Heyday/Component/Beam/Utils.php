@@ -34,10 +34,10 @@ class Utils
      * @param $dir
      * @return array
      */
-    public static function getAllowedFilesFromDirectory($excludes, $dir, $include = false)
+    public static function getAllowedFilesFromDirectory($excludes, $dir)
     {
         return Utils::getFilesFromDirectory(
-            function ($file) use ($excludes, $dir, $include) {
+            function ($file) use ($excludes, $dir) {
                 $path = Utils::getRelativePath(
                     $dir,
                     $file->getPathname()
@@ -45,24 +45,10 @@ class Utils
                 return ($file->isFile() || $file->isLink()) && !Utils::isExcluded(
                     $excludes,
                     $path
-                ) && (!$include || preg_match("{^$include}", $path));
+                );
             },
             $dir
         );
-    }
-    /**
-     * @param array $files
-     * @param       $dir
-     * @return array
-     */
-    public static function getChecksumForFiles(array $files, $dir)
-    {
-        $checksums = array();
-        foreach ($files as $file) {
-            $path = $file->getPathname();
-            $checksums[Utils::getRelativePath($dir, $path)] = md5_file($path);
-        }
-        return $checksums;
     }
     /**
      * @param $excludes
@@ -96,6 +82,20 @@ class Utils
         return str_replace($root . '/', '', $path);
     }
     /**
+     * @param array $files
+     * @param       $dir
+     * @return array
+     */
+    public static function checksumsFromFiles(array $files, $dir)
+    {
+        $checksums = array();
+        foreach ($files as $file) {
+            $path = $file->getPathname();
+            $checksums[Utils::getRelativePath($dir, $path)] = md5_file($path);
+        }
+        return $checksums;
+    }
+    /**
      * @param array $checksums
      * @return mixed
      */
@@ -126,5 +126,13 @@ class Utils
     public static function checksumsFromGz($data)
     {
         return json_decode(gzinflate(substr($data, 10, -8)), true);
+    }
+    /**
+     * @param $data
+     * @return mixed
+     */
+    public static function checksumsFromString($data)
+    {
+        return json_decode($data, true);
     }
 }

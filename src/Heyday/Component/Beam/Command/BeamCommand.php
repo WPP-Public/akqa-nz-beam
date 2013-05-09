@@ -97,7 +97,7 @@ class BeamCommand extends Command
         $formatterHelper = $helperset->get('formatter');
         $progressHelper = $helperset->get('contentprogress');
         $progressHelper->setFormat('[%bar%] %current%/%max% files');
-        $changesHelper = $helperset->get('changes');
+        $deploymentResultHelper = $helperset->get('deploymentresult');
         $dialogHelper = $helperset->get('dialog');
 
         try {
@@ -151,15 +151,15 @@ class BeamCommand extends Command
             // Prompt the user with the affected files and a confirmation dialog
             if (!$input->getOption('noprompt')) {
                 // Get the affected files
-                $changedFiles = $beam->getChangedFiles();
+                $deploymentResult = $beam->doDryrun();
                 // If there are any show them
-                $count = count($changedFiles);
+                $count = count($deploymentResult);
                 // If there is more that 1 item there are updates,
                 // If there is 1 and it is nochange treat it as no update
-                if ($count > 1 || (isset($changedFiles[0]) && $changedFiles[0]['update'] != 'nochange')) {
-                    $changesHelper->outputChanges($formatterHelper, $output, $changedFiles);
+                if ($count > 1 || (isset($deploymentResult[0]) && $deploymentResult[0]['update'] != 'nochange')) {
+                    $deploymentResultHelper->outputChanges($formatterHelper, $output, $deploymentResult);
                     // Output a summary of the changes
-                    $changesHelper->outputChangesSummary($formatterHelper, $output, $changedFiles);
+                    $deploymentResultHelper->outputChangesSummary($formatterHelper, $output, $deploymentResult);
                     // If we have confirmation do the beam
                     if ($this->isOkay($output, $dialogHelper, $formatterHelper)) {
                         // Set the output handler for displaying the progress bar etc
@@ -173,7 +173,7 @@ class BeamCommand extends Command
                                 $progressHelper,
                                 $formatterHelper,
                                 $count,
-                                $changedFiles
+                                $deploymentResult
                             ) {
                                 static $totalSteps = 0;
                                 if ($totalSteps == 0) {
@@ -187,7 +187,7 @@ class BeamCommand extends Command
                                     // We call advance once per step as opposed to all steps at once
                                     // so the redrawFrequency can be applied correctly
                                     for ($i = 0; $i < $steps; $i++) {
-                                        $progressHelper->advance(1, false, $changedFiles[$totalSteps + $i]['filename']);
+                                        $progressHelper->advance(1, false, $deploymentResult[$totalSteps + $i]['filename']);
                                     }
                                     $totalSteps += $steps;
                                     // Check if we have finished (rsync stops outputing data
@@ -213,12 +213,12 @@ class BeamCommand extends Command
                             }
                         );
                         // Run the deployment
-                        $changedFiles = $beam->run();
+                        $deploymentResult = $beam->doRun($deploymentResult);
 
-                        $changesHelper->outputChangesSummary(
+                        $deploymentResultHelper->outputChangesSummary(
                             $formatterHelper,
                             $output,
-                            $changedFiles
+                            $deploymentResult
                         );
                     } else {
                         throw new \RuntimeException('User canceled');
@@ -227,15 +227,15 @@ class BeamCommand extends Command
                     throw new \RuntimeException('No changed files');
                 }
             } else {
-                $changedFiles = $beam->run();
+                $changedFiles = $beam->doRun();
 
-                $changesHelper->outputChanges(
+                $deploymentResultHelper->outputChanges(
                     $formatterHelper,
                     $output,
                     $changedFiles
                 );
 
-                $changesHelper->outputChangesSummary(
+                $deploymentResultHelper->outputChangesSummary(
                     $formatterHelper,
                     $output,
                     $changedFiles

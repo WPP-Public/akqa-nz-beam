@@ -62,7 +62,7 @@ class MakeChecksumsCommand extends Command
 
         $dir = $input->getOption('path');
         $files = Utils::getAllowedFilesFromDirectory($config['exclude'], $dir);
-        $checksums = Utils::getChecksumForFiles($files, $dir);
+        $checksums = Utils::checksumsFromFiles($files, $dir);
         $jsonfile = rtrim($dir, '/') . '/' . $input->getOption('checksumfile');
 
         if ($input->getOption('gzip')) {

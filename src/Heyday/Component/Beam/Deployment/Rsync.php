@@ -3,6 +3,7 @@
 namespace Heyday\Component\Beam\Deployment;
 
 use Heyday\Component\Beam\Beam;
+use Heyday\Component\Beam\Deployment\DeploymentResult;
 use Symfony\Component\Process\Process;
 
 /**
@@ -29,7 +30,7 @@ class Rsync implements DeploymentProvider
     /**
      * @{inheritDoc}
      */
-    public function up(\Closure $output = null, $dryrun = false)
+    public function up(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
     {
         return $this->deploy(
             $this->buildCommand(
@@ -43,7 +44,7 @@ class Rsync implements DeploymentProvider
     /**
      * @{inheritDoc}
      */
-    public function down(\Closure $output = null, $dryrun = false)
+    public function down(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
     {
         return $this->deploy(
             $this->buildCommand(
@@ -77,7 +78,7 @@ class Rsync implements DeploymentProvider
         }
         $output = $process->getOutput();
 
-        return $this->formatOutput($output);
+        return new DeploymentResult($this->formatOutput($output));
     }
     /**
      * Builds the rsync command based of current options
@@ -161,7 +162,7 @@ class Rsync implements DeploymentProvider
                     $change['update'] = 'deleted';
                     $change['filename'] = $matches[5];
                     $change['filetype'] = preg_match('/\/$/', $matches[5]) ? 'directory' : 'file';
-                    $change['reason'] = array('notexist');
+                    $change['reason'] = array('missing');
                 } else {
                     switch ($matches[2]) {
                         case '<':

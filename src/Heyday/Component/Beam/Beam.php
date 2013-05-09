@@ -4,6 +4,7 @@ namespace Heyday\Component\Beam;
 
 use Heyday\Component\Beam\Config\BeamConfiguration;
 use Heyday\Component\Beam\Deployment\DeploymentProvider;
+use Heyday\Component\Beam\Deployment\DeploymentResult;
 use Heyday\Component\Beam\Deployment\Rsync;
 use Heyday\Component\Beam\Vcs\Git;
 use Heyday\Component\Beam\Vcs\VcsProvider;
@@ -138,7 +139,7 @@ class Beam
     /**
      * @return mixed
      */
-    public function run()
+    public function doRun(DeploymentResult $deploymentResult = null)
     {
         $isUp = $this->isUp();
 
@@ -152,12 +153,16 @@ class Beam
 
         if ($isUp) {
             $this->runPreTargetCommands();
-            $changedFiles = $this->options['deploymentprovider']->up(
-                $this->options['deploymentoutputhandler']
+            $deploymentResult = $this->options['deploymentprovider']->up(
+                $this->options['deploymentoutputhandler'],
+                false,
+                $deploymentResult
             );
         } else {
-            $changedFiles = $this->options['deploymentprovider']->down(
-                $this->options['deploymentoutputhandler']
+            $deploymentResult = $this->options['deploymentprovider']->down(
+                $this->options['deploymentoutputhandler'],
+                false,
+                $deploymentResult
             );
         }
 
@@ -166,13 +171,12 @@ class Beam
             $this->runPostTargetCommands();
         }
 
-        return $changedFiles;
+        return $deploymentResult;
     }
     /**
-     * @param callable $output
      * @return mixed
      */
-    public function getChangedFiles(\Closure $output = null)
+    public function doDryrun() // TODO: Do we need an output closure?
     {
         if (!$this->isPrepared() && !$this->isWorkingCopy()) {
             $this->prepareLocalPath();
@@ -180,18 +184,18 @@ class Beam
         }
 
         if ($this->isUp()) {
-            $changedFiles = $this->options['deploymentprovider']->up(
+            $deploymentResult = $this->options['deploymentprovider']->up(
                 $this->options['deploymentoutputhandler'],
                 true
             );
         } else {
-            $changedFiles = $this->options['deploymentprovider']->down(
+            $deploymentResult = $this->options['deploymentprovider']->down(
                 $this->options['deploymentoutputhandler'],
                 true
             );
         }
 
-        return $changedFiles;
+        return $deploymentResult;
     }
     /**
      * Ensures that the correct content is at the local path
@@ -463,7 +467,7 @@ class Beam
     {
         foreach ($this->config['commands'] as $command) {
             if ($command['phase'] == 'pre' && $command['location'] == 'target') {
-                $this->runRemoteCommand($command);
+                $this->runTargetCommand($command);
             }
         }
     }
@@ -480,6 +484,7 @@ class Beam
      */
     protected function runTargetCommand($command)
     {
+        //TODO requires ssh need an error if not ssh
         $server = $this->getServer();
         $configuration = new SshConfigFileConfiguration(
             '~/.ssh/config',

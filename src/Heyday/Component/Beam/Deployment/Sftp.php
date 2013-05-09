@@ -5,6 +5,7 @@ namespace Heyday\Component\Beam\Deployment;
 use Heyday\Component\Beam\Beam;
 use Heyday\Component\Beam\Deployment\DeploymentProvider;
 use Heyday\Component\Beam\Utils;
+use Heyday\Component\Beam\Deployment\DeploymentResult;
 use Ssh\Authentication\Password;
 use Ssh\Configuration;
 use Ssh\SshConfigFileConfiguration;
@@ -64,83 +65,126 @@ class Sftp implements DeploymentProvider
      * @param bool     $dryrun
      * @return mixed
      */
-    public function up(\Closure $output = null, $dryrun = false)
+    public function up(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
     {
-        $sftp = $this->getSftp();
+        // TODO implement delete
         $dir = $this->beam->getLocalPath();
+
+        $sftp = $this->getSftp();
 
         $files = Utils::getAllowedFilesFromDirectory(
             $this->beam->getConfig('exclude'),
-            $dir,
-            $this->beam->getOption('path')
+            $dir . ($this->beam->hasPath() ? '/' . $this->beam->getOption('path') : '')
         );
 
-        $targetchecksumfile = $this->getTargetFilePath('checksums.json');
+        $localchecksums = Utils::checksumsFromFiles($files, $dir);
+
         $targetchecksums = array();
+
+        $targetchecksumfile = $this->getTargetFilePath('checksums.json');
 
         if (function_exists('bzdecompress') && $sftp->exists($targetchecksumfile . '.bz2')) {
             $targetchecksums = Utils::checksumsFromBz2($sftp->read($targetchecksumfile . '.bz2'));
         } elseif (function_exists('gzinflate') && $sftp->exists($targetchecksumfile . '.gz')) {
             $targetchecksums = Utils::checksumsFromGz($sftp->read($targetchecksumfile . '.gz'));
         } elseif ($sftp->exists($targetchecksumfile)) {
-            $targetchecksums = json_decode($sftp->read($targetchecksumfile), true);
+            $targetchecksums = Utils::checksumsFromString($sftp->read($targetchecksumfile));
         }
 
-        $synclist = array();
-        $changes = array();
-        $localchecksums = Utils::getChecksumForFiles($files, $dir);
+        if (null === $deploymentResult) {
 
-        foreach ($files as $file) {
-            $path = $file->getPathname();
-            $targetfile = $this->getTargetFilePath($path);
-            $relativefilename = Utils::getRelativePath($dir, $path);
-            if ($sftp->exists($targetfile)) {
-                $remoteStat = $sftp->stat($targetfile);
-                $localStat = stat($path);
-                if (isset($targetchecksums[$relativefilename]) && $targetchecksums[$relativefilename] !== $localchecksums[$relativefilename]) {
-                    $synclist[$path] = $targetfile;
-                    $changes[] = array(
-                        'update' => 'sent',
-                        'filename' => $relativefilename,
-                        'filetype' => 'file',
-                        'reason' => array('checksum')
-                    );
-                } elseif ($remoteStat['size'] != $localStat['size']) {
-                    $synclist[$path] = $targetfile;
-                    $changes[] = array(
-                        'update' => 'sent',
-                        'filename' => $relativefilename,
-                        'filetype' => 'file',
-                        'reason' => array('size')
-                    );
+            $result = array();
+
+            foreach ($files as $file) {
+                $path = $file->getPathname();
+                $targetfile = $this->getTargetFilePath($path);
+                $relativefilename = Utils::getRelativePath($dir, $path);
+
+                if (false) {
+                    if (isset($targetchecksums[$relativefilename])) {
+                        if ($targetchecksums[$relativefilename] !== $localchecksums[$relativefilename]) {
+                            $result[] = array(
+                                'update' => 'sent',
+                                'filename' => $targetfile,
+                                'localfilename' => $path,
+                                'filetype' => 'file',
+                                'reason' => array('checksum')
+                            );
+                        }
+                    } else {
+                        $result[] = array(
+                            'update' => 'created',
+                            'filename' => $targetfile,
+                            'localfilename' => $path,
+                            'filetype' => 'file',
+                            'reason' => array('missing')
+                        );
+                    }
+                } else {
+
+                    if ($sftp->exists($targetfile)) {
+                        if (isset($targetchecksums[$relativefilename]) && $targetchecksums[$relativefilename] !== $localchecksums[$relativefilename]) {
+                            $result[] = array(
+                                'update' => 'sent',
+                                'filename' => $targetfile,
+                                'localfilename' => $path,
+                                'filetype' => 'file',
+                                'reason' => array('checksum')
+                            );
+                        } else {
+                            $targetStat = $sftp->stat($targetfile);
+                            $localStat = stat($path);
+                            if ($targetStat['size'] != $localStat['size']) {
+                                $result[] = array(
+                                    'update' => 'sent',
+                                    'filename' => $targetfile,
+                                    'localfilename' => $path,
+                                    'filetype' => 'file',
+                                    'reason' => array('size')
+                                );
+                            }
+                        }
+                    } else {
+                        $result[] = array(
+                            'update' => 'created',
+                            'filename' => $targetfile,
+                            'localfilename' => $path,
+                            'filetype' => 'file',
+                            'reason' => array('missing')
+                        );
+                    }
+
                 }
-            } else {
-                $synclist[$path] = $targetfile;
-                $changes[] = array(
-                    'update' => 'created',
-                    'filename' => $relativefilename,
-                    'filetype' => 'file',
-                    'reason' => array('notexist')
-                );
             }
+
+            $deploymentResult = new DeploymentResult($result);
+
         }
 
         if (!$dryrun && !$this->beam->getOption('dry-run')) {
-            foreach ($synclist as $localfile => $targetfile) {
+            foreach ($deploymentResult as $change) {
                 if (is_callable($output)) {
                     $output('out', "\n");
                 }
-                $dir = dirname($targetfile);
+                $dir = dirname($change['filename']);
                 if (!$sftp->exists($dir)) {
                     $sftp->mkdir($dir, 0755, true);
                 }
-                $sftp->send($localfile, $targetfile);
+                $sftp->send($change['localfilename'], $change['filename']);
             }
             // Save the checksums to the server
-            $sftp->write($this->getTargetFilePath('checksums.json.bz2'), Utils::checksumsToBz2($localchecksums));
+            $sftp->write(
+                $this->getTargetFilePath('checksums.json.bz2'),
+                Utils::checksumsToBz2(
+                    $this->beam->hasPath() ? array_merge(
+                        $targetchecksums,
+                        $localchecksums
+                    ) : $localchecksums
+                )
+            );
         }
 
-        return $changes;
+        return $deploymentResult;
     }
     /**
      * @param callable $output
