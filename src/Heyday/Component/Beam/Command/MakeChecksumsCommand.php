@@ -61,7 +61,7 @@ class MakeChecksumsCommand extends Command
         );
 
         $dir = $input->getOption('path');
-        $files = Utils::getAllFiles(
+        $files = Utils::getFilesFromDirectory(
             function ($file) use ($config, $dir) {
                 return ($file->isFile() || $file->isLink()) && !Utils::isExcluded(
                     $config['exclude'],

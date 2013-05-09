@@ -2,9 +2,18 @@
 
 namespace Heyday\Component\Beam;
 
+/**
+ * Class Utils
+ * @package Heyday\Component\Beam
+ */
 class Utils
 {
-    public static function getAllFiles(\Closure $condition, $dir) //TODO: Rename function
+    /**
+     * @param callable $condition
+     * @param          $dir
+     * @return array
+     */
+    public static function getFilesFromDirectory(\Closure $condition, $dir) //TODO: Rename function
     {
         $files = array();
         $iterator = new \RecursiveIteratorIterator(
@@ -20,6 +29,11 @@ class Utils
         }
         return $files;
     }
+    /**
+     * @param $excludes
+     * @param $path
+     * @return bool
+     */
     public static function isExcluded($excludes, $path)
     {
         foreach ($excludes as $exclude) {
@@ -37,6 +51,11 @@ class Utils
         }
         return false;
     }
+    /**
+     * @param $root
+     * @param $path
+     * @return mixed
+     */
     public static function getRelativePath($root, $path)
     {
         return str_replace($root . '/', '', $path);

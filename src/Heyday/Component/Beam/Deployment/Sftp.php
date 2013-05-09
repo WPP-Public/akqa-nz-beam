@@ -151,7 +151,7 @@ class Sftp implements DeploymentProvider
     {
         $excludes = $this->beam->getConfig('exclude');
         $rootpath = $this->beam->getLocalPath();
-        $files = Utils::getAllFiles(
+        $files = Utils::getFilesFromDirectory(
             function ($file) use ($excludes, $rootpath) {
                 return $file->isFile() && !Utils::isExcluded(
                     $excludes,
