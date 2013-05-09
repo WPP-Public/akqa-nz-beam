@@ -34,7 +34,7 @@ class Utils
      * @param $dir
      * @return array
      */
-    public static function getAllowedFilesFromDirectory($excludes, $dir)
+    public static function getAllowedFilesFromDirectory(array $excludes, $dir)
     {
         return Utils::getFilesFromDirectory(
             function ($file) use ($excludes, $dir) {
@@ -52,13 +52,27 @@ class Utils
     }
     /**
      * @param $excludes
+     * @param $checksums
+     * @return array
+     */
+    public static function getFilteredChecksums(array $excludes, array $checksums)
+    {
+        foreach (array_keys($checksums) as $path) {
+            if (Utils::isExcluded($excludes, $path)) {
+                unset($checksums[$path]);
+            }
+        }
+        return $checksums;
+    }
+    /**
+     * @param $excludes
      * @param $path
      * @return bool
      */
-    public static function isExcluded($excludes, $path)
+    public static function isExcluded(array $excludes, $path)
     {
         foreach ($excludes as $exclude) {
-            if ($exclude[0] == '/' && substr($exclude, -1) == '/') {
+            if ($exclude[0] === '/' && substr($exclude, -1) === '/') {
                 if (strpos('/' . $path, $exclude) === 0) {
                     return true;
                 }
@@ -73,13 +87,13 @@ class Utils
         return false;
     }
     /**
-     * @param $root
+     * @param $dir
      * @param $path
      * @return mixed
      */
-    public static function getRelativePath($root, $path)
+    public static function getRelativePath($dir, $path)
     {
-        return str_replace($root . '/', '', $path);
+        return str_replace($dir . '/', '', $path);
     }
     /**
      * @param array $files

@@ -6,7 +6,9 @@ use Heyday\Component\Beam\Command\BeamCommand;
 use Heyday\Component\Beam\Command\CompileCommand;
 use Heyday\Component\Beam\Command\GenerateDeployCommand;
 use Heyday\Component\Beam\Command\MakeChecksumsCommand;
+use Heyday\Component\Beam\Command\RsyncCommand;
 use Heyday\Component\Beam\Command\SelfUpdateCommand;
+use Heyday\Component\Beam\Command\SftpCommand;
 use Heyday\Component\Beam\Helper\ContentProgressHelper;
 use Heyday\Component\Beam\Helper\DeploymentResultHelper;
 use Symfony\Component\Console\Application as BaseApplication;
@@ -41,7 +43,7 @@ class Application extends BaseApplication
         } else {
             $this->isSingleCommandApp = true;
 
-            return 'beam';
+            return 'rsync';
         }
     }
     /**
@@ -50,7 +52,8 @@ class Application extends BaseApplication
     protected function getDefaultCommands()
     {
         $commands = parent::getDefaultCommands();
-        $commands[] = new BeamCommand();
+        $commands[] = new RsyncCommand();
+        $commands[] = new SftpCommand();
         $commands[] = new GenerateDeployCommand();
         $commands[] = new SelfUpdateCommand();
         $commands[] = new MakeChecksumsCommand();

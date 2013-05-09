@@ -9,13 +9,11 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-use Heyday\Component\Beam\Deployment\Sftp;
-
 /**
  * Class BeamCommand
  * @package Heyday\Component\Beam\Command
  */
-class BeamCommand extends Command
+abstract class BeamCommand extends Command
 {
 
     /**
@@ -24,8 +22,6 @@ class BeamCommand extends Command
     protected function configure()
     {
         $this
-            ->setName('beam')
-            ->setDescription('A file upload/download tool that utilises rsync and git')
             ->addArgument(
                 'direction',
                 InputArgument::REQUIRED,
@@ -78,13 +74,7 @@ class BeamCommand extends Command
                 InputOption::VALUE_NONE,
                 'When uploading, syncs files from the working copy rather than exported git copy'
             )
-            ->addConfigOption()
-            ->addOption(
-                'sftp',
-                '',
-                InputOption::VALUE_NONE,
-                'Switches to using sftp'
-            );
+            ->addConfigOption();
     }
     /**
      * @param  InputInterface  $input
@@ -286,10 +276,6 @@ class BeamCommand extends Command
                 $input->getOption('configfile')
             )
         );
-
-        if ($input->getOption('sftp')) {
-            $options['deploymentprovider'] = new Sftp();
-        }
 
         return $options;
     }

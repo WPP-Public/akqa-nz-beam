@@ -11,10 +11,31 @@ use Ssh\Configuration;
 use Ssh\SshConfigFileConfiguration;
 use Ssh\Session;
 
+/**
+ * Class Sftp
+ * @package Heyday\Component\Beam\Deployment
+ */
 class Sftp implements DeploymentProvider
 {
+    /**
+     * @var
+     */
+    protected $fullmode;
+    /**
+     * @var
+     */
     protected $beam;
+    /**
+     * @var
+     */
     protected $sftp;
+    /**
+     * @param bool $fullmode
+     */
+    public function _construct($fullmode = false)
+    {
+        $this->fullmode = $fullmode;
+    }
     /**
      * @param Beam $beam
      * @return mixed
@@ -23,6 +44,10 @@ class Sftp implements DeploymentProvider
     {
         $this->beam = $beam;
     }
+    /**
+     * @return \Ssh\Sftp
+     * @throws \RuntimeException
+     */
     protected function getSftp()
     {
         if (null === $this->sftp) {
@@ -63,11 +88,12 @@ class Sftp implements DeploymentProvider
     /**
      * @param callable $output
      * @param bool     $dryrun
+     * @param DeploymentResult $deploymentResult
      * @return mixed
      */
     public function up(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
     {
-        // TODO implement delete
+        // TODO: implement delete
         $dir = $this->beam->getLocalPath();
 
         $sftp = $this->getSftp();
@@ -91,6 +117,11 @@ class Sftp implements DeploymentProvider
             $targetchecksums = Utils::checksumsFromString($sftp->read($targetchecksumfile));
         }
 
+        $targetchecksums = Utils::getFilteredChecksums(
+            $this->beam->getConfig('exclude'),
+            $targetchecksums
+        );
+
         if (null === $deploymentResult) {
 
             $result = array();
@@ -100,27 +131,7 @@ class Sftp implements DeploymentProvider
                 $targetfile = $this->getTargetFilePath($path);
                 $relativefilename = Utils::getRelativePath($dir, $path);
 
-                if (true) {
-                    if (isset($targetchecksums[$relativefilename])) {
-                        if ($targetchecksums[$relativefilename] !== $localchecksums[$relativefilename]) {
-                            $result[] = array(
-                                'update' => 'sent',
-                                'filename' => $targetfile,
-                                'localfilename' => $path,
-                                'filetype' => 'file',
-                                'reason' => array('checksum')
-                            );
-                        }
-                    } else {
-                        $result[] = array(
-                            'update' => 'created',
-                            'filename' => $targetfile,
-                            'localfilename' => $path,
-                            'filetype' => 'file',
-                            'reason' => array('missing')
-                        );
-                    }
-                } else {
+                if ($this->fullmode) {
 
                     if ($sftp->exists($targetfile)) {
                         if (isset($targetchecksums[$relativefilename]) && $targetchecksums[$relativefilename] !== $localchecksums[$relativefilename]) {
@@ -143,6 +154,28 @@ class Sftp implements DeploymentProvider
                                     'reason' => array('size')
                                 );
                             }
+                        }
+                    } else {
+                        $result[] = array(
+                            'update' => 'created',
+                            'filename' => $targetfile,
+                            'localfilename' => $path,
+                            'filetype' => 'file',
+                            'reason' => array('missing')
+                        );
+                    }
+
+                } else {
+
+                    if (isset($targetchecksums[$relativefilename])) {
+                        if ($targetchecksums[$relativefilename] !== $localchecksums[$relativefilename]) {
+                            $result[] = array(
+                                'update' => 'sent',
+                                'filename' => $targetfile,
+                                'localfilename' => $path,
+                                'filetype' => 'file',
+                                'reason' => array('checksum')
+                            );
                         }
                     } else {
                         $result[] = array(
@@ -194,8 +227,13 @@ class Sftp implements DeploymentProvider
     public function down(\Closure $output = null, $dryrun = false)
     {
         // TODO: Implement down() method.
+        throw new \RuntimeException('Not implemented');
     }
 
+    /**
+     * @param $path
+     * @return mixed|string
+     */
     protected function getTargetFilePath($path)
     {
         $server = $this->beam->getServer();
