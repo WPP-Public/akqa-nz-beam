@@ -40,7 +40,6 @@ class Sftp implements DeploymentProvider
                     $configuration,
                     new Password($server['user'], $server['password'])
                 );
-
             } else {
                 $configuration = new SshConfigFileConfiguration(
                     '~/.ssh/config',
@@ -72,7 +71,8 @@ class Sftp implements DeploymentProvider
 
         $files = Utils::getAllowedFilesFromDirectory(
             $this->beam->getConfig('exclude'),
-            $dir
+            $dir,
+            $this->beam->getOption('path')
         );
 
         $targetchecksumfile = $this->getTargetFilePath('checksums.json');

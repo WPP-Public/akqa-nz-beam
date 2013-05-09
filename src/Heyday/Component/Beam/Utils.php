@@ -34,17 +34,18 @@ class Utils
      * @param $dir
      * @return array
      */
-    public static function getAllowedFilesFromDirectory($excludes, $dir)
+    public static function getAllowedFilesFromDirectory($excludes, $dir, $include = false)
     {
         return Utils::getFilesFromDirectory(
-            function ($file) use ($excludes, $dir) {
+            function ($file) use ($excludes, $dir, $include) {
+                $path = Utils::getRelativePath(
+                    $dir,
+                    $file->getPathname()
+                );
                 return ($file->isFile() || $file->isLink()) && !Utils::isExcluded(
                     $excludes,
-                    Utils::getRelativePath(
-                        $dir,
-                        $file->getPathname()
-                    )
-                );
+                    $path
+                ) && (!$include || preg_match("{^$include}", $path));
             },
             $dir
         );
