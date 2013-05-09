@@ -5,6 +5,8 @@ namespace Heyday\Component\Beam\Deployment;
 use Heyday\Component\Beam\Beam;
 use Heyday\Component\Beam\Deployment\DeploymentProvider;
 use Heyday\Component\Beam\Utils;
+use Ssh\Authentication\Password;
+use Ssh\Configuration;
 use Ssh\SshConfigFileConfiguration;
 use Ssh\Session;
 
@@ -29,18 +31,30 @@ class Sftp implements DeploymentProvider
                 throw new \RuntimeException('Webrrot must be a absolute path when using sftp');
             }
 
-            $configuration = new SshConfigFileConfiguration(
-                '~/.ssh/config',
-                $server['host']
-            );
+            if (isset($server['password'])) {
+                $configuration = new Configuration(
+                    $server['host']
+                );
 
-            $session = new Session(
-                $configuration,
-                $configuration->getAuthentication(
-                    null,
-                    $server['user']
-                )
-            );
+                $session = new Session(
+                    $configuration,
+                    new Password($server['user'], $server['password'])
+                );
+
+            } else {
+                $configuration = new SshConfigFileConfiguration(
+                    '~/.ssh/config',
+                    $server['host']
+                );
+
+                $session = new Session(
+                    $configuration,
+                    $configuration->getAuthentication(
+                        null,
+                        $server['user']
+                    )
+                );
+            }
 
             $this->sftp = $session->getSftp();
         }

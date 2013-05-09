@@ -110,6 +110,7 @@ class BeamConfiguration implements ConfigurationInterface
                                 ->end()
                             ->end()
                             ->scalarNode('branch')->end()
+                            ->scalarNode('password')->end()
                         ->end()
                     ->end()
                 ->end()
