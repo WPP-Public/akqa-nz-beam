@@ -54,38 +54,37 @@ class Sftp implements DeploymentProvider
     public function up(\Closure $output = null, $dryrun = false)
     {
         $sftp = $this->getSftp();
-        $files = $this->getFromFiles();
-        $rootpath = $this->beam->getLocalPath();
+        $dir = $this->beam->getLocalPath();
 
-        $checksumfile = $this->getTargetFilePath('checksums.json');
-        $checksums = false;
+        $files = Utils::getAllowedFilesFromDirectory(
+            $this->beam->getConfig('exclude'),
+            $dir
+        );
 
-        if (function_exists('bzdecompress') && $sftp->exists($checksumfile . '.bz2')) {
-            $checksums = json_decode(
-                bzdecompress($sftp->read($checksumfile . '.bz2')),
-                true
-            );
-        } elseif (function_exists('gzinflate') && $sftp->exists($checksumfile . '.gz')) {
-            $checksums = json_decode(
-                gzinflate(substr($sftp->read($checksumfile . '.gz'), 10, -8)),
-                true
-            );
-        } elseif ($sftp->exists($checksumfile)) {
-            $checksums = json_decode($sftp->read($checksumfile), true);
+        $targetchecksumfile = $this->getTargetFilePath('checksums.json');
+        $targetchecksums = array();
+
+        if (function_exists('bzdecompress') && $sftp->exists($targetchecksumfile . '.bz2')) {
+            $targetchecksums = Utils::checksumsFromBz2($sftp->read($targetchecksumfile . '.bz2'));
+        } elseif (function_exists('gzinflate') && $sftp->exists($targetchecksumfile . '.gz')) {
+            $targetchecksums = Utils::checksumsFromGz($sftp->read($targetchecksumfile . '.gz'));
+        } elseif ($sftp->exists($targetchecksumfile)) {
+            $targetchecksums = json_decode($sftp->read($targetchecksumfile), true);
         }
 
         $synclist = array();
         $changes = array();
+        $localchecksums = Utils::getChecksumForFiles($files, $dir);
 
         foreach ($files as $file) {
             $path = $file->getPathname();
-            $remotefile = $this->getTargetFilePath($path);
-            $relativefilename = Utils::getRelativePath($rootpath, $path);
-            if ($sftp->exists($remotefile)) {
-                $remoteStat = $sftp->stat($remotefile);
+            $targetfile = $this->getTargetFilePath($path);
+            $relativefilename = Utils::getRelativePath($dir, $path);
+            if ($sftp->exists($targetfile)) {
+                $remoteStat = $sftp->stat($targetfile);
                 $localStat = stat($path);
-                if ($checksums && $checksums[$relativefilename] != md5_file($path)) {
-                    $synclist[$path] = $remotefile;
+                if (isset($targetchecksums[$relativefilename]) && $targetchecksums[$relativefilename] !== $localchecksums[$relativefilename]) {
+                    $synclist[$path] = $targetfile;
                     $changes[] = array(
                         'update' => 'sent',
                         'filename' => $relativefilename,
@@ -93,7 +92,7 @@ class Sftp implements DeploymentProvider
                         'reason' => array('checksum')
                     );
                 } elseif ($remoteStat['size'] != $localStat['size']) {
-                    $synclist[$path] = $remotefile;
+                    $synclist[$path] = $targetfile;
                     $changes[] = array(
                         'update' => 'sent',
                         'filename' => $relativefilename,
@@ -102,7 +101,7 @@ class Sftp implements DeploymentProvider
                     );
                 }
             } else {
-                $synclist[$path] = $remotefile;
+                $synclist[$path] = $targetfile;
                 $changes[] = array(
                     'update' => 'created',
                     'filename' => $relativefilename,
@@ -113,16 +112,18 @@ class Sftp implements DeploymentProvider
         }
 
         if (!$dryrun && !$this->beam->getOption('dry-run')) {
-            foreach ($synclist as $localfile => $remotefile) {
+            foreach ($synclist as $localfile => $targetfile) {
                 if (is_callable($output)) {
                     $output('out', "\n");
                 }
-                $dir = dirname($remotefile);
+                $dir = dirname($targetfile);
                 if (!$sftp->exists($dir)) {
                     $sftp->mkdir($dir, 0755, true);
                 }
-                $sftp->send($localfile, $remotefile);
+                $sftp->send($localfile, $targetfile);
             }
+            // Save the checksums to the server
+            $sftp->write($this->getTargetFilePath('checksums.json.bz2'), Utils::checksumsToBz2($localchecksums));
         }
 
         return $changes;
@@ -145,25 +146,6 @@ class Sftp implements DeploymentProvider
         } else {
             return $server['webroot'] . '/' . $path;
         }
-    }
-
-    protected function getFromFiles()
-    {
-        $excludes = $this->beam->getConfig('exclude');
-        $rootpath = $this->beam->getLocalPath();
-        $files = Utils::getFilesFromDirectory(
-            function ($file) use ($excludes, $rootpath) {
-                return $file->isFile() && !Utils::isExcluded(
-                    $excludes,
-                    Utils::getRelativePath(
-                        $rootpath,
-                        $file->getPathname()
-                    )
-                );
-            },
-            $this->beam->getLocalPath()
-        );
-        return $files;
     }
     /**
      * @return mixed

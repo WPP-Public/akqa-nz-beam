@@ -61,40 +61,24 @@ class MakeChecksumsCommand extends Command
         );
 
         $dir = $input->getOption('path');
-        $files = Utils::getFilesFromDirectory(
-            function ($file) use ($config, $dir) {
-                return ($file->isFile() || $file->isLink()) && !Utils::isExcluded(
-                    $config['exclude'],
-                    Utils::getRelativePath(
-                        $dir,
-                        $file->getPathname()
-                    )
-                );
-            },
-            $dir
-        );
-
-        $json = array();
-        foreach ($files as $file) {
-            $path = str_replace($dir . '/', '', $file->getPathname());
-            $json[$path] = md5_file($file);
-        }
-
+        $files = Utils::getAllowedFilesFromDirectory($config['exclude'], $dir);
+        $checksums = Utils::getChecksumForFiles($files, $dir);
         $jsonfile = rtrim($dir, '/') . '/' . $input->getOption('checksumfile');
+
         if ($input->getOption('gzip')) {
             file_put_contents(
                 $jsonfile . '.gz',
-                gzencode(json_encode($json), 9)
+                Utils::checksumsToGz($checksums)
             );
         } elseif ($input->getOption('nocompress')) {
             file_put_contents(
                 $jsonfile,
-                json_encode($json)
+                json_encode($checksums)
             );
         } else {
             file_put_contents(
                 $jsonfile . '.bz2',
-                bzcompress(json_encode($json), 9)
+                Utils::checksumsToBz2($checksums)
             );
         }
     }
