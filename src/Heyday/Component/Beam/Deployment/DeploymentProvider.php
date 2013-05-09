@@ -30,5 +30,5 @@ interface DeploymentProvider
     /**
      * @return mixed
      */
-    public function getRemotePath();
+    public function getTargetPath();
 }

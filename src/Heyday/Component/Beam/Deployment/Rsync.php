@@ -34,7 +34,7 @@ class Rsync implements DeploymentProvider
         return $this->deploy(
             $this->buildCommand(
                 $this->beam->getLocalPath(),
-                $this->getRemotePath(),
+                $this->getTargetPath(),
                 $dryrun
             ),
             $output
@@ -47,7 +47,7 @@ class Rsync implements DeploymentProvider
     {
         return $this->deploy(
             $this->buildCommand(
-                $this->getRemotePath(),
+                $this->getTargetPath(),
                 $this->beam->getLocalPath(),
                 $dryrun
             ),
@@ -163,9 +163,6 @@ class Rsync implements DeploymentProvider
                     $change['filetype'] = preg_match('/\/$/', $matches[5]) ? 'directory' : 'file';
                     $change['reason'] = array('notexist');
                 } else {
-//                    if ($matches[2] == '.') {
-//                        continue;
-//                    }
                     switch ($matches[2]) {
                         case '<':
                             $change['update'] = 'sent';
@@ -273,7 +270,7 @@ class Rsync implements DeploymentProvider
      * Takes the form: "user@host:path"
      * @return string
      */
-    public function getRemotePath()
+    public function getTargetPath()
     {
         $server = $this->beam->getServer();
 

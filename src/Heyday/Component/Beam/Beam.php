@@ -151,7 +151,7 @@ class Beam
         }
 
         if ($isUp) {
-            $this->runPreRemoteCommands();
+            $this->runPreTargetCommands();
             $changedFiles = $this->options['deploymentprovider']->up(
                 $this->options['deploymentoutputhandler']
             );
@@ -163,7 +163,7 @@ class Beam
 
         if ($isUp) {
             $this->runPostLocalCommands();
-            $this->runPostRemoteCommands();
+            $this->runPostTargetCommands();
         }
 
         return $changedFiles;
@@ -239,9 +239,9 @@ class Beam
     /**
      * @return mixed
      */
-    public function getRemotePath()
+    public function getTargetPath()
     {
-        return $this->getCombinedPath($this->options['deploymentprovider']->getRemotePath());
+        return $this->getCombinedPath($this->options['deploymentprovider']->getTargetPath());
     }
     /**
      * @param boolean $prepared
@@ -258,7 +258,7 @@ class Beam
         return $this->prepared;
     }
     /**
-     * Returns whether or not files are being sent to the remote
+     * Returns whether or not files are being sent to the target
      * @return bool
      */
     public function isUp()
@@ -334,7 +334,7 @@ class Beam
      */
     public function getServer()
     {
-        return $this->config['servers'][$this->options['remote']];
+        return $this->config['servers'][$this->options['target']];
     }
     /**
      * Get the locked branch
@@ -459,26 +459,26 @@ class Beam
             }
         }
     }
-    protected function runPreRemoteCommands()
+    protected function runPreTargetCommands()
     {
         foreach ($this->config['commands'] as $command) {
-            if ($command['phase'] == 'pre' && $command['location'] == 'remote') {
+            if ($command['phase'] == 'pre' && $command['location'] == 'target') {
                 $this->runRemoteCommand($command);
             }
         }
     }
-    protected function runPostRemoteCommands()
+    protected function runPostTargetCommands()
     {
         foreach ($this->config['commands'] as $command) {
-            if ($command['phase'] == 'post' && $command['location'] == 'remote') {
-                $this->runRemoteCommand($command);
+            if ($command['phase'] == 'post' && $command['location'] == 'target') {
+                $this->runTargetCommand($command);
             }
         }
     }
     /**
      * @param   $command
      */
-    protected function runRemoteCommand($command)
+    protected function runTargetCommand($command)
     {
         $server = $this->getServer();
         $configuration = new SshConfigFileConfiguration(
@@ -529,7 +529,7 @@ class Beam
         $resolver->setRequired(
             array(
                 'direction',
-                'remote', // TODO: rename to target
+                'target',
                 'srcdir'
             )
         )->setOptional(
@@ -553,7 +553,7 @@ class Beam
                         'up',
                         'down'
                     ),
-                    'remote' => array_keys($this->config['servers'])
+                    'target' => array_keys($this->config['servers'])
                 )
             )->setDefaults(
                 array(

@@ -54,7 +54,7 @@ class Sftp implements DeploymentProvider
         $files = $this->getFromFiles();
         $rootpath = $this->beam->getLocalPath();
 
-        $checksumfile = $this->getRemoteFilePath('checksums.json');
+        $checksumfile = $this->getTargetFilePath('checksums.json');
         $checksums = false;
 
         if (function_exists('bzdecompress') && $sftp->exists($checksumfile . '.bz2')) {
@@ -76,7 +76,7 @@ class Sftp implements DeploymentProvider
 
         foreach ($files as $file) {
             $path = $file->getPathname();
-            $remotefile = $this->getRemoteFilePath($path);
+            $remotefile = $this->getTargetFilePath($path);
             $relativefilename = Utils::getRelativePath($rootpath, $path);
             if ($sftp->exists($remotefile)) {
                 $remoteStat = $sftp->stat($remotefile);
@@ -134,7 +134,7 @@ class Sftp implements DeploymentProvider
         // TODO: Implement down() method.
     }
 
-    protected function getRemoteFilePath($path)
+    protected function getTargetFilePath($path)
     {
         $server = $this->beam->getServer();
         if ($path[0] == '/') {
@@ -165,8 +165,9 @@ class Sftp implements DeploymentProvider
     /**
      * @return mixed
      */
-    public function getRemotePath()
+    public function getTargetPath()
     {
-
+        $server = $this->beam->getServer();
+        return $server['webroot'];
     }
 }

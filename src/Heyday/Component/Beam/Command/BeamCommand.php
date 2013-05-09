@@ -32,9 +32,9 @@ class BeamCommand extends Command
                 'Valid values are \'up\' or \'down\''
             )
             ->addArgument(
-                'remote',
+                'target',
                 InputArgument::REQUIRED,
-                'Config name of remote location to be beamed from or to'
+                'Config name of target location to be beamed from or to'
             )
             ->addOption(
                 'branch',
@@ -259,7 +259,7 @@ class BeamCommand extends Command
     {
         $options = array(
             'direction' => $input->getArgument('direction'),
-            'remote'    => $input->getArgument('remote')
+            'target'    => $input->getArgument('target')
         );
 
         if ($input->getOption('branch')) {
@@ -318,8 +318,29 @@ class BeamCommand extends Command
      * @param                 $formatterHelper
      * @param                 $beam
      */
-    protected function outputSummary(OutputInterface $output, $formatterHelper, $beam)
+    protected function outputSummary(OutputInterface $output, $formatterHelper, Beam $beam)
     {
+        if ($beam->isUp()) {
+            $fromMessage = sprintf(
+                'From: %s @ %s',
+                $beam->getCombinedPath($beam->getLocalPath()),
+                $beam->getOption('branch')
+            );
+            $toMessage = sprintf(
+                'To:   %s',
+                $beam->getTargetPath()
+            );
+        } else {
+            $toMessage = sprintf(
+                'To: %s @ %s',
+                $beam->getCombinedPath($beam->getLocalPath()),
+                $beam->getOption('branch')
+            );
+            $fromMessage = sprintf(
+                'From:   %s',
+                $beam->getTargetPath()
+            );
+        }
         $output->writeln(
             array(
                 $formatterHelper->formatSection(
@@ -334,19 +355,12 @@ class BeamCommand extends Command
                 ),
                 $formatterHelper->formatSection(
                     'warn',
-                    sprintf(
-                        'From: %s @ %s',
-                        $beam->getCombinedPath($beam->getLocalPath()),
-                        $beam->getOption('branch')
-                    ),
+                    $fromMessage,
                     'comment'
                 ),
                 $formatterHelper->formatSection(
                     'warn',
-                    sprintf(
-                        'To:   %s',
-                        $beam->getRemotePath()
-                    ),
+                    $toMessage,
                     'comment'
                 )
             )

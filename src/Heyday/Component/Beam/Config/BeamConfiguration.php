@@ -76,7 +76,7 @@ class BeamConfiguration implements ConfigurationInterface
      */
     protected $locations = array(
         'local',
-        'remote'
+        'target'
     );
     /**
      * Generates the configuration tree builder.
