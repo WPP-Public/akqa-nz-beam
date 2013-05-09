@@ -219,15 +219,21 @@ class Beam
         if ($this->isWorkingCopy()) {
             $path = $this->options['srcdir'];
         } else {
-            $path = $this->getLocalPathFolder() .
-                DIRECTORY_SEPARATOR .
-                $this->options['exportdir'];
-            // TODO: Think about making this not relative to the srcdir
+            $path = sprintf(
+                '/tmp/%s',
+                $this->getLocalPathname()
+            );
         }
-
         return sprintf(
             '%s',
             $path
+        );
+    }
+    public function getLocalPathname()
+    {
+        return sprintf(
+            'beam-%s',
+            md5($this->options['srcdir'])
         );
     }
     /**
@@ -528,14 +534,12 @@ class Beam
             )
         )->setOptional(
                 array(
-                    'exportdir',
                     'branch',
                     'path',
                     'dry-run',
                     'checksum',
                     'delete',
                     'workingcopy',
-                    'excludesfile',
                     'archive',
                     'compress',
                     'vcsprovider',
@@ -553,8 +557,6 @@ class Beam
                 )
             )->setDefaults(
                 array(
-                    'exportdir' => '_temp',
-                    'excludesfile' => '.beam-excludes',
                     'path' => false,
                     'dry-run' => false,
                     'delete' => false,
@@ -578,8 +580,6 @@ class Beam
                 array(
                     'branch' => 'string',
                     'srcdir' => 'string',
-                    'exportdir' => 'string',
-                    'excludesfile' => 'string',
                     'dry-run' => 'bool',
                     'checksum' => 'bool',
                     'workingcopy' => 'bool',
@@ -598,12 +598,6 @@ class Beam
                     },
                     'path' => function (Options $options, $value) {
                         return is_string($value) ? trim($value, '/') : false;
-                    },
-                    'exportdir' => function (Options $options, $value) {
-                        return trim($value, '/');
-                    },
-                    'excludesfile' => function (Options $options, $value) {
-                        return trim($value, '/');
                     },
                     'deploymentprovider' => function (Options $options, $value) use ($that) {
                         if (is_callable($value)) {

@@ -36,7 +36,8 @@ class Rsync implements DeploymentProvider
                 $this->beam->getLocalPath(),
                 $this->getRemotePath(),
                 $dryrun
-            )
+            ),
+            $output
         );
     }
     /**
@@ -49,7 +50,8 @@ class Rsync implements DeploymentProvider
                 $this->getRemotePath(),
                 $this->beam->getLocalPath(),
                 $dryrun
-            )
+            ),
+            $output
         );
     }
     /**
@@ -161,9 +163,9 @@ class Rsync implements DeploymentProvider
                     $change['filetype'] = preg_match('/\/$/', $matches[5]) ? 'directory' : 'file';
                     $change['reason'] = array('notexist');
                 } else {
-                    if ($matches[2] == '.') {
-                        continue;
-                    }
+//                    if ($matches[2] == '.') {
+//                        continue;
+//                    }
                     switch ($matches[2]) {
                         case '<':
                             $change['update'] = 'sent';
@@ -176,6 +178,9 @@ class Rsync implements DeploymentProvider
                             break;
                         case 'h':
                             $change['update'] = 'link';
+                            break;
+                        case '.':
+                            $change['update'] = 'nochange';
                             break;
                     }
                     switch ($matches[3]) {
@@ -257,9 +262,10 @@ class Rsync implements DeploymentProvider
      */
     protected function getExcludesPath()
     {
-        return dirname($this->beam->getOption('srcdir')) .
-            DIRECTORY_SEPARATOR .
-            $this->beam->getOption('excludesfile');
+        return sprintf(
+            '/tmp/%s.excludes',
+            $this->beam->getLocalPathname()
+        );
     }
     /**
      * Gets the to location for rsync

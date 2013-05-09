@@ -80,12 +80,6 @@ class BeamCommand extends Command
             )
             ->addConfigOption()
             ->addOption(
-                'exportdir',
-                '',
-                InputOption::VALUE_REQUIRED,
-                'The export directory name'
-            )
-            ->addOption(
                 'sftp',
                 '',
                 InputOption::VALUE_NONE,
@@ -273,9 +267,6 @@ class BeamCommand extends Command
         }
         if ($input->getOption('path')) {
             $options['path'] = $input->getOption('path');
-        }
-        if ($input->getOption('exportdir')) {
-            $options['exportdir'] = $input->getOption('exportdir');
         }
         if ($input->getOption('dryrun')) {
             $options['dry-run'] = true;

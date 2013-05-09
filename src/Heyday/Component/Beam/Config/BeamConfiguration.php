@@ -28,7 +28,6 @@ class BeamConfiguration implements ConfigurationInterface
             'deploy.json',
             'beam.json',
             'deploy.properties',
-            'exclude.properties',
             'sftp-config.json',
             'checksums.json*',
             '/access-logs/',
