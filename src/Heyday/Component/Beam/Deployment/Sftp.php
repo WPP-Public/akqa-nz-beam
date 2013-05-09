@@ -100,7 +100,7 @@ class Sftp implements DeploymentProvider
                 $targetfile = $this->getTargetFilePath($path);
                 $relativefilename = Utils::getRelativePath($dir, $path);
 
-                if (false) {
+                if (true) {
                     if (isset($targetchecksums[$relativefilename])) {
                         if ($targetchecksums[$relativefilename] !== $localchecksums[$relativefilename]) {
                             $result[] = array(
