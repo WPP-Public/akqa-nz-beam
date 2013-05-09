@@ -23,8 +23,11 @@ class Sftp implements DeploymentProvider
     protected function getSftp()
     {
         if (null === $this->sftp) {
-            // TODO: Error on non-absolute
             $server = $this->beam->getServer();
+
+            if ($server['webroot'][0] !== '/') {
+                throw new \RuntimeException('Webrrot must be a absolute path when using sftp');
+            }
 
             $configuration = new SshConfigFileConfiguration(
                 '~/.ssh/config',
