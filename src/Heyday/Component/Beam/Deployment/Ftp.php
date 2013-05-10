@@ -193,7 +193,7 @@ class Ftp extends Deployment implements DeploymentProvider
             throw new \RuntimeException('Ftp requires a password');
         }
         if ($server['webroot'][0] !== '/') {
-            throw new \RuntimeException('Webrrot must be a absolute path when using ftp');
+            throw new \RuntimeException('Webroot must be a absolute path when using ftp');
         }
         return sprintf(
             'ftp%s://%s:%s@%s%s',

@@ -209,11 +209,13 @@ class Sftp extends Deployment implements DeploymentProvider
         return $deploymentResult;
     }
     /**
-     * @param  callable $output
-     * @param  bool     $dryrun
+     * @param  callable        $output
+     * @param  bool            $dryrun
+     * @param DeploymentResult $deploymentResult
+     * @throws \RuntimeException
      * @return mixed
      */
-    public function down(\Closure $output = null, $dryrun = false)
+    public function down(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
     {
         // TODO: Implement down() method.
         throw new \RuntimeException('Not implemented');
