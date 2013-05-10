@@ -52,7 +52,7 @@ class MakeChecksumsCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $processor = new Processor();
-        $path = $input->getOption('path');
+        $path = realpath($input->getOption('path'));
 
         $config = $processor->processConfiguration(
             new BeamConfiguration(),
@@ -61,7 +61,7 @@ class MakeChecksumsCommand extends Command
             )
         );
 
-        $files = Utils::getAllowedFilesFromDirectory($config['exclude'], realpath($path));
+        $files = Utils::getAllowedFilesFromDirectory($config['exclude'], $path);
         $checksums = Utils::checksumsFromFiles($files, $path);
         $jsonfile = rtrim($path, '/') . '/' . $input->getOption('checksumfile');
 
