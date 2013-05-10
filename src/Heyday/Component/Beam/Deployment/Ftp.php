@@ -6,25 +6,13 @@ use Heyday\Component\Beam\Beam;
 use Heyday\Component\Beam\Deployment\DeploymentProvider;
 use Heyday\Component\Beam\Utils;
 use Heyday\Component\Beam\Deployment\DeploymentResult;
-use Ssh\Authentication\Password;
-use Ssh\Configuration;
-use Ssh\SshConfigFileConfiguration;
-use Ssh\Session;
 
-/**
- * Class Sftp
- * @package Heyday\Component\Beam\Deployment
- */
-class Sftp extends Deployment implements DeploymentProvider
+class Ftp extends Deployment implements DeploymentProvider
 {
     /**
      * @var
      */
     protected $fullmode;
-    /**
-     * @var
-     */
-    protected $sftp;
     /**
      * @param bool $fullmode
      */
@@ -33,59 +21,14 @@ class Sftp extends Deployment implements DeploymentProvider
         $this->fullmode = $fullmode;
     }
     /**
-     * @return \Ssh\Sftp
-     * @throws \RuntimeException
-     */
-    protected function getSftp()
-    {
-        if (null === $this->sftp) {
-            $server = $this->beam->getServer();
-
-            if ($server['webroot'][0] !== '/') {
-                throw new \RuntimeException('Webrrot must be a absolute path when using sftp');
-            }
-
-            if (isset($server['password'])) {
-                $configuration = new Configuration(
-                    $server['host']
-                );
-
-                $session = new Session(
-                    $configuration,
-                    new Password($server['user'], $server['password'])
-                );
-            } else {
-                $configuration = new SshConfigFileConfiguration(
-                    '~/.ssh/config',
-                    $server['host']
-                );
-
-                $session = new Session(
-                    $configuration,
-                    $configuration->getAuthentication(
-                        null,
-                        $server['user']
-                    )
-                );
-            }
-
-            $this->sftp = $session->getSftp();
-        }
-
-        return $this->sftp;
-    }
-    /**
-     * @param  callable         $output
-     * @param  bool             $dryrun
-     * @param  DeploymentResult $deploymentResult
-     * @return mixed
+     * @param callable         $output
+     * @param bool             $dryrun
+     * @param DeploymentResult $deploymentResult
+     * @return DeploymentResult|mixed
      */
     public function up(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
     {
-        // TODO: implement delete
         $dir = $this->beam->getLocalPath();
-
-        $sftp = $this->getSftp();
 
         $files = Utils::getAllowedFilesFromDirectory(
             $this->beam->getConfig('exclude'),
@@ -96,14 +39,14 @@ class Sftp extends Deployment implements DeploymentProvider
 
         $targetchecksums = array();
 
-        $targetchecksumfile = $this->getTargetFilePath('checksums.json');
+        $targetchecksumfile = $this->getTargetFullPath('checksums.json');
 
-        if (function_exists('bzdecompress') && $sftp->exists($targetchecksumfile . '.bz2')) {
-            $targetchecksums = Utils::checksumsFromBz2($sftp->read($targetchecksumfile . '.bz2'));
-        } elseif (function_exists('gzinflate') && $sftp->exists($targetchecksumfile . '.gz')) {
-            $targetchecksums = Utils::checksumsFromGz($sftp->read($targetchecksumfile . '.gz'));
-        } elseif ($sftp->exists($targetchecksumfile)) {
-            $targetchecksums = Utils::checksumsFromString($sftp->read($targetchecksumfile));
+        if (function_exists('bzdecompress') && file_exists($targetchecksumfile . '.bz2')) {
+            $targetchecksums = Utils::checksumsFromBz2(file_get_contents($targetchecksumfile . '.bz2'));
+        } elseif (function_exists('gzinflate') && file_exists($targetchecksumfile . '.gz')) {
+            $targetchecksums = Utils::checksumsFromGz(file_get_contents($targetchecksumfile . '.gz'));
+        } elseif (file_exists($targetchecksumfile)) {
+            $targetchecksums = Utils::checksumsFromString(file_get_contents($targetchecksumfile));
         }
 
         $targetchecksums = Utils::getFilteredChecksums(
@@ -122,22 +65,20 @@ class Sftp extends Deployment implements DeploymentProvider
 
                 if ($this->fullmode) {
 
-                    if ($sftp->exists($targetfile)) {
+                    if (file_exists($targetfile)) {
                         if (isset($targetchecksums[$relativefilename]) && $targetchecksums[$relativefilename] !== $localchecksums[$relativefilename]) {
                             $result[] = array(
                                 'update' => 'sent',
-                                'filename' => $targetfile,
+                                'filename' => $relativefilename,
                                 'localfilename' => $path,
                                 'filetype' => 'file',
                                 'reason' => array('checksum')
                             );
                         } else {
-                            $targetStat = $sftp->stat($targetfile);
-                            $localStat = stat($path);
-                            if ($targetStat['size'] != $localStat['size']) {
+                            if (filesize($targetfile) != filesize($path)) {
                                 $result[] = array(
                                     'update' => 'sent',
-                                    'filename' => $targetfile,
+                                    'filename' => $relativefilename,
                                     'localfilename' => $path,
                                     'filetype' => 'file',
                                     'reason' => array('size')
@@ -147,7 +88,7 @@ class Sftp extends Deployment implements DeploymentProvider
                     } else {
                         $result[] = array(
                             'update' => 'created',
-                            'filename' => $targetfile,
+                            'filename' => $relativefilename,
                             'localfilename' => $path,
                             'filetype' => 'file',
                             'reason' => array('missing')
@@ -160,7 +101,7 @@ class Sftp extends Deployment implements DeploymentProvider
                         if ($targetchecksums[$relativefilename] !== $localchecksums[$relativefilename]) {
                             $result[] = array(
                                 'update' => 'sent',
-                                'filename' => $targetfile,
+                                'filename' => $relativefilename,
                                 'localfilename' => $path,
                                 'filetype' => 'file',
                                 'reason' => array('checksum')
@@ -169,7 +110,7 @@ class Sftp extends Deployment implements DeploymentProvider
                     } else {
                         $result[] = array(
                             'update' => 'created',
-                            'filename' => $targetfile,
+                            'filename' => $relativefilename,
                             'localfilename' => $path,
                             'filetype' => 'file',
                             'reason' => array('missing')
@@ -184,25 +125,33 @@ class Sftp extends Deployment implements DeploymentProvider
         }
 
         if (!$dryrun && !$this->beam->getOption('dry-run')) {
+            $writecontext = stream_context_create(array('ftp' => array('overwrite' => true)));
             foreach ($deploymentResult as $change) {
                 if (is_callable($output)) {
                     $output('out', "\n");
                 }
-                $dir = dirname($change['filename']);
-                if (!$sftp->exists($dir)) {
-                    $sftp->mkdir($dir, 0755, true);
+                $dir = $this->getTargetFullPath(dirname($change['filename']));
+                if (!file_exists($dir)) {
+                    mkdir($dir, 0755, true);
                 }
-                $sftp->send($change['localfilename'], $change['filename']);
+                file_put_contents(
+                    $this->getTargetFullPath($change['filename']),
+                    file_get_contents($change['localfilename']),
+                    0,
+                    $writecontext
+                );
             }
             // Save the checksums to the server
-            $sftp->write(
-                $this->getTargetFilePath('checksums.json.bz2'),
+            file_put_contents(
+                $this->getTargetFullPath($this->getTargetFilePath('checksums.json.bz2')),
                 Utils::checksumsToBz2(
                     $this->beam->hasPath() ? array_merge(
                         $targetchecksums,
                         $localchecksums
                     ) : $localchecksums
-                )
+                ),
+                0,
+                $writecontext
             );
         }
 
@@ -213,15 +162,13 @@ class Sftp extends Deployment implements DeploymentProvider
      * @param  bool     $dryrun
      * @return mixed
      */
-    public function down(\Closure $output = null, $dryrun = false)
+    public function down(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
     {
-        // TODO: Implement down() method.
         throw new \RuntimeException('Not implemented');
     }
-
     /**
      * @param $path
-     * @return mixed|string
+     * @return string
      */
     protected function getTargetFilePath($path)
     {
@@ -232,13 +179,29 @@ class Sftp extends Deployment implements DeploymentProvider
             return $server['webroot'] . '/' . $path;
         }
     }
+    protected function getTargetFullPath($path)
+    {
+        return $this->getTargetPath() . '/' . $path;
+    }
     /**
      * @return mixed
      */
     public function getTargetPath()
     {
         $server = $this->beam->getServer();
-
-        return $server['webroot'];
+        if (!isset($server['password'])) {
+            throw new \RuntimeException('Ftp requires a password');
+        }
+        if ($server['webroot'][0] !== '/') {
+            throw new \RuntimeException('Webrrot must be a absolute path when using ftp');
+        }
+        return sprintf(
+            'ftp%s://%s:%s@%s%s',
+            '', //TODO: ssl
+            $server['user'],
+            $server['password'],
+            $server['host'],
+            $server['webroot']
+        );
     }
 }

@@ -20,13 +20,13 @@ interface DeploymentProvider
      * @param  bool     $dryrun
      * @return mixed
      */
-    public function up(\Closure $output = null, $dryrun = false);
+    public function up(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null);
     /**
      * @param  callable $output
      * @param  bool     $dryrun
      * @return mixed
      */
-    public function down(\Closure $output = null, $dryrun = false);
+    public function down(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null);
     /**
      * @return mixed
      */

@@ -10,23 +10,12 @@ use Symfony\Component\Process\Process;
  * Class Rsync
  * @package Heyday\Component\Beam\Deployment
  */
-class Rsync implements DeploymentProvider
+class Rsync extends Deployment implements DeploymentProvider
 {
     /**
      *
      */
     const TIMEOUT = 300;
-    /**
-     * @var \Heyday\Component\Beam\Beam
-     */
-    protected $beam;
-    /**
-     * @param \Heyday\Component\Beam\Beam $beam
-     */
-    public function setBeam(Beam $beam)
-    {
-        $this->beam = $beam;
-    }
     /**
      * @{inheritDoc}
      */
