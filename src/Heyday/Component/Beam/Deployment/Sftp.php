@@ -32,7 +32,7 @@ class Sftp implements DeploymentProvider
     /**
      * @param bool $fullmode
      */
-    public function _construct($fullmode = false)
+    public function __construct($fullmode = false)
     {
         $this->fullmode = $fullmode;
     }
