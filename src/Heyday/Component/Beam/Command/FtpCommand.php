@@ -26,6 +26,11 @@ class FtpCommand extends BeamCommand
                 'f',
                 InputOption::VALUE_NONE,
                 'Does a more full check on the target, relying less on the checksums file'
+            )->addOption(
+                'ssl',
+                's',
+                InputOption::VALUE_NONE,
+                'Use ssl (ftps)'
             );
     }
     /**
@@ -35,7 +40,10 @@ class FtpCommand extends BeamCommand
     protected function getOptions(InputInterface $input)
     {
         $options = parent::getOptions($input);
-        $options['deploymentprovider'] = new Ftp($input->getOption('full'));
+        $options['deploymentprovider'] = new Ftp(
+            $input->getOption('full'),
+            $input->getOption('ssl')
+        );
 
         return $options;
     }

@@ -14,11 +14,17 @@ class Ftp extends Deployment implements DeploymentProvider
      */
     protected $fullmode;
     /**
-     * @param bool $fullmode
+     * @var
      */
-    public function __construct($fullmode = false)
+    protected $ssl;
+    /**
+     * @param bool $fullmode
+     * @param bool $ssl
+     */
+    public function __construct($fullmode = false, $ssl = false)
     {
         $this->fullmode = $fullmode;
+        $this->ssl = $ssl;
     }
     /**
      * @param callable         $output
@@ -158,8 +164,10 @@ class Ftp extends Deployment implements DeploymentProvider
         return $deploymentResult;
     }
     /**
-     * @param  callable $output
-     * @param  bool     $dryrun
+     * @param  callable        $output
+     * @param  bool            $dryrun
+     * @param DeploymentResult $deploymentResult
+     * @throws \RuntimeException
      * @return mixed
      */
     public function down(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
@@ -184,6 +192,7 @@ class Ftp extends Deployment implements DeploymentProvider
         return $this->getTargetPath() . '/' . $path;
     }
     /**
+     * @throws \RuntimeException
      * @return mixed
      */
     public function getTargetPath()
@@ -197,7 +206,7 @@ class Ftp extends Deployment implements DeploymentProvider
         }
         return sprintf(
             'ftp%s://%s:%s@%s%s',
-            '', //TODO: ssl
+            $this->ssl ? 's' : '',
             $server['user'],
             $server['password'],
             $server['host'],
