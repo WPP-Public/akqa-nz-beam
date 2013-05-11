@@ -21,17 +21,23 @@ use Symfony\Component\Console\Input\InputInterface;
 class Application extends BaseApplication
 {
     /**
+     * The default command when beam is operating in single command mode
+     */
+    const DEFAULT_COMMAND = 'rsync';
+    /**
      * @var bool
      */
     protected $isSingleCommandApp = false;
     /**
-     *
+     * Set the name and version (with the version a dummy var to be swapped out by the compiler)
      */
     public function __construct()
     {
         parent::__construct('Beam', '~package_version~');
     }
     /**
+     * If the first argument is a registered command then return that as the command name, else default to the
+     * specified default command
      * @param  InputInterface $input
      * @return string
      */
@@ -43,10 +49,11 @@ class Application extends BaseApplication
         } else {
             $this->isSingleCommandApp = true;
 
-            return 'rsync';
+            return static::DEFAULT_COMMAND;
         }
     }
     /**
+     * Set the default commands
      * @return array
      */
     protected function getDefaultCommands()
@@ -63,6 +70,7 @@ class Application extends BaseApplication
         return $commands;
     }
     /**
+     * Return the default helper set
      * @return \Symfony\Component\Console\Helper\HelperSet
      */
     protected function getDefaultHelperSet()
@@ -74,6 +82,8 @@ class Application extends BaseApplication
         return $helperset;
     }
     /**
+     * When operating as a single command app, ensure the app doesn't error due to the first argument
+     * not being a command on the command set
      * @return \Symfony\Component\Console\Input\InputDefinition
      */
     public function getDefinition()

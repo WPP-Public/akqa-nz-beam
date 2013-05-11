@@ -21,9 +21,7 @@ class Utils
             \RecursiveIteratorIterator::CHILD_FIRST
         );
         foreach ($iterator as $file) {
-            if (in_array($file->getBasename(), array('.', '..'))) {
-                continue;
-            } elseif ($condition($file)) {
+            if (!in_array($file->getBasename(), array('.', '..')) && ($file->isFile() || $file->isLink()) && $condition($file)) {
                 $files[] = $file;
             }
         }
@@ -39,14 +37,12 @@ class Utils
     {
         return Utils::getFilesFromDirectory(
             function ($file) use ($excludes, $dir) {
-                $path = Utils::getRelativePath(
-                    $dir,
-                    $file->getPathname()
-                );
-
-                return ($file->isFile() || $file->isLink()) && !Utils::isExcluded(
+                return !Utils::isExcluded(
                     $excludes,
-                    $path
+                    Utils::getRelativePath(
+                        $dir,
+                        $file->getPathname()
+                    )
                 );
             },
             $dir
@@ -68,22 +64,43 @@ class Utils
         return $checksums;
     }
     /**
-     * @param $excludes
-     * @param $path
+     * # if the pattern starts with a / then it is matched against the start of the filename, otherwise it is matched
+     *   against the end of the filename. Thus "/foo" would match a file called "foo" at the base of the tree.
+     *   On the other hand, "foo" would match any file called "foo" anywhere in the tree because the algorithm is
+     *   applied recursively from top down; it behaves as if each path component gets a turn at being the
+     *   end of the file name.
+     *
+     * # if the pattern ends with a / then it will only match a directory, not a file, link or device.
+     *
+     * # if the pattern contains a wildcard character from the set *?[ then expression matching is applied using the
+     *   shell filename matching rules. Otherwise a simple string match is used.
+     *
+     * # if the pattern includes a double asterisk "**" then all wildcards in the pattern will match slashes, otherwise
+     *   they will stop at slashes.
+     *
+     * # if the pattern contains a / (not counting a trailing /) then it is matched against the full filename, including
+     *   any leading directory. If the pattern doesn't contain a / then it is matched only against the final component
+     *   of the filename. Again, remember that the algorithm is applied recursively so "full filename" can actually be
+     *   any portion of a path.
+     *
+     * @param $patterns
+     * @param $path A relative path
      * @return bool
      */
-    public static function isExcluded(array $excludes, $path)
+    public static function isExcluded(array $patterns, $path)
     {
-        foreach ($excludes as $exclude) {
-            if ($exclude[0] === '/' && substr($exclude, -1) === '/') {
-                if (strpos('/' . $path, $exclude) === 0) {
-                    return true;
+        $path = '/' . $path;
+        foreach ($patterns as $pattern) {
+            if (substr($pattern, -1) === '/') {
+                $pattern = $pattern . '*';
+                if ($pattern[0] !== '/') {
+                    $pattern = '*' . $pattern;
                 }
-            } elseif (substr($exclude, -1) == '/') {
-                if (strpos('/' . $path, $exclude) !== false) {
-                    return true;
-                }
-            } elseif (fnmatch('*' . $exclude, $path)) {
+            } elseif($pattern[0] !== '/') {
+                $pattern = '*/' . $pattern;
+            }
+
+            if (fnmatch($pattern, $path)) {
                 return true;
             }
         }
