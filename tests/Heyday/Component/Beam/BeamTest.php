@@ -31,7 +31,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
         );
         $this->validOptions = array(
             'direction' => 'up',
-            'remote' => 'live',
+            'target' => 'live',
             'srcdir' => vfsStream::url('root/test'),
             'vcsprovider' => $this->getVcsProviderStub(),
             'deploymentprovider' => $this->getDeploymentProviderStub()
@@ -116,7 +116,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
         );
     }
     /**
-     * @expectedExceptionMessage The option "remote" has the value "fake", but is expected to be one of "live"
+     * @expectedExceptionMessage The option "target" has the value "fake", but is expected to be one of "live"
      * @expectedException \Symfony\Component\OptionsResolver\Exception\InvalidOptionsException
      */
     public function testBeamConstructInvalidOptionsRemoteException()
@@ -127,7 +127,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             ),
             $this->getCombinedOptions(
                 array(
-                    'remote' => 'fake'
+                    'target' => 'fake'
                 )
             )
         );
@@ -308,7 +308,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             ),
             $this->validOptions
         );
-        $this->assertEquals('vfs://root/_temp', $beam->getLocalPath());
+        $this->assertEquals('/tmp/beam-57df3e8661206a673d2fef647599e814', $beam->getLocalPath());
         $beam = new Beam(
             array(
                 $this->validConfig
@@ -319,30 +319,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
                 )
             )
         );
-        $this->assertEquals('vfs://root/_temp', $beam->getLocalPath());
-        $beam = new Beam(
-            array(
-                $this->validConfig
-            ),
-            $this->getCombinedOptions(
-                array(
-                    'exportdir' => 'testing'
-                )
-            )
-        );
-        $this->assertEquals('vfs://root/testing', $beam->getLocalPath());
-        $beam = new Beam(
-            array(
-                $this->validConfig
-            ),
-            $this->getCombinedOptions(
-                array(
-                    'exportdir' => 'testing',
-                    'path' => 'extra/'
-                )
-            )
-        );
-        $this->assertEquals('vfs://root/testing', $beam->getLocalPath());
+        $this->assertEquals('/tmp/beam-57df3e8661206a673d2fef647599e814', $beam->getLocalPath());
         $beam = new Beam(
             array(
                 $this->validConfig

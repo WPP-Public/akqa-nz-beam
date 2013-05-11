@@ -22,7 +22,7 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                         'test command' => array(
                             'command' => 'test',
                             'phase' => 'pre',
-                            'location' => 'remote',
+                            'location' => 'target',
                             'servers' => array(
                                 'live'
                             )
@@ -33,7 +33,9 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                             '_base',
                             'gear',
                             'silverstripe',
-                            'symfony'
+                            'symfony',
+                            'wordpress',
+                            'zend'
                         ),
                         'patterns' => array(
                             'test',
@@ -57,7 +59,7 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                     'test command' => array(
                         'command' => 'test',
                         'phase' => 'pre',
-                        'location' => 'remote',
+                        'location' => 'target',
                         'servers' => array(
                             'live'
                         )
@@ -66,26 +68,27 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                 'exclude' => array(
                     '*~',
                     '.DS_Store',
-                    '.git',
                     '.gitignore',
                     '.mergesources.yml',
-                    '.svn',
                     'README.md',
                     'composer.json',
                     'composer.lock',
                     'deploy.json',
+                    'beam.json',
                     'deploy.properties',
-                    'exclude.properties',
                     'sftp-config.json',
+                    'checksums.json*',
                     '/access-logs/',
                     '/cgi-bin/',
                     '/.idea/',
+                    '.svn/',
+                    '.git/',
                     '/images/repository/',
                     '/assets/',
                     '/silverstripe-cache/',
+                    '/assets-generated/',
                     '/cache-include/cache/',
                     '/heyday-cacheinclude/cache/',
-                    '/assets-generated/',
                     '/silverstripe-cacheinclude/cache/',
                     '/cache/',
                     '/data/lucene/',
@@ -95,6 +98,9 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                     '/lib/model/map/',
                     '/lib/model/om/',
                     '/log/',
+                    '/web/uploads/',
+                    'wp-content/uploads/',
+                    '/www/uploads/',
                     '/web/uploads/',
                     'test',
                     'hello'

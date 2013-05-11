@@ -71,7 +71,7 @@ class UtilsTest extends \PHPUnit_Framework_TestCase
     public function testIsExcluded()
     {
         $this->assertTrue(
-            Utils::isExcluded(
+            Utils::isFileExcluded(
                 array(
                     '/test'
                 ),
@@ -79,7 +79,7 @@ class UtilsTest extends \PHPUnit_Framework_TestCase
             )
         );
         $this->assertFalse(
-            Utils::isExcluded(
+            Utils::isFileExcluded(
                 array(
                     '/test'
                 ),
@@ -87,7 +87,7 @@ class UtilsTest extends \PHPUnit_Framework_TestCase
             )
         );
         $this->assertTrue(
-            Utils::isExcluded(
+            Utils::isFileExcluded(
                 array(
                     '/test/'
                 ),
@@ -95,7 +95,7 @@ class UtilsTest extends \PHPUnit_Framework_TestCase
             )
         );
         $this->assertTrue(
-            Utils::isExcluded(
+            Utils::isFileExcluded(
                 array(
                     'test/'
                 ),
@@ -103,7 +103,7 @@ class UtilsTest extends \PHPUnit_Framework_TestCase
             )
         );
         $this->assertTrue(
-            Utils::isExcluded(
+            Utils::isFileExcluded(
                 array(
                     '*'
                 ),
@@ -111,7 +111,7 @@ class UtilsTest extends \PHPUnit_Framework_TestCase
             )
         );
         $this->assertTrue(
-            Utils::isExcluded(
+            Utils::isFileExcluded(
                 array(
                     'filename.file'
                 ),
@@ -119,12 +119,27 @@ class UtilsTest extends \PHPUnit_Framework_TestCase
             )
         );
         $this->assertTrue(
-            Utils::isExcluded(
+            Utils::isFileExcluded(
                 array(
                     'filename.file'
                 ),
                 'directory/filename.file'
             )
+        );
+        $this->assertTrue(
+            Utils::isFileExcluded(
+                array(
+                    'filename*'
+                ),
+                'directory/filename.file'
+            )
+        );
+    }
+    public function testGetRelativePath()
+    {
+        $this->assertEquals(
+            'vendor/filename.php',
+            Utils::getRelativePath('/home', '/home/vendor/filename.php')
         );
     }
 }

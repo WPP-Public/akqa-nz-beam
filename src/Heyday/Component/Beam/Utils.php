@@ -37,7 +37,7 @@ class Utils
     {
         return Utils::getFilesFromDirectory(
             function ($file) use ($excludes, $dir) {
-                return !Utils::isExcluded(
+                return !Utils::isFileExcluded(
                     $excludes,
                     Utils::getRelativePath(
                         $dir,
@@ -56,7 +56,7 @@ class Utils
     public static function getFilteredChecksums(array $excludes, array $checksums)
     {
         foreach (array_keys($checksums) as $path) {
-            if (Utils::isExcluded($excludes, $path)) {
+            if (Utils::isFileExcluded($excludes, $path)) {
                 unset($checksums[$path]);
             }
         }
@@ -87,7 +87,7 @@ class Utils
      * @param $path A relative path
      * @return bool
      */
-    public static function isExcluded(array $patterns, $path)
+    public static function isFileExcluded(array $patterns, $path)
     {
         $path = '/' . $path;
         foreach ($patterns as $pattern) {
