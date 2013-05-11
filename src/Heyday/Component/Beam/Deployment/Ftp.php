@@ -143,7 +143,7 @@ class Ftp extends Deployment implements DeploymentProvider
             }
             // Save the checksums to the server
             file_put_contents(
-                $this->getTargetFullPath($this->getTargetFilePath('checksums.json.bz2')),
+                $this->getTargetFullPath('checksums.json.bz2'),
                 Utils::checksumsToBz2(
                     $this->beam->hasPath() ? array_merge(
                         $targetchecksums,
