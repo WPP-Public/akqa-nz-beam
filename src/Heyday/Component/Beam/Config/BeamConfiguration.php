@@ -15,7 +15,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
      * @var array
      */
     protected $applications = array(
-        '_base' => array(
+        '_base'        => array(
             '*~',
             '.DS_Store',
             '.gitignore',
@@ -34,7 +34,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
             '.svn/',
             '.git/'
         ),
-        'gear' => array(
+        'gear'         => array(
             '/images/repository/'
         ),
         'silverstripe' => array(
@@ -45,7 +45,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
             '/heyday-cacheinclude/cache/',
             '/silverstripe-cacheinclude/cache/'
         ),
-        'symfony' => array(
+        'symfony'      => array(
             '/cache/',
             '/data/lucene/',
             '/config/log/',
@@ -56,10 +56,10 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
             '/log/',
             '/web/uploads/'
         ),
-        'wordpress' => array(
+        'wordpress'    => array(
             'wp-content/uploads/'
         ),
-        'zend' => array(
+        'zend'         => array(
             '/www/uploads/',
             '/web/uploads/'
         )

@@ -3,12 +3,12 @@
 namespace Heyday\Component\Beam;
 
 use Heyday\Component\Beam\Command\CompileCommand;
+use Heyday\Component\Beam\Command\FtpCommand;
 use Heyday\Component\Beam\Command\GenerateDeployCommand;
 use Heyday\Component\Beam\Command\MakeChecksumsCommand;
 use Heyday\Component\Beam\Command\RsyncCommand;
 use Heyday\Component\Beam\Command\SelfUpdateCommand;
 use Heyday\Component\Beam\Command\SftpCommand;
-use Heyday\Component\Beam\Command\FtpCommand;
 use Heyday\Component\Beam\Helper\ContentProgressHelper;
 use Heyday\Component\Beam\Helper\DeploymentResultHelper;
 use Symfony\Component\Console\Application as BaseApplication;

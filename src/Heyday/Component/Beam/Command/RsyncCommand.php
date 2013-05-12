@@ -2,10 +2,10 @@
 
 namespace Heyday\Component\Beam\Command;
 
-use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Helper\ProgressHelper;
-use Symfony\Component\Console\Helper\FormatterHelper;
 use Heyday\Component\Beam\Deployment\DeploymentResult;
+use Symfony\Component\Console\Helper\FormatterHelper;
+use Symfony\Component\Console\Helper\ProgressHelper;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Class RsyncCommand
@@ -33,6 +33,7 @@ class RsyncCommand extends BeamCommand
         DeploymentResult $deploymentResult
     ) {
         $count = count($deploymentResult);
+
         return function (
             $type,
             $data
@@ -80,6 +81,5 @@ class RsyncCommand extends BeamCommand
             }
         };
     }
-
 
 }

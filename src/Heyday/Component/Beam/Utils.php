@@ -21,7 +21,10 @@ class Utils
             \RecursiveIteratorIterator::CHILD_FIRST
         );
         foreach ($iterator as $file) {
-            if (!in_array($file->getBasename(), array('.', '..')) && ($file->isFile() || $file->isLink()) && $condition($file)) {
+            if (!in_array($file->getBasename(), array('.', '..')) && ($file->isFile() || $file->isLink()) && $condition(
+                $file
+            )
+            ) {
                 $files[] = $file;
             }
         }
@@ -96,7 +99,7 @@ class Utils
                 if ($pattern[0] !== '/') {
                     $pattern = '*' . $pattern;
                 }
-            } elseif($pattern[0] !== '/') {
+            } elseif ($pattern[0] !== '/') {
                 $pattern = '*/' . $pattern;
             }
 

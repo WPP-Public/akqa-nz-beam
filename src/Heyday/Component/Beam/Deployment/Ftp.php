@@ -4,8 +4,8 @@ namespace Heyday\Component\Beam\Deployment;
 
 use Heyday\Component\Beam\Beam;
 use Heyday\Component\Beam\Deployment\DeploymentProvider;
-use Heyday\Component\Beam\Utils;
 use Heyday\Component\Beam\Deployment\DeploymentResult;
+use Heyday\Component\Beam\Utils;
 
 class Ftp extends Deployment implements DeploymentProvider
 {
@@ -27,9 +27,9 @@ class Ftp extends Deployment implements DeploymentProvider
         $this->ssl = $ssl;
     }
     /**
-     * @param callable         $output
-     * @param bool             $dryrun
-     * @param DeploymentResult $deploymentResult
+     * @param  callable               $output
+     * @param  bool                   $dryrun
+     * @param  DeploymentResult       $deploymentResult
      * @return DeploymentResult|mixed
      */
     public function up(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
@@ -74,30 +74,30 @@ class Ftp extends Deployment implements DeploymentProvider
                     if (file_exists($targetfile)) {
                         if (isset($targetchecksums[$relativefilename]) && $targetchecksums[$relativefilename] !== $localchecksums[$relativefilename]) {
                             $result[] = array(
-                                'update' => 'sent',
-                                'filename' => $relativefilename,
+                                'update'        => 'sent',
+                                'filename'      => $relativefilename,
                                 'localfilename' => $path,
-                                'filetype' => 'file',
-                                'reason' => array('checksum')
+                                'filetype'      => 'file',
+                                'reason'        => array('checksum')
                             );
                         } else {
                             if (filesize($targetfile) != filesize($path)) {
                                 $result[] = array(
-                                    'update' => 'sent',
-                                    'filename' => $relativefilename,
+                                    'update'        => 'sent',
+                                    'filename'      => $relativefilename,
                                     'localfilename' => $path,
-                                    'filetype' => 'file',
-                                    'reason' => array('size')
+                                    'filetype'      => 'file',
+                                    'reason'        => array('size')
                                 );
                             }
                         }
                     } else {
                         $result[] = array(
-                            'update' => 'created',
-                            'filename' => $relativefilename,
+                            'update'        => 'created',
+                            'filename'      => $relativefilename,
                             'localfilename' => $path,
-                            'filetype' => 'file',
-                            'reason' => array('missing')
+                            'filetype'      => 'file',
+                            'reason'        => array('missing')
                         );
                     }
 
@@ -106,20 +106,20 @@ class Ftp extends Deployment implements DeploymentProvider
                     if (isset($targetchecksums[$relativefilename])) {
                         if ($targetchecksums[$relativefilename] !== $localchecksums[$relativefilename]) {
                             $result[] = array(
-                                'update' => 'sent',
-                                'filename' => $relativefilename,
+                                'update'        => 'sent',
+                                'filename'      => $relativefilename,
                                 'localfilename' => $path,
-                                'filetype' => 'file',
-                                'reason' => array('checksum')
+                                'filetype'      => 'file',
+                                'reason'        => array('checksum')
                             );
                         }
                     } else {
                         $result[] = array(
-                            'update' => 'created',
-                            'filename' => $relativefilename,
+                            'update'        => 'created',
+                            'filename'      => $relativefilename,
                             'localfilename' => $path,
-                            'filetype' => 'file',
-                            'reason' => array('missing')
+                            'filetype'      => 'file',
+                            'reason'        => array('missing')
                         );
                     }
 
@@ -164,9 +164,9 @@ class Ftp extends Deployment implements DeploymentProvider
         return $deploymentResult;
     }
     /**
-     * @param  callable        $output
-     * @param  bool            $dryrun
-     * @param DeploymentResult $deploymentResult
+     * @param  callable          $output
+     * @param  bool              $dryrun
+     * @param  DeploymentResult  $deploymentResult
      * @throws \RuntimeException
      * @return mixed
      */
@@ -204,6 +204,7 @@ class Ftp extends Deployment implements DeploymentProvider
         if ($server['webroot'][0] !== '/') {
             throw new \RuntimeException('Webroot must be a absolute path when using ftp');
         }
+
         return sprintf(
             'ftp%s://%s:%s@%s%s',
             $this->ssl ? 's' : '',

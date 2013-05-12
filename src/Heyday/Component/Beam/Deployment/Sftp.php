@@ -4,12 +4,12 @@ namespace Heyday\Component\Beam\Deployment;
 
 use Heyday\Component\Beam\Beam;
 use Heyday\Component\Beam\Deployment\DeploymentProvider;
-use Heyday\Component\Beam\Utils;
 use Heyday\Component\Beam\Deployment\DeploymentResult;
+use Heyday\Component\Beam\Utils;
 use Ssh\Authentication\Password;
 use Ssh\Configuration;
-use Ssh\SshConfigFileConfiguration;
 use Ssh\Session;
+use Ssh\SshConfigFileConfiguration;
 
 /**
  * Class Sftp
@@ -125,32 +125,32 @@ class Sftp extends Deployment implements DeploymentProvider
                     if ($sftp->exists($targetfile)) {
                         if (isset($targetchecksums[$relativefilename]) && $targetchecksums[$relativefilename] !== $localchecksums[$relativefilename]) {
                             $result[] = array(
-                                'update' => 'sent',
-                                'filename' => $targetfile,
+                                'update'        => 'sent',
+                                'filename'      => $targetfile,
                                 'localfilename' => $path,
-                                'filetype' => 'file',
-                                'reason' => array('checksum')
+                                'filetype'      => 'file',
+                                'reason'        => array('checksum')
                             );
                         } else {
                             $targetStat = $sftp->stat($targetfile);
                             $localStat = stat($path);
                             if ($targetStat['size'] != $localStat['size']) {
                                 $result[] = array(
-                                    'update' => 'sent',
-                                    'filename' => $targetfile,
+                                    'update'        => 'sent',
+                                    'filename'      => $targetfile,
                                     'localfilename' => $path,
-                                    'filetype' => 'file',
-                                    'reason' => array('size')
+                                    'filetype'      => 'file',
+                                    'reason'        => array('size')
                                 );
                             }
                         }
                     } else {
                         $result[] = array(
-                            'update' => 'created',
-                            'filename' => $targetfile,
+                            'update'        => 'created',
+                            'filename'      => $targetfile,
                             'localfilename' => $path,
-                            'filetype' => 'file',
-                            'reason' => array('missing')
+                            'filetype'      => 'file',
+                            'reason'        => array('missing')
                         );
                     }
 
@@ -159,20 +159,20 @@ class Sftp extends Deployment implements DeploymentProvider
                     if (isset($targetchecksums[$relativefilename])) {
                         if ($targetchecksums[$relativefilename] !== $localchecksums[$relativefilename]) {
                             $result[] = array(
-                                'update' => 'sent',
-                                'filename' => $targetfile,
+                                'update'        => 'sent',
+                                'filename'      => $targetfile,
                                 'localfilename' => $path,
-                                'filetype' => 'file',
-                                'reason' => array('checksum')
+                                'filetype'      => 'file',
+                                'reason'        => array('checksum')
                             );
                         }
                     } else {
                         $result[] = array(
-                            'update' => 'created',
-                            'filename' => $targetfile,
+                            'update'        => 'created',
+                            'filename'      => $targetfile,
                             'localfilename' => $path,
-                            'filetype' => 'file',
-                            'reason' => array('missing')
+                            'filetype'      => 'file',
+                            'reason'        => array('missing')
                         );
                     }
 
@@ -209,9 +209,9 @@ class Sftp extends Deployment implements DeploymentProvider
         return $deploymentResult;
     }
     /**
-     * @param  callable        $output
-     * @param  bool            $dryrun
-     * @param DeploymentResult $deploymentResult
+     * @param  callable          $output
+     * @param  bool              $dryrun
+     * @param  DeploymentResult  $deploymentResult
      * @throws \RuntimeException
      * @return mixed
      */

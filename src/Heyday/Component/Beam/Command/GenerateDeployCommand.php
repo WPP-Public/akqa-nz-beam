@@ -48,20 +48,20 @@ class GenerateDeployCommand extends SymfonyCommand
 
         // Set defaults
         $defaults = array(
-            'project.applications' => 'silverstripe',
-            'exclude.patterns' => array(''),
-            'staging.server.user' => 'dev',
-            'staging.server.host' => 'snarl.heyday.net.nz',
-            'staging.server.webroot' => 'FIX_ME!!',
-            'staging.db.username' => '',
-            'staging.db.password' => '',
-            'staging.db.database' => '',
-            'production.server.user' => 'FIX_ME!!',
-            'production.server.host' => 'FIX_ME!!',
+            'project.applications'      => 'silverstripe',
+            'exclude.patterns'          => array(''),
+            'staging.server.user'       => 'dev',
+            'staging.server.host'       => 'snarl.heyday.net.nz',
+            'staging.server.webroot'    => 'FIX_ME!!',
+            'staging.db.username'       => '',
+            'staging.db.password'       => '',
+            'staging.db.database'       => '',
+            'production.server.user'    => 'FIX_ME!!',
+            'production.server.host'    => 'FIX_ME!!',
             'production.server.webroot' => 'FIX_ME!!',
-            'production.db.username' => '',
-            'production.db.password' => '',
-            'production.db.database' => ''
+            'production.db.username'    => '',
+            'production.db.password'    => '',
+            'production.db.database'    => ''
         );
 
         if ($input->getArgument('client_code')) {
@@ -72,7 +72,7 @@ class GenerateDeployCommand extends SymfonyCommand
             $defaults['production.server.user'] = $project_code;
 
             // Check if properties file exists
-            $properties_file = $_SERVER['HOME'].'/build/config/' . $project_code . '.properties';
+            $properties_file = $_SERVER['HOME'] . '/build/config/' . $project_code . '.properties';
             if (!file_exists($properties_file)) {
 
                 $output->writeln("<error>Error: properties file $properties_file does not exist</error>");
@@ -101,7 +101,7 @@ class GenerateDeployCommand extends SymfonyCommand
             }
 
             // Check if sync file exists
-            $sync_file = $_SERVER['HOME'].'/build/sync/' . $project_code . '.properties';
+            $sync_file = $_SERVER['HOME'] . '/build/sync/' . $project_code . '.properties';
             if (file_exists($sync_file)) {
 
                 $defaults['exclude.patterns'] = explode("\n", trim(file_get_contents($sync_file)));
@@ -114,15 +114,15 @@ class GenerateDeployCommand extends SymfonyCommand
             $dialog = $this->getHelperSet()->get('dialog');
             if (!$dialog->askConfirmation(
                 $output,
-                "<question>You haven't sepcified a client code, would you like to generate a default deploy.json file?".
-                " (y,n)</question>",
+                "<question>You haven't sepcified a client code, would you like to generate a default deploy.json file?" .
+                    " (y,n)</question>",
                 false
-            )) {
+            )
+            ) {
                 exit;
             }
 
         }
-
 
 
         // Merge the arrays
@@ -132,31 +132,31 @@ class GenerateDeployCommand extends SymfonyCommand
         $json_deploy_template = array(
             'exclude' => array(
                 'applications' => explode(',', $new_properties['project.applications']),
-                'patterns' => $new_properties['exclude.patterns'],
-           ),
+                'patterns'     => $new_properties['exclude.patterns'],
+            ),
             'servers' => array(
                 's1' => array(
-                    'user' => $new_properties['staging.server.user'],
-                    'host' => $new_properties['staging.server.host'],
-                    'webroot' => $new_properties['staging.server.webroot'],
-                    'db-user' => $new_properties['staging.db.username'],
-                    'db-pass' => $new_properties['staging.db.password'],
+                    'user'     => $new_properties['staging.server.user'],
+                    'host'     => $new_properties['staging.server.host'],
+                    'webroot'  => $new_properties['staging.server.webroot'],
+                    'db-user'  => $new_properties['staging.db.username'],
+                    'db-pass'  => $new_properties['staging.db.password'],
                     'database' => $new_properties['staging.db.database']
-               )
-           ),
+                )
+            ),
         );
 
         // Create live server config if allowed
         if (!array_key_exists('production.server.cansync', $new_properties)) {
 
             $json_deploy_template['servers']['live'] = array(
-                'user' => $new_properties['production.server.user'],
-                'host' => $new_properties['production.server.host'],
-                'webroot' => $new_properties['production.server.webroot'],
-                'db-user' => $new_properties['production.db.username'],
-                'db-pass' => $new_properties['production.db.password'],
+                'user'     => $new_properties['production.server.user'],
+                'host'     => $new_properties['production.server.host'],
+                'webroot'  => $new_properties['production.server.webroot'],
+                'db-user'  => $new_properties['production.db.username'],
+                'db-pass'  => $new_properties['production.db.password'],
                 'database' => $new_properties['production.db.database'],
-                'branch' => 'remotes/origin/master'
+                'branch'   => 'remotes/origin/master'
             );
 
         }
@@ -165,8 +165,8 @@ class GenerateDeployCommand extends SymfonyCommand
         file_put_contents('deploy.json', str_replace('\/', '/', $this->jSONFormat(json_encode($json_deploy_template))));
 
         $output->writeln(
-            "<info>Success: deploy.json file saved to ". getcwd() .
-            "/deploy.json - be sure to check the file before using it</info>"
+            "<info>Success: deploy.json file saved to " . getcwd() .
+                "/deploy.json - be sure to check the file before using it</info>"
         );
 
     }
@@ -194,7 +194,7 @@ class GenerateDeployCommand extends SymfonyCommand
                 case '{':
                 case '[':
                     if (!$in_string) {
-                        $new_json .= $char . "\n" . str_repeat($tab, $indent_level+1);
+                        $new_json .= $char . "\n" . str_repeat($tab, $indent_level + 1);
                         $indent_level++;
                     } else {
                         $new_json .= $char;
@@ -224,10 +224,10 @@ class GenerateDeployCommand extends SymfonyCommand
                     }
                     break;
                 case '"':
-                    if ($c > 0 && $json[$c-1] != '\\') {
+                    if ($c > 0 && $json[$c - 1] != '\\') {
                         $in_string = !$in_string;
                     }
-                    // Fall through
+                // Fall through
                 default:
                     $new_json .= $char;
                     break;

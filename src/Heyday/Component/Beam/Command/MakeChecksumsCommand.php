@@ -4,10 +4,10 @@ namespace Heyday\Component\Beam\Command;
 
 use Heyday\Component\Beam\Config\BeamConfiguration;
 use Heyday\Component\Beam\Utils;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Config\Definition\Processor;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class MakeChecksumsCommand extends Command
 {
@@ -15,7 +15,7 @@ class MakeChecksumsCommand extends Command
     {
         $this
             ->setName('makechecksums')
-            ->setDescription('Generate a checksums file')
+            ->setDescription('Generate a checksums file with the default compression of bz2')
             ->addOption(
                 'path',
                 'p',
@@ -34,7 +34,7 @@ class MakeChecksumsCommand extends Command
                 'gzip',
                 'g',
                 InputOption::VALUE_NONE,
-                'Gzip to save download time'
+                'Gzip the output'
             )
             ->addOption(
                 'nocompress',

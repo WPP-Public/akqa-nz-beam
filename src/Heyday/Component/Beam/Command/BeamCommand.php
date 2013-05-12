@@ -233,6 +233,7 @@ abstract class BeamCommand extends Command
         DeploymentResult $deploymentResult
     ) {
         $count = count($deploymentResult);
+
         return function () use (
             $output,
             $progressHelper,

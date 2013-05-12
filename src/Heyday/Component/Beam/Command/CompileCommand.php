@@ -96,7 +96,10 @@ class CompileCommand extends SymfonyCommand
                 unlink($rootdir . '/beam.phar.version');
             }
         } catch (\Exception $e) {
-            $output->writeln('Failed to compile phar: ['.get_class($e).'] '.$e->getMessage().' at '.$e->getFile().':'.$e->getLine());
+            $output->writeln(
+                'Failed to compile phar: [' . get_class($e) . '] ' . $e->getMessage() . ' at ' . $e->getFile(
+                ) . ':' . $e->getLine()
+            );
             exit(1);
         }
     }

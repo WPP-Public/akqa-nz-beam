@@ -146,7 +146,11 @@ class Rsync extends Deployment implements DeploymentProvider
             if ($line !== '') {
                 $change = array();
                 $matches = array();
-                preg_match('/(?:(^\*[\w]+)|([<>.ch])([fdLDS])([.?+c][.?+s][.?+t][.?+p][.?+o][.?+g][.?+]?[.?+a]?[.?+x]?)) (.*)/', $line, $matches);
+                preg_match(
+                    '/(?:(^\*[\w]+)|([<>.ch])([fdLDS])([.?+c][.?+s][.?+t][.?+p][.?+o][.?+g][.?+]?[.?+a]?[.?+x]?)) (.*)/',
+                    $line,
+                    $matches
+                );
                 if ($matches[1] == '*deleting') {
                     $change['update'] = 'deleted';
                     $change['filename'] = $matches[5];

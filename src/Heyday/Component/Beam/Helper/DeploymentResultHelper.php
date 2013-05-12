@@ -2,10 +2,10 @@
 
 namespace Heyday\Component\Beam\Helper;
 
+use Heyday\Component\Beam\Deployment\DeploymentResult;
 use Symfony\Component\Console\Helper\FormatterHelper;
 use Symfony\Component\Console\Helper\Helper;
 use Symfony\Component\Console\Output\OutputInterface;
-use Heyday\Component\Beam\Deployment\DeploymentResult;
 
 class DeploymentResultHelper extends Helper
 {
@@ -25,8 +25,11 @@ class DeploymentResultHelper extends Helper
      * @param OutputInterface  $output
      * @param DeploymentResult $deploymentResult
      */
-    public function outputChanges(FormatterHelper $formatter, OutputInterface $output, DeploymentResult $deploymentResult)
-    {
+    public function outputChanges(
+        FormatterHelper $formatter,
+        OutputInterface $output,
+        DeploymentResult $deploymentResult
+    ) {
         foreach ($deploymentResult as $change) {
             if ($change['reason'] != array('time')) {
                 $output->writeLn(
@@ -51,8 +54,11 @@ class DeploymentResultHelper extends Helper
      * @param OutputInterface  $output
      * @param DeploymentResult $deploymentResult
      */
-    public function outputChangesSummary(FormatterHelper $formatter, OutputInterface $output, DeploymentResult $deploymentResult)
-    {
+    public function outputChangesSummary(
+        FormatterHelper $formatter,
+        OutputInterface $output,
+        DeploymentResult $deploymentResult
+    ) {
         $totals = array(
             'sent' => 0,
             'received' => 0,

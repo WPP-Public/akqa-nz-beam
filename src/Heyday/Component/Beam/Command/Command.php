@@ -2,9 +2,9 @@
 
 namespace Heyday\Component\Beam\Command;
 
-use Symfony\Component\Console\Command\Command as BaseCommand;
 use Heyday\Component\Beam\Config\JsonConfigLoader;
 use Symfony\Component\Config\FileLocator;
+use Symfony\Component\Console\Command\Command as BaseCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 

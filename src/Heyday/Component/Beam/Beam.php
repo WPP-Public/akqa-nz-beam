@@ -8,12 +8,12 @@ use Heyday\Component\Beam\Deployment\DeploymentResult;
 use Heyday\Component\Beam\Deployment\Rsync;
 use Heyday\Component\Beam\Vcs\Git;
 use Heyday\Component\Beam\Vcs\VcsProvider;
+use Ssh\Session;
+use Ssh\SshConfigFileConfiguration;
 use Symfony\Component\Config\Definition\Processor;
+use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Process\Process;
-use Symfony\Component\OptionsResolver\Options;
-use Ssh\SshConfigFileConfiguration;
-use Ssh\Session;
 
 /**
  * Class Beam
@@ -594,56 +594,56 @@ class Beam
                         'up',
                         'down'
                     ),
-                    'target' => array_keys($this->config['servers'])
+                    'target'    => array_keys($this->config['servers'])
                 )
             )->setDefaults(
                 array(
-                    'path' => false,
-                    'dry-run' => false,
-                    'delete' => false,
-                    'checksum' => true,
-                    'workingcopy' => false,
-                    'archive' => true,
-                    'compress' => true,
-                    'delay-updates' => true,
-                    'vcsprovider' => function (Options $options) {
+                    'path'                       => false,
+                    'dry-run'                    => false,
+                    'delete'                     => false,
+                    'checksum'                   => true,
+                    'workingcopy'                => false,
+                    'archive'                    => true,
+                    'compress'                   => true,
+                    'delay-updates'              => true,
+                    'vcsprovider'                => function (Options $options) {
                         return new Git($options['srcdir']);
                     },
-                    'deploymentprovider' => function () {
+                    'deploymentprovider'         => function () {
                         return new Rsync();
                     },
-                    'deploymentoutputhandler' => function ($type, $data) {
+                    'deploymentoutputhandler'    => function ($type, $data) {
                     },
-                    'localcommandoutputhandler' => function ($type, $data) {
+                    'localcommandoutputhandler'  => function ($type, $data) {
                     },
                     'targetcommandoutputhandler' => function ($content) {
                     },
-                    'outputhandler' => function ($content) {
+                    'outputhandler'              => function ($content) {
                     }
                 )
             )->setAllowedTypes(
                 array(
-                    'branch' => 'string',
-                    'srcdir' => 'string',
-                    'dry-run' => 'bool',
-                    'checksum' => 'bool',
-                    'workingcopy' => 'bool',
-                    'archive' => 'bool',
-                    'compress' => 'bool',
-                    'delay-updates' => 'bool',
-                    'vcsprovider' => __NAMESPACE__ . '\Vcs\VcsProvider',
-                    'deploymentprovider' => __NAMESPACE__ . '\Deployment\DeploymentProvider',
-                    'deploymentoutputhandler' => 'callable',
-                    'localcommandoutputhandler' => 'callable',
+                    'branch'                     => 'string',
+                    'srcdir'                     => 'string',
+                    'dry-run'                    => 'bool',
+                    'checksum'                   => 'bool',
+                    'workingcopy'                => 'bool',
+                    'archive'                    => 'bool',
+                    'compress'                   => 'bool',
+                    'delay-updates'              => 'bool',
+                    'vcsprovider'                => __NAMESPACE__ . '\Vcs\VcsProvider',
+                    'deploymentprovider'         => __NAMESPACE__ . '\Deployment\DeploymentProvider',
+                    'deploymentoutputhandler'    => 'callable',
+                    'localcommandoutputhandler'  => 'callable',
                     'targetcommandoutputhandler' => 'callable',
-                    'outputhandler' => 'callable'
+                    'outputhandler'              => 'callable'
                 )
             )->setNormalizers(
                 array(
-                    'branch' => function (Options $options, $value) {
+                    'branch'             => function (Options $options, $value) {
                         return trim($value);
                     },
-                    'path' => function (Options $options, $value) {
+                    'path'               => function (Options $options, $value) {
                         return is_string($value) ? trim($value, '/') : false;
                     },
                     'deploymentprovider' => function (Options $options, $value) use ($that) {

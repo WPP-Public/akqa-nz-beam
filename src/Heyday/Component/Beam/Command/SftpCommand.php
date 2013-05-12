@@ -2,9 +2,9 @@
 
 namespace Heyday\Component\Beam\Command;
 
+use Heyday\Component\Beam\Deployment\Sftp;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use Heyday\Component\Beam\Deployment\Sftp;
 
 /**
  * Class SftpCommand
