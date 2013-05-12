@@ -134,7 +134,7 @@ class Ftp extends Deployment implements DeploymentProvider
             $writecontext = stream_context_create(array('ftp' => array('overwrite' => true)));
             foreach ($deploymentResult as $change) {
                 if (is_callable($output)) {
-                    $output('out', "\n");
+                    $output();
                 }
                 $dir = $this->getTargetFullPath(dirname($change['filename']));
                 if (!file_exists($dir)) {

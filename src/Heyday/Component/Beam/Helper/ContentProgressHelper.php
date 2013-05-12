@@ -31,7 +31,17 @@ class ContentProgressHelper extends ProgressHelper
      * @var
      */
     protected $first;
+    /**
+     * @var string
+     */
     protected $prefix = '';
+    /**
+     *
+     */
+    public function __construct()
+    {
+        $this->cols = exec('tput cols');
+    }
 
     /**
      * @param $name
@@ -69,7 +79,6 @@ class ContentProgressHelper extends ProgressHelper
     public function start(OutputInterface $output, $max = null, $prefix = '')
     {
         $this->prefix = $prefix;
-        $this->cols = exec('tput cols');
         $output->write(str_repeat("\x20", $this->cols)); //next line and end line
         parent::start($output, $max);
     }
@@ -90,7 +99,13 @@ class ContentProgressHelper extends ProgressHelper
      */
     public function setContent($content = '')
     {
-        $this->content = $this->prefix . substr($content, -$this->cols - strlen($this->prefix));
+        $space = $this->cols - strlen($this->prefix);
+        $contentlen = strlen($content);
+        if ($contentlen > $space) {
+            $this->content = $this->prefix . '...' . substr($content, -1 * ($space - 3));
+        } else {
+            $this->content = $this->prefix . str_pad($content, $space, ' ', STR_PAD_LEFT);
+        }
     }
 
     /**
@@ -137,7 +152,7 @@ class ContentProgressHelper extends ProgressHelper
      */
     public function setAutoWidth($max)
     {
-        $this->setBarWidth(exec('tput cols') - (strlen($max) * 2 + 18));
+        $this->setBarWidth($this->cols - (strlen($max) * 2 + 18));
     }
 
     /**

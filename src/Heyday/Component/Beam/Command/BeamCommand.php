@@ -3,6 +3,8 @@
 namespace Heyday\Component\Beam\Command;
 
 use Heyday\Component\Beam\Beam;
+use Heyday\Component\Beam\Deployment\DeploymentResult;
+use Symfony\Component\Console\Helper\FormatterHelper;
 use Symfony\Component\Console\Helper\ProgressHelper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -92,26 +94,41 @@ abstract class BeamCommand extends Command
 
         try {
 
-            $options = $this->getOptions($input);
+            $options = $this->getOptions($input, $output);
 
-            $options['commandoutputhandler'] = function ($type, $data) use ($output, $formatterHelper) {
-                if ($type == 'out') {
-                    $output->write(
-                        $formatterHelper->formatSection(
-                            'command',
-                            $data
-                        )
-                    );
-                } elseif ($type == 'err') {
-                    $output->write(
-                        $formatterHelper->formatSection(
-                            'error',
-                            $data,
-                            'error'
-                        )
-                    );
-                }
+            $options['outputhandler'] = function ($content, $section = 'info') use ($output, $formatterHelper) {
+                $output->writeln(
+                    $formatterHelper->formatSection(
+                        $section,
+                        $content
+                    )
+                );
             };
+
+            if (OutputInterface::VERBOSITY_VERBOSE === $output->getVerbosity()) {
+
+                $options['targetcommandoutputhandler'] = $options['outputhandler'];
+
+                $options['localcommandoutputhandler'] = function ($type, $data) use ($output, $formatterHelper) {
+                    if ($type == 'out') {
+                        $output->write(
+                            $formatterHelper->formatSection(
+                                'command',
+                                $data
+                            )
+                        );
+                    } elseif ($type == 'err') {
+                        $output->write(
+                            $formatterHelper->formatSection(
+                                'error',
+                                $data,
+                                'error'
+                            )
+                        );
+                    }
+                };
+
+            }
 
             $beam = new Beam(
                 array(
@@ -155,52 +172,12 @@ abstract class BeamCommand extends Command
                         // Set the output handler for displaying the progress bar etc
                         $beam->setOption(
                             'deploymentoutputhandler',
-                            function (
-                                $type,
-                                $data
-                            ) use (
+                            $this->getDeploymentOutputHandler(
                                 $output,
                                 $progressHelper,
                                 $formatterHelper,
-                                $count,
                                 $deploymentResult
-                            ) {
-                                static $totalSteps = 0;
-                                if ($totalSteps == 0) {
-                                    $progressHelper->setAutoWidth($count);
-                                    // Start the progress bar
-                                    $progressHelper->start($output, $count, 'File: ');
-                                }
-                                if ($type == 'out') {
-                                    // Advance 1 for each line we get in the data
-                                    $steps = substr_count($data, PHP_EOL);
-                                    // We call advance once per step as opposed to all steps at once
-                                    // so the redrawFrequency can be applied correctly
-                                    for ($i = 0; $i < $steps; $i++) {
-                                        $progressHelper->advance(1, false, $deploymentResult[$totalSteps + $i]['filename']);
-                                    }
-                                    $totalSteps += $steps;
-                                    // Check if we have finished (rsync stops outputing data
-                                    // before things have entirely finished)
-                                    if ($totalSteps >= $count) {
-                                        $progressHelper->finish();
-                                        $output->writeln(
-                                            $formatterHelper->formatSection(
-                                                'info',
-                                                'Finalizing deployment'
-                                            )
-                                        );
-                                    }
-                                } elseif ($type == 'err') {
-                                    $output->write(
-                                        $formatterHelper->formatSection(
-                                            'error',
-                                            $data,
-                                            'error'
-                                        )
-                                    );
-                                }
-                            }
+                            )
                         );
                         // Run the deployment
                         $deploymentResult = $beam->doRun($deploymentResult);
@@ -240,6 +217,41 @@ abstract class BeamCommand extends Command
             );
         }
 
+    }
+    /**
+     * @param $output
+     * @param $progressHelper
+     * @param $formatterHelper
+     * @param $count
+     * @param $deploymentResult
+     * @return mixed
+     */
+    protected function getDeploymentOutputHandler(
+        OutputInterface $output,
+        ProgressHelper $progressHelper,
+        FormatterHelper $formatterHelper,
+        DeploymentResult $deploymentResult
+    ) {
+        $count = count($deploymentResult);
+        return function () use (
+            $output,
+            $progressHelper,
+            $formatterHelper,
+            $deploymentResult,
+            $count
+        ) {
+            static $steps = 0;
+            if ($steps === 0) {
+                $progressHelper->setAutoWidth($count);
+                // Start the progress bar
+                $progressHelper->start($output, $count, 'File: ');
+            }
+            $progressHelper->advance(1, false, $deploymentResult[$steps]['filename']);
+            $steps++;
+            if ($steps >= $count) {
+                $progressHelper->finish();
+            }
+        };
     }
     /**
      * @param  InputInterface $input

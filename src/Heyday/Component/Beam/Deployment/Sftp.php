@@ -186,7 +186,7 @@ class Sftp extends Deployment implements DeploymentProvider
         if (!$dryrun && !$this->beam->getOption('dry-run')) {
             foreach ($deploymentResult as $change) {
                 if (is_callable($output)) {
-                    $output('out', "\n");
+                    $output();
                 }
                 $dir = dirname($change['filename']);
                 if (!$sftp->exists($dir)) {

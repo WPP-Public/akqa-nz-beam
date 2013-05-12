@@ -24,7 +24,7 @@ class Beam
     /**
      *
      */
-    const PROCESS_TIMEOUT = 300;
+    const PROCESS_TIMEOUT = 300; //TODO: Should this be a const?
     /**
      * @var array
      */
@@ -178,9 +178,14 @@ class Beam
      */
     public function doDryrun() // TODO: Do we need an output closure?
     {
+        $isUp = $this->isUp();
+
         if (!$this->isPrepared() && !$this->isWorkingCopy()) {
             $this->prepareLocalPath();
-            $this->runPreLocalCommands();
+
+            if ($isUp) {
+                $this->runPreLocalCommands();
+            }
         }
 
         if ($this->isUp()) {
@@ -202,6 +207,8 @@ class Beam
      */
     protected function prepareLocalPath()
     {
+        $this->options['outputhandler']('Preparing local deploy path');
+
         if ($this->isServerLockedRemote()) {
             $this->options['vcsprovider']->updateBranch($this->options['branch']); //TODO: This might be wrong
         }
@@ -456,6 +463,7 @@ class Beam
      */
     protected function runPostLocalCommands()
     {
+        $this->options['outputhandler']('Running local post-deployment commands');
         foreach ($this->config['commands'] as $command) {
             if ($command['phase'] == 'post' && $command['location'] == 'local') {
                 $this->runLocalCommand($command);
@@ -467,6 +475,7 @@ class Beam
      */
     protected function runPreLocalCommands()
     {
+        $this->options['outputhandler']('Running local pre-deployment commands');
         foreach ($this->config['commands'] as $command) {
             if ($command['phase'] == 'pre' && $command['location'] == 'local') {
                 $this->runLocalCommand($command);
@@ -478,6 +487,7 @@ class Beam
      */
     protected function runPreTargetCommands()
     {
+        $this->options['outputhandler']('Running target pre-deployment commands');
         foreach ($this->config['commands'] as $command) {
             if ($command['phase'] == 'pre' && $command['location'] == 'target') {
                 $this->runTargetCommand($command);
@@ -489,6 +499,7 @@ class Beam
      */
     protected function runPostTargetCommands()
     {
+        $this->options['outputhandler']('Running target post-deployment commands');
         foreach ($this->config['commands'] as $command) {
             if ($command['phase'] == 'post' && $command['location'] == 'target') {
                 $this->runTargetCommand($command);
@@ -500,6 +511,10 @@ class Beam
      */
     protected function runTargetCommand($command)
     {
+        $this->options['outputhandler'](
+            $command['command'],
+            'command:target'
+        );
         //TODO requires ssh need an error if not ssh
         $server = $this->getServer();
         $configuration = new SshConfigFileConfiguration(
@@ -515,8 +530,7 @@ class Beam
         );
         $exec = $session->getExec();
         call_user_func(
-            $this->options['commandoutputhandler'],
-            'out',
+            $this->options['targetcommandoutputhandler'],
             $exec->run(
                 sprintf(
                     'cd %s; %s',
@@ -531,12 +545,16 @@ class Beam
      */
     protected function runLocalCommand($command)
     {
+        $this->options['outputhandler'](
+            $command['command'],
+            'command:local'
+        );
         $this->runProcess(
             $this->getProcess(
                 $command['command'],
                 $this->getLocalPath()
             ),
-            $this->options['commandoutputhandler']
+            $this->options['localcommandoutputhandler']
         );
     }
     /**
@@ -566,7 +584,9 @@ class Beam
                     'vcsprovider',
                     'deploymentprovider',
                     'deploymentoutputhandler',
-                    'commandoutputhandler'
+                    'localcommandoutputhandler',
+                    'targetcommandoutputhandler',
+                    'outputhandler'
                 )
             )->setAllowedValues(
                 array(
@@ -594,7 +614,11 @@ class Beam
                     },
                     'deploymentoutputhandler' => function ($type, $data) {
                     },
-                    'commandoutputhandler' => function ($type, $data) {
+                    'localcommandoutputhandler' => function ($type, $data) {
+                    },
+                    'targetcommandoutputhandler' => function ($content) {
+                    },
+                    'outputhandler' => function ($content) {
                     }
                 )
             )->setAllowedTypes(
@@ -610,7 +634,9 @@ class Beam
                     'vcsprovider' => __NAMESPACE__ . '\Vcs\VcsProvider',
                     'deploymentprovider' => __NAMESPACE__ . '\Deployment\DeploymentProvider',
                     'deploymentoutputhandler' => 'callable',
-                    'commandoutputhandler' => 'callable'
+                    'localcommandoutputhandler' => 'callable',
+                    'targetcommandoutputhandler' => 'callable',
+                    'outputhandler' => 'callable'
                 )
             )->setNormalizers(
                 array(
