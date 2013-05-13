@@ -9,6 +9,7 @@ use Heyday\Component\Beam\Vcs\Git;
 use Heyday\Component\Beam\Vcs\VcsProvider;
 use Ssh\Session;
 use Ssh\SshConfigFileConfiguration;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -94,7 +95,7 @@ class Beam
         $this->validateSetup();
     }
     /**
-     * Validates dynnamic options or options that the options resolver can't validate
+     * Validates dynamic options or options that the options resolver can't validate
      * @throws \InvalidArgumentException
      */
     protected function validateSetup()
@@ -132,6 +133,23 @@ class Beam
                 throw new \InvalidArgumentException(
                     sprintf('The local path "%s" is not writable', $this->getLocalPathFolder())
                 );
+            }
+        }
+
+        if ($limitations = $this->options['deploymentprovider']->getLimitations()) {
+            if (is_array($limitations)) {
+
+                // Check for remote commands used where not available
+                if (in_array(DeploymentProvider::LIMITATION_REMOTECOMMAND, $limitations)) {
+                    foreach ($this->config['commands'] as $command) {
+                        if ($command['location'] == 'target' && in_array($command['phase'], array('post', 'pre'))) {
+                            throw new InvalidConfigurationException(
+                                'Commands are defined for the location "target" but the selected deployment provider cannot execute remote commands.'
+                            );
+                        }
+                    }
+                }
+
             }
         }
     }
@@ -515,7 +533,7 @@ class Beam
             $command['command'],
             'command:target'
         );
-        //TODO requires ssh need an error if not ssh
+        //TODO requires ssh need an error if not ssh (partly addressed with DeploymentProvider::getLimitations)
         $server = $this->getServer();
         $configuration = new SshConfigFileConfiguration(
             '~/.ssh/config',

@@ -315,4 +315,11 @@ class Rsync extends Deployment implements DeploymentProvider
             $server['webroot']
         );
     }
+    /**
+     * @return mixed|null
+     */
+    public function getLimitations()
+    {
+        return null;
+    }
 }

@@ -10,6 +10,9 @@ use Heyday\Component\Beam\Beam;
  */
 interface DeploymentProvider
 {
+
+    const LIMITATION_REMOTECOMMAND = 'remote-command';
+
     /**
      * @param  Beam  $beam
      * @return mixed
@@ -31,4 +34,10 @@ interface DeploymentProvider
      * @return mixed
      */
     public function getTargetPath();
+    /**
+     * Return any limitations of the provider
+     * @return mixed
+     */
+    public function getLimitations();
+
 }
