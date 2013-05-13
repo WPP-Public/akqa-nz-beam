@@ -141,6 +141,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
                             ->arrayNode('servers')
                                 ->prototype('scalar')->end()
                             ->end()
+                            ->scalarNode('required')->defaultFalse()->end()
                         ->end()
                     ->end()
                 ->end()

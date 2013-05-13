@@ -124,6 +124,7 @@ class Rsync extends Deployment implements DeploymentProvider
                 $fromPath,
                 $toPath
             ),
+            '-rlpgoD', // recursion, links, perms, group, owner, devices, specials
             '--itemize-changes',
             array(
                 '--exclude-from="%s"',
@@ -139,9 +140,6 @@ class Rsync extends Deployment implements DeploymentProvider
         }
         if ($this->options['delete']) {
             $command[] = '--delete';
-        }
-        if ($this->options['archive']) {
-            $command[] = '-rlpgoD';
         }
         if ($this->options['compress']) {
             $command[] = '--compress';

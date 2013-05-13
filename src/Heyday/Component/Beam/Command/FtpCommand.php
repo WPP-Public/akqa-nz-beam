@@ -5,6 +5,7 @@ namespace Heyday\Component\Beam\Command;
 use Heyday\Component\Beam\Deployment\Ftp;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Class FtpCommand
@@ -37,9 +38,9 @@ class FtpCommand extends BeamCommand
      * @param  InputInterface $input
      * @return array
      */
-    protected function getOptions(InputInterface $input)
+    protected function getOptions(InputInterface $input, OutputInterface $output)
     {
-        $options = parent::getOptions($input);
+        $options = parent::getOptions($input, $output);
         $options['deploymentprovider'] = new Ftp(
             $input->getOption('full'),
             $input->getOption('ssl')
