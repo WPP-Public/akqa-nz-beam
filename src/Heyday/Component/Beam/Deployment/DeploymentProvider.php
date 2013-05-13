@@ -36,7 +36,7 @@ interface DeploymentProvider
     public function getTargetPath();
     /**
      * Return any limitations of the provider
-     * @return mixed
+     * @return array
      */
     public function getLimitations();
 

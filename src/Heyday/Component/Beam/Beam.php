@@ -136,21 +136,23 @@ class Beam
             }
         }
 
-        if ($limitations = $this->options['deploymentprovider']->getLimitations()) {
-            if (is_array($limitations)) {
+        $hasRemoteCommands = $this->hasRemoteCommands();
 
-                // Check for remote commands used where not available
-                if (in_array(DeploymentProvider::LIMITATION_REMOTECOMMAND, $limitations)) {
-                    foreach ($this->config['commands'] as $command) {
-                        if ($command['location'] == 'target' && in_array($command['phase'], array('post', 'pre'))) {
-                            throw new InvalidConfigurationException(
-                                'Commands are defined for the location "target" but the selected deployment provider cannot execute remote commands.'
-                            );
-                        }
-                    }
-                }
+        if ($limitations = $this->options['deploymentprovider']->getLimitations() && is_array($limitations)) {
 
+            // Check if remote commands defined when not available
+            if (in_array(DeploymentProvider::LIMITATION_REMOTECOMMAND, $limitations)) {
+                throw new InvalidConfigurationException(
+                    'Commands are defined for the location "target" but the selected deployment provider cannot execute remote commands.'
+                );
             }
+
+        }
+
+        if ($hasRemoteCommands && !extension_loaded('ssh2')) {
+            throw new InvalidConfigurationException(
+                'The PHP extension ssh2 is required to run commands on the location "target" but it is not loaded. (You may need to install it).'
+            );
         }
     }
     /**
@@ -670,5 +672,19 @@ class Beam
     protected function getConfigurationDefinition()
     {
         return new BeamConfiguration();
+    }
+
+    /**
+     * Returns true if any commands to run on the remote ("target") are defined
+     * @return boolean
+     */
+    protected function hasRemoteCommands()
+    {
+        foreach ($this->config['commands'] as $command) {
+            if ($command['location'] == 'target' && in_array($command['phase'], array('post', 'pre'))) {
+                return true;
+            }
+        }
+        return false;
     }
 }
