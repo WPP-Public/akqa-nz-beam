@@ -57,7 +57,7 @@ class RsyncCommand extends BeamCommand
             );
     }
     /**
-     * @param InputInterface $input
+     * @param  InputInterface $input
      * @return array
      */
     protected function getOptions(InputInterface $input)
@@ -73,6 +73,7 @@ class RsyncCommand extends BeamCommand
                 // TODO: Add dry-run?
             )
         );
+
         return $options;
     }
     /**

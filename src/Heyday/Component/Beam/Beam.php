@@ -136,7 +136,7 @@ class Beam
         }
     }
     /**
-     * @param Deployment\DeploymentResult $deploymentResult
+     * @param  Deployment\DeploymentResult $deploymentResult
      * @return mixed
      */
     public function doRun(DeploymentResult $deploymentResult = null)

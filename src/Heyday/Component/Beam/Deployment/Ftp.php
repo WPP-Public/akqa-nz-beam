@@ -31,9 +31,9 @@ class Ftp extends Deployment implements DeploymentProvider
         $this->ssl = $ssl;
     }
     /**
-     * @param  callable               $output
-     * @param  bool                   $dryrun
-     * @param  \Heyday\Component\Beam\Deployment\DeploymentResult       $deploymentResult
+     * @param  callable                                           $output
+     * @param  bool                                               $dryrun
+     * @param  \Heyday\Component\Beam\Deployment\DeploymentResult $deploymentResult
      * @return \Heyday\Component\Beam\Deployment\DeploymentResult
      */
     public function up(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
