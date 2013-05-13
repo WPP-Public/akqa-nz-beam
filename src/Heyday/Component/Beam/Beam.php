@@ -461,23 +461,11 @@ class Beam
     /**
      *
      */
-    protected function runPostLocalCommands()
-    {
-        $this->options['outputhandler']('Running local post-deployment commands');
-        foreach ($this->config['commands'] as $command) {
-            if ($command['phase'] == 'post' && $command['location'] == 'local') {
-                $this->runLocalCommand($command);
-            }
-        }
-    }
-    /**
-     *
-     */
     protected function runPreLocalCommands()
     {
         $this->options['outputhandler']('Running local pre-deployment commands');
         foreach ($this->config['commands'] as $command) {
-            if ($command['phase'] == 'pre' && $command['location'] == 'local') {
+            if ($this->isAllowedCommand($command, 'pre', 'local')) {
                 $this->runLocalCommand($command);
             }
         }
@@ -489,8 +477,20 @@ class Beam
     {
         $this->options['outputhandler']('Running target pre-deployment commands');
         foreach ($this->config['commands'] as $command) {
-            if ($command['phase'] == 'pre' && $command['location'] == 'target') {
+            if ($this->isAllowedCommand($command, 'pre', 'target')) {
                 $this->runTargetCommand($command);
+            }
+        }
+    }
+    /**
+     *
+     */
+    protected function runPostLocalCommands()
+    {
+        $this->options['outputhandler']('Running local post-deployment commands');
+        foreach ($this->config['commands'] as $command) {
+            if ($this->isAllowedCommand($command, 'post', 'local')) {
+                $this->runLocalCommand($command);
             }
         }
     }
@@ -501,10 +501,23 @@ class Beam
     {
         $this->options['outputhandler']('Running target post-deployment commands');
         foreach ($this->config['commands'] as $command) {
-            if ($command['phase'] == 'post' && $command['location'] == 'target') {
+            if ($this->isAllowedCommand($command, 'post', 'target')) {
                 $this->runTargetCommand($command);
             }
         }
+    }
+    /**
+     * @param $command
+     * @param $phase
+     * @param $location
+     * @return bool
+     */
+    protected function isAllowedCommand($command, $phase, $location)
+    {
+        return
+            $command['phase'] === $phase &&
+            $command['location'] === $location &&
+            (count($command['servers']) === 0 || in_array($this->options['target'], $command['servers']));
     }
     /**
      * @param   $command
@@ -523,14 +536,14 @@ class Beam
         );
         $session = new Session(
             $configuration,
+            // TODO: This authentication mechanism should be specifiable
             $configuration->getAuthentication(
                 null,
                 $server['user']
             )
         );
         $exec = $session->getExec();
-        call_user_func(
-            $this->options['targetcommandoutputhandler'],
+        $this->options['targetcommandoutputhandler'](
             $exec->run(
                 sprintf(
                     'cd %s; %s',
