@@ -141,7 +141,7 @@ class Rsync extends Deployment implements DeploymentProvider
             $command[] = '--delete';
         }
         if ($this->options['archive']) {
-            $command[] = '--archive';
+            $command[] = '-rlpgoD';
         }
         if ($this->options['compress']) {
             $command[] = '--compress';
@@ -187,7 +187,7 @@ class Rsync extends Deployment implements DeploymentProvider
                 $change = array();
                 $matches = array();
                 preg_match(
-                    '/(?:(^\*[\w]+)|([<>.ch])([fdLDS])([.?+c][.?+s][.?+t][.?+p][.?+o][.?+g][.?+]?[.?+a]?[.?+x]?)) (.*)/',
+                    '/(?:(^\*[\w]+)|([<>.ch])([fdLDS])([.?+c][.?+s][.?+tT][.?+p][.?+o][.?+g][.?+]?[.?+a]?[.?+x]?)) (.*)/',
                     $line,
                     $matches
                 );
