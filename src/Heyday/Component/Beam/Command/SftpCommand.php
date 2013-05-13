@@ -5,6 +5,7 @@ namespace Heyday\Component\Beam\Command;
 use Heyday\Component\Beam\Deployment\Sftp;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Class SftpCommand
@@ -32,9 +33,9 @@ class SftpCommand extends BeamCommand
      * @param  InputInterface $input
      * @return array
      */
-    protected function getOptions(InputInterface $input)
+    protected function getOptions(InputInterface $input, OutputInterface $output)
     {
-        $options = parent::getOptions($input);
+        $options = parent::getOptions($input, $output);
         $options['deploymentprovider'] = new Sftp($input->getOption('full'));
 
         return $options;

@@ -481,23 +481,16 @@ class Beam
     /**
      *
      */
-    protected function runPostLocalCommands()
-    {
-        $this->options['outputhandler']('Running local post-deployment commands');
-        foreach ($this->config['commands'] as $command) {
-            if ($command['phase'] == 'post' && $command['location'] == 'local') {
-                $this->runLocalCommand($command);
-            }
-        }
-    }
-    /**
-     *
-     */
     protected function runPreLocalCommands()
     {
-        $this->options['outputhandler']('Running local pre-deployment commands');
+        $this->runOutputHandler(
+            $this->options['outputhandler'],
+            array(
+                'Running local pre-deployment commands'
+            )
+        );
         foreach ($this->config['commands'] as $command) {
-            if ($command['phase'] == 'pre' && $command['location'] == 'local') {
+            if ($this->isAllowedCommand($command, 'pre', 'local')) {
                 $this->runLocalCommand($command);
             }
         }
@@ -507,10 +500,32 @@ class Beam
      */
     protected function runPreTargetCommands()
     {
-        $this->options['outputhandler']('Running target pre-deployment commands');
+        $this->runOutputHandler(
+            $this->options['outputhandler'],
+            array(
+                'Running target pre-deployment commands'
+            )
+        );
         foreach ($this->config['commands'] as $command) {
-            if ($command['phase'] == 'pre' && $command['location'] == 'target') {
+            if ($this->isAllowedCommand($command, 'pre', 'target')) {
                 $this->runTargetCommand($command);
+            }
+        }
+    }
+    /**
+     *
+     */
+    protected function runPostLocalCommands()
+    {
+        $this->runOutputHandler(
+            $this->options['outputhandler'],
+            array(
+                'Running local post-deployment commands'
+            )
+        );
+        foreach ($this->config['commands'] as $command) {
+            if ($this->isAllowedCommand($command, 'post', 'local')) {
+                $this->runLocalCommand($command);
             }
         }
     }
@@ -519,21 +534,43 @@ class Beam
      */
     protected function runPostTargetCommands()
     {
-        $this->options['outputhandler']('Running target post-deployment commands');
+        $this->runOutputHandler(
+            $this->options['outputhandler'],
+            array(
+                'Running target post-deployment commands'
+            )
+        );
         foreach ($this->config['commands'] as $command) {
-            if ($command['phase'] == 'post' && $command['location'] == 'target') {
+            if ($this->isAllowedCommand($command, 'post', 'target')) {
                 $this->runTargetCommand($command);
             }
         }
+    }
+    /**
+     * @param $command
+     * @param $phase
+     * @param $location
+     * @return bool
+     */
+    protected function isAllowedCommand($command, $phase, $location)
+    {
+        return
+            $command['phase'] === $phase &&
+            $command['location'] === $location &&
+            (count($command['servers']) === 0 || in_array($this->options['target'], $command['servers'])) &&
+            ($command['required'] || !is_callable($this->options['commandprompthandler']) || $this->options['commandprompthandler']($command));
     }
     /**
      * @param   $command
      */
     protected function runTargetCommand($command)
     {
-        $this->options['outputhandler'](
-            $command['command'],
-            'command:target'
+        $this->runOutputHandler(
+            $this->options['outputhandler'],
+            array(
+                $command['command'],
+                'command:target'
+            )
         );
         //TODO requires ssh need an error if not ssh (partly addressed with DeploymentProvider::getLimitations)
         $server = $this->getServer();
@@ -543,19 +580,23 @@ class Beam
         );
         $session = new Session(
             $configuration,
+            // TODO: This authentication mechanism should be specifiable
             $configuration->getAuthentication(
                 null,
                 $server['user']
             )
         );
         $exec = $session->getExec();
-        call_user_func(
+
+        $this->runOutputHandler(
             $this->options['targetcommandoutputhandler'],
-            $exec->run(
-                sprintf(
-                    'cd %s; %s',
-                    $server['webroot'],
-                    $command['command']
+            array(
+                $exec->run(
+                    sprintf(
+                        'cd %s; %s',
+                        $server['webroot'],
+                        $command['command']
+                    )
                 )
             )
         );
@@ -565,9 +606,12 @@ class Beam
      */
     protected function runLocalCommand($command)
     {
-        $this->options['outputhandler'](
-            $command['command'],
-            'command:local'
+        $this->runOutputHandler(
+            $this->options['outputhandler'],
+            array(
+                $command['command'],
+                'command:local'
+            )
         );
         $this->runProcess(
             $this->getProcess(
@@ -576,6 +620,18 @@ class Beam
             ),
             $this->options['localcommandoutputhandler']
         );
+    }
+    /**
+     * @param $handler
+     * @param $arguments
+     */
+    protected function runOutputHandler($handler, $arguments)
+    {
+        if (is_callable($handler)) {
+            return call_user_func_array($handler, $arguments);
+        }
+
+        return false;
     }
     /**
      * This returns an options resolver that will ensure required options are set and that all options set are valid
@@ -621,14 +677,11 @@ class Beam
                     'vcsprovider'                => function (Options $options) {
                         return new Git($options['srcdir']);
                     },
-                    'deploymentoutputhandler'    => function ($type, $data) {
-                    },
-                    'localcommandoutputhandler'  => function ($type, $data) {
-                    },
-                    'targetcommandoutputhandler' => function ($content) {
-                    },
-                    'outputhandler'              => function ($content) {
-                    }
+                    'deploymentoutputhandler' => null,
+                    'outputhandler' => null,
+                    'localcommandoutputhandler' => null,
+                    'targetcommandoutputhandler' => null,
+                    'commandprompthandler'       => null
                 )
             )->setAllowedTypes(
                 array(
@@ -638,10 +691,6 @@ class Beam
                     'workingcopy'                => 'bool',
                     'vcsprovider'                => __NAMESPACE__ . '\Vcs\VcsProvider',
                     'deploymentprovider'         => __NAMESPACE__ . '\Deployment\DeploymentProvider',
-                    'deploymentoutputhandler'    => 'callable',
-                    'localcommandoutputhandler'  => 'callable',
-                    'targetcommandoutputhandler' => 'callable',
-                    'outputhandler'              => 'callable'
                 )
             )->setNormalizers(
                 array(
@@ -656,6 +705,41 @@ class Beam
                             $value = $value($options);
                         }
                         $value->setBeam($that);
+
+                        return $value;
+                    },
+                    'deploymentoutputhandler' => function (Options $options, $value) {
+                        if ($value !== null && !is_callable($value)) {
+                            throw new \InvalidArgumentException('Deployment output handler must be null or callable');
+                        }
+
+                        return $value;
+                    },
+                    'outputhandler' => function (Options $options, $value) {
+                        if ($value !== null && !is_callable($value)) {
+                            throw new \InvalidArgumentException('Output handler must be null or callable');
+                        }
+
+                        return $value;
+                    },
+                    'localcommandoutputhandler' => function (Options $options, $value) {
+                        if ($value !== null && !is_callable($value)) {
+                            throw new \InvalidArgumentException('Local command output handler must be null or callable');
+                        }
+
+                        return $value;
+                    },
+                    'targetcommandoutputhandler' => function (Options $options, $value) {
+                        if ($value !== null && !is_callable($value)) {
+                            throw new \InvalidArgumentException('Target command output handler must be null or callable');
+                        }
+
+                        return $value;
+                    },
+                    'commandprompthandler' => function (Options $options, $value) {
+                        if ($value !== null && !is_callable($value)) {
+                            throw new \InvalidArgumentException('Command prompt handler must be null or callable');
+                        }
 
                         return $value;
                     }

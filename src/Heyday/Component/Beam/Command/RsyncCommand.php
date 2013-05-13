@@ -38,12 +38,6 @@ class RsyncCommand extends BeamCommand
                 'Use with caution, deletes items that don\'t exist at the target'
             )
             ->addOption(
-                'no-archive',
-                '',
-                InputOption::VALUE_NONE,
-                'Remove recursion'
-            )
-            ->addOption(
                 'no-compress',
                 '',
                 InputOption::VALUE_NONE,
@@ -60,14 +54,13 @@ class RsyncCommand extends BeamCommand
      * @param  InputInterface $input
      * @return array
      */
-    protected function getOptions(InputInterface $input)
+    protected function getOptions(InputInterface $input, OutputInterface $output)
     {
-        $options = parent::getOptions($input);
+        $options = parent::getOptions($input, $output);
         $options['deploymentprovider'] = new Rsync(
             array(
                 'checksum' => !$input->getOption('no-checksum'),
                 'delete' => $input->getOption('delete'),
-                'archive' => !$input->getOption('no-archive'),
                 'compress' => !$input->getOption('no-compress'),
                 'delay-updates' => !$input->getOption('no-delay-updates')
                 // TODO: Add dry-run?

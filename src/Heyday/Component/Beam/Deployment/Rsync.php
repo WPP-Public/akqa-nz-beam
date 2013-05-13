@@ -124,6 +124,7 @@ class Rsync extends Deployment implements DeploymentProvider
                 $fromPath,
                 $toPath
             ),
+            '-rlpgoD', // recursion, links, perms, group, owner, devices, specials
             '--itemize-changes',
             array(
                 '--exclude-from="%s"',
@@ -139,9 +140,6 @@ class Rsync extends Deployment implements DeploymentProvider
         }
         if ($this->options['delete']) {
             $command[] = '--delete';
-        }
-        if ($this->options['archive']) {
-            $command[] = '--archive';
         }
         if ($this->options['compress']) {
             $command[] = '--compress';
@@ -187,7 +185,7 @@ class Rsync extends Deployment implements DeploymentProvider
                 $change = array();
                 $matches = array();
                 preg_match(
-                    '/(?:(^\*[\w]+)|([<>.ch])([fdLDS])([.?+c][.?+s][.?+t][.?+p][.?+o][.?+g][.?+]?[.?+a]?[.?+x]?)) (.*)/',
+                    '/(?:(^\*[\w]+)|([<>.ch])([fdLDS])([.?+c][.?+s][.?+tT][.?+p][.?+o][.?+g][.?+]?[.?+a]?[.?+x]?)) (.*)/',
                     $line,
                     $matches
                 );

@@ -10,6 +10,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Application;
 
 /**
  * Class BeamCommand
@@ -17,7 +18,37 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 abstract class BeamCommand extends Command
 {
-
+    /**
+     * @var \Symfony\Component\Console\Helper\HelperInterface
+     */
+    protected $formatterHelper;
+    /**
+     * @var \Symfony\Component\Console\Helper\HelperInterface
+     */
+    protected $progressHelper;
+    /**
+     * @var \Symfony\Component\Console\Helper\HelperInterface
+     */
+    protected $deploymentResultHelper;
+    /**
+     * @var \Symfony\Component\Console\Helper\HelperInterface
+     */
+    protected $dialogHelper;
+    /**
+     * @param Application $application
+     */
+    public function setApplication(Application $application = null)
+    {
+        parent::setApplication($application);
+        if ($application) {
+            $helperSet = $this->getHelperSet();
+            $this->formatterHelper = $helperSet->get('formatter');
+            $this->progressHelper = $helperSet->get('contentprogress');
+            $this->progressHelper->setFormat('[%bar%] %current%/%max% files');
+            $this->deploymentResultHelper = $helperSet->get('deploymentresult');
+            $this->dialogHelper = $helperSet->get('dialog');
+        }
+    }
     /**
      *
      */
@@ -64,6 +95,12 @@ abstract class BeamCommand extends Command
                 InputOption::VALUE_NONE,
                 'When uploading, syncs files from the working copy rather than exported git copy'
             )
+            ->addOption(
+                'commands-prompt',
+                '',
+                InputOption::VALUE_NONE,
+                'Prompts non-required commands'
+            )
             ->addConfigOption();
     }
     /**
@@ -73,12 +110,11 @@ abstract class BeamCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $helperset = $this->getHelperSet();
-        $formatterHelper = $helperset->get('formatter');
-        $progressHelper = $helperset->get('contentprogress');
-        $progressHelper->setFormat('[%bar%] %current%/%max% files');
-        $deploymentResultHelper = $helperset->get('deploymentresult');
-        $dialogHelper = $helperset->get('dialog');
+        //Set for use in local closures
+        $formatterHelper = $this->formatterHelper;
+        $progressHelper = $this->progressHelper;
+        $deploymentResultHelper = $this->deploymentResultHelper;
+        $dialogHelper = $this->dialogHelper;
 
         try {
 
@@ -246,8 +282,11 @@ abstract class BeamCommand extends Command
      * @param  InputInterface $input
      * @return array
      */
-    protected function getOptions(InputInterface $input)
+    protected function getOptions(InputInterface $input, OutputInterface $output)
     {
+        $formatterHelper = $this->formatterHelper;
+        $dialogHelper = $this->dialogHelper;
+
         $options = array(
             'direction' => $input->getArgument('direction'),
             'target'    => $input->getArgument('target')
@@ -265,6 +304,26 @@ abstract class BeamCommand extends Command
         if ($input->getOption('workingcopy')) {
             $options['workingcopy'] = true;
         }
+        if ($input->getOption('commands-prompt')) {
+            $that = $this;
+            $options['commandprompthandler'] = function ($command) use ($that, $output, $dialogHelper, $formatterHelper) {
+                return in_array(
+                    $dialogHelper->askConfirmation(
+                        $output,
+                        $formatterHelper->formatSection(
+                            $command['command'],
+                            $that->getQuestion('Do you want to run this command?', 'y'),
+                            'comment'
+                        ),
+                        'y'
+                    ),
+                    array(
+                        'y',
+                        'yes'
+                    )
+                );
+            };
+        }
 
         $options['srcdir'] = dirname(
             $this->getJsonConfigLoader(getcwd())->locate(
@@ -279,7 +338,7 @@ abstract class BeamCommand extends Command
      * @param  null   $default
      * @return string
      */
-    protected function getQuestion($question, $default = null)
+    public function getQuestion($question, $default = null)
     {
         if ($default !== null) {
             return sprintf(
