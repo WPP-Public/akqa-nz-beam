@@ -4,6 +4,10 @@ namespace Heyday\Component\Beam\Deployment;
 
 use Heyday\Component\Beam\Beam;
 
+/**
+ * Class Deployment
+ * @package Heyday\Component\Beam\Deployment
+ */
 abstract class Deployment
 {
     /**

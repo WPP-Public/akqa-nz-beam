@@ -5,7 +5,6 @@ namespace Heyday\Component\Beam;
 use Heyday\Component\Beam\Config\BeamConfiguration;
 use Heyday\Component\Beam\Deployment\DeploymentProvider;
 use Heyday\Component\Beam\Deployment\DeploymentResult;
-use Heyday\Component\Beam\Deployment\Rsync;
 use Heyday\Component\Beam\Vcs\Git;
 use Heyday\Component\Beam\Vcs\VcsProvider;
 use Ssh\Session;
@@ -137,6 +136,7 @@ class Beam
         }
     }
     /**
+     * @param Deployment\DeploymentResult $deploymentResult
      * @return mixed
      */
     public function doRun(DeploymentResult $deploymentResult = null)
@@ -176,7 +176,7 @@ class Beam
     /**
      * @return mixed
      */
-    public function doDryrun() // TODO: Do we need an output closure?
+    public function doDryrun()
     {
         $isUp = $this->isUp();
 
@@ -210,7 +210,7 @@ class Beam
         $this->options['outputhandler']('Preparing local deploy path');
 
         if ($this->isServerLockedRemote()) {
-            $this->options['vcsprovider']->updateBranch($this->options['branch']); //TODO: This might be wrong
+            $this->options['vcsprovider']->updateBranch($this->options['branch']);
         }
         $this->options['vcsprovider']->exportBranch(
             $this->options['branch'],
@@ -569,18 +569,15 @@ class Beam
             array(
                 'direction',
                 'target',
-                'srcdir'
+                'srcdir',
+                'deploymentprovider'
             )
         )->setOptional(
                 array(
                     'branch',
                     'path',
                     'dry-run',
-                    'checksum', //TODO: Move to deployment
-                    'delete', //TODO: Move to deployment
                     'workingcopy',
-                    'archive', //TODO: Move to deployment
-                    'compress', //TODO: Move to deployment
                     'vcsprovider',
                     'deploymentprovider',
                     'deploymentoutputhandler',
@@ -600,17 +597,9 @@ class Beam
                 array(
                     'path'                       => false,
                     'dry-run'                    => false,
-                    'delete'                     => false,
-                    'checksum'                   => true,
                     'workingcopy'                => false,
-                    'archive'                    => true,
-                    'compress'                   => true,
-                    'delay-updates'              => true,
                     'vcsprovider'                => function (Options $options) {
                         return new Git($options['srcdir']);
-                    },
-                    'deploymentprovider'         => function () {
-                        return new Rsync();
                     },
                     'deploymentoutputhandler'    => function ($type, $data) {
                     },
@@ -626,11 +615,7 @@ class Beam
                     'branch'                     => 'string',
                     'srcdir'                     => 'string',
                     'dry-run'                    => 'bool',
-                    'checksum'                   => 'bool',
                     'workingcopy'                => 'bool',
-                    'archive'                    => 'bool',
-                    'compress'                   => 'bool',
-                    'delay-updates'              => 'bool',
                     'vcsprovider'                => __NAMESPACE__ . '\Vcs\VcsProvider',
                     'deploymentprovider'         => __NAMESPACE__ . '\Deployment\DeploymentProvider',
                     'deploymentoutputhandler'    => 'callable',

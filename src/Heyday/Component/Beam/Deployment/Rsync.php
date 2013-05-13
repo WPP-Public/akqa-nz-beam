@@ -4,6 +4,7 @@ namespace Heyday\Component\Beam\Deployment;
 
 use Heyday\Component\Beam\Beam;
 use Heyday\Component\Beam\Deployment\DeploymentResult;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Process\Process;
 
 /**
@@ -13,9 +14,48 @@ use Symfony\Component\Process\Process;
 class Rsync extends Deployment implements DeploymentProvider
 {
     /**
+     * @var array
+     */
+    protected $options;
+    /**
      *
      */
-    const TIMEOUT = 300;
+    const PROCESS_TIMEOUT = 300;
+    /**
+     * @param array $options
+     */
+    public function __construct(array $options)
+    {
+        $resolver = new OptionsResolver();
+        $resolver->setOptional(
+            array(
+                'checksum',
+                'delete',
+                'archive',
+                'compress',
+                'delay-updates'
+            )
+        );
+        $resolver->setAllowedTypes(
+            array(
+                'checksum' => 'bool',
+                'delete' => 'bool',
+                'archive' => 'bool',
+                'compress' => 'bool',
+                'delay-updates' => 'bool'
+            )
+        );
+        $resolver->setDefaults(
+            array(
+                'checksum' => true,
+                'delete' => false,
+                'archive' => true,
+                'compress' => true,
+                'delay-updates' => true
+            )
+        );
+        $this->options = $resolver->resolve($options);
+    }
     /**
      * @{inheritDoc}
      */
@@ -59,7 +99,7 @@ class Rsync extends Deployment implements DeploymentProvider
             null,
             null,
             null,
-            self::TIMEOUT
+            static::PROCESS_TIMEOUT
         );
         $process->run($output);
         if (!$process->isSuccessful()) {
@@ -94,19 +134,19 @@ class Rsync extends Deployment implements DeploymentProvider
         if ($dryrun || $this->beam->getOption('dry-run')) {
             $command[] = '--dry-run';
         }
-        if ($this->beam->getOption('checksum')) {
+        if ($this->options['checksum']) {
             $command[] = '--checksum';
         }
-        if ($this->beam->getOption('delete')) {
+        if ($this->options['delete']) {
             $command[] = '--delete';
         }
-        if ($this->beam->getOption('archive')) {
+        if ($this->options['archive']) {
             $command[] = '--archive';
         }
-        if ($this->beam->getOption('compress')) {
+        if ($this->options['compress']) {
             $command[] = '--compress';
         }
-        if ($this->beam->getOption('delay-updates')) {
+        if ($this->options['delay-updates']) {
             $command[] = '--delay-updates';
         }
 

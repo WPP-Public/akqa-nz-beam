@@ -56,19 +56,7 @@ abstract class BeamCommand extends Command
                 'noprompt',
                 '',
                 InputOption::VALUE_NONE,
-                'Skips the pre-sync check and prompt'
-            )
-            ->addOption(
-                'nochecksum',
-                '',
-                InputOption::VALUE_NONE,
-                'Performs a faster file change check'
-            )
-            ->addOption(
-                'delete',
-                '',
-                InputOption::VALUE_NONE,
-                'USE WITH CAUTION!! adds the delete flag to remove items that don\'t exist at the destination'
+                'Skips the dry-run and prompt'
             )
             ->addOption(
                 'workingcopy',
@@ -219,11 +207,11 @@ abstract class BeamCommand extends Command
 
     }
     /**
-     * @param $output
-     * @param $progressHelper
-     * @param $formatterHelper
-     * @param $count
-     * @param $deploymentResult
+     * @param \Symfony\Component\Console\Output\OutputInterface  $output
+     * @param \Symfony\Component\Console\Helper\ProgressHelper   $progressHelper
+     * @param \Symfony\Component\Console\Helper\FormatterHelper  $formatterHelper
+     * @param \Heyday\Component\Beam\Deployment\DeploymentResult $deploymentResult
+     * @internal param $count
      * @return mixed
      */
     protected function getDeploymentOutputHandler(
@@ -273,12 +261,6 @@ abstract class BeamCommand extends Command
         }
         if ($input->getOption('dryrun')) {
             $options['dry-run'] = true;
-        }
-        if ($input->getOption('nochecksum')) {
-            $options['checksum'] = false;
-        }
-        if ($input->getOption('delete')) {
-            $options['delete'] = true;
         }
         if ($input->getOption('workingcopy')) {
             $options['workingcopy'] = true;

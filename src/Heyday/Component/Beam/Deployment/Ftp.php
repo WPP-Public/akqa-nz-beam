@@ -7,6 +7,10 @@ use Heyday\Component\Beam\Deployment\DeploymentProvider;
 use Heyday\Component\Beam\Deployment\DeploymentResult;
 use Heyday\Component\Beam\Utils;
 
+/**
+ * Class Ftp
+ * @package Heyday\Component\Beam\Deployment
+ */
 class Ftp extends Deployment implements DeploymentProvider
 {
     /**
@@ -29,8 +33,8 @@ class Ftp extends Deployment implements DeploymentProvider
     /**
      * @param  callable               $output
      * @param  bool                   $dryrun
-     * @param  DeploymentResult       $deploymentResult
-     * @return DeploymentResult|mixed
+     * @param  \Heyday\Component\Beam\Deployment\DeploymentResult       $deploymentResult
+     * @return \Heyday\Component\Beam\Deployment\DeploymentResult
      */
     public function up(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
     {
@@ -187,6 +191,10 @@ class Ftp extends Deployment implements DeploymentProvider
             return $server['webroot'] . '/' . $path;
         }
     }
+    /**
+     * @param $path
+     * @return string
+     */
     protected function getTargetFullPath($path)
     {
         return $this->getTargetPath() . '/' . $path;

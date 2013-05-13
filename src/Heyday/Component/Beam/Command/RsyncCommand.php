@@ -3,9 +3,12 @@
 namespace Heyday\Component\Beam\Command;
 
 use Heyday\Component\Beam\Deployment\DeploymentResult;
+use Heyday\Component\Beam\Deployment\Rsync;
 use Symfony\Component\Console\Helper\FormatterHelper;
 use Symfony\Component\Console\Helper\ProgressHelper;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 
 /**
  * Class RsyncCommand
@@ -21,7 +24,56 @@ class RsyncCommand extends BeamCommand
         parent::configure();
         $this
             ->setName('rsync')
-            ->setDescription('A file upload/download tool that utilises rsync and git');
+            ->setDescription('A deployment tool using rsync')
+            ->addOption(
+                'no-checksum',
+                '',
+                InputOption::VALUE_NONE,
+                'Performs a faster file change check'
+            )
+            ->addOption(
+                'delete',
+                '',
+                InputOption::VALUE_NONE,
+                'Use with caution, deletes items that don\'t exist at the target'
+            )
+            ->addOption(
+                'no-archive',
+                '',
+                InputOption::VALUE_NONE,
+                'Remove recursion'
+            )
+            ->addOption(
+                'no-compress',
+                '',
+                InputOption::VALUE_NONE,
+                'Removes compression'
+            )
+            ->addOption(
+                'no-delay-updates',
+                '',
+                InputOption::VALUE_NONE,
+                'Transfers as it runs not all at the end'
+            );
+    }
+    /**
+     * @param InputInterface $input
+     * @return array
+     */
+    protected function getOptions(InputInterface $input)
+    {
+        $options = parent::getOptions($input);
+        $options['deploymentprovider'] = new Rsync(
+            array(
+                'checksum' => !$input->getOption('no-checksum'),
+                'delete' => $input->getOption('delete'),
+                'archive' => !$input->getOption('no-archive'),
+                'compress' => !$input->getOption('no-compress'),
+                'delay-updates' => !$input->getOption('no-delay-updates')
+                // TODO: Add dry-run?
+            )
+        );
+        return $options;
     }
     /**
      * @{inheritDoc}
@@ -81,5 +133,4 @@ class RsyncCommand extends BeamCommand
             }
         };
     }
-
 }
