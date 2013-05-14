@@ -137,8 +137,9 @@ class Beam
         }
 
         $hasRemoteCommands = $this->hasRemoteCommands();
+        $limitations = $this->options['deploymentprovider']->getLimitations();
 
-        if ($limitations = $this->options['deploymentprovider']->getLimitations() && is_array($limitations)) {
+        if (is_array($limitations)) {
 
             // Check if remote commands defined when not available
             if (in_array(DeploymentProvider::LIMITATION_REMOTECOMMAND, $limitations)) {
