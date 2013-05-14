@@ -92,7 +92,7 @@ class Utils
      */
     public static function isFileExcluded(array $patterns, $path)
     {
-        $path = '/' . $path;
+        $path = '/' . ltrim($path, '/');
         foreach ($patterns as $pattern) {
             if (substr($pattern, -1) === '/') {
                 $pattern = $pattern . '*';
@@ -100,11 +100,16 @@ class Utils
                     $pattern = '*' . $pattern;
                 }
             } elseif ($pattern[0] !== '/') {
-                $pattern = '*/' . $pattern;
+                $pattern = array(
+                    '*/' . $pattern,
+                    '*/' . $pattern . '/*'
+                );
             }
 
-            if (fnmatch($pattern, $path)) {
-                return true;
+            foreach ((array) $pattern as $subpattern) {
+                if (fnmatch($subpattern, $path)) {
+                    return true;
+                }
             }
         }
 

@@ -134,6 +134,14 @@ class UtilsTest extends \PHPUnit_Framework_TestCase
                 'directory/filename.file'
             )
         );
+        $this->assertTrue(
+            Utils::isFileExcluded(
+                array(
+                    'vendor'// => '*/vendor/*'
+                ),
+                'vendor/filename.file'
+            )
+        );
     }
     public function testGetRelativePath()
     {
