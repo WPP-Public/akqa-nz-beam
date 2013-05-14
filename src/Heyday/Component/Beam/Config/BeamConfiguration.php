@@ -142,6 +142,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
                                 ->prototype('scalar')->end()
                             ->end()
                             ->scalarNode('required')->defaultFalse()->end()
+                            ->scalarNode('tag')->defaultFalse()->end()
                         ->end()
                     ->end()
                 ->end()

@@ -96,10 +96,16 @@ abstract class BeamCommand extends Command
                 'When uploading, syncs files from the working copy rather than exported git copy'
             )
             ->addOption(
-                'commands-prompt',
+                'command-prompt',
                 '',
                 InputOption::VALUE_NONE,
                 'Prompts non-required commands'
+            )
+            ->addOption(
+                'tags',
+                't',
+                InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY,
+                'Run the specified tagged commands'
             )
             ->addConfigOption();
     }
@@ -308,7 +314,7 @@ abstract class BeamCommand extends Command
         if ($input->getOption('workingcopy')) {
             $options['workingcopy'] = true;
         }
-        if ($input->getOption('commands-prompt')) {
+        if ($input->getOption('command-prompt')) {
             $that = $this;
             $options['commandprompthandler'] = function ($command) use ($that, $output, $dialogHelper, $formatterHelper) {
                 return in_array(
@@ -327,6 +333,10 @@ abstract class BeamCommand extends Command
                     )
                 );
             };
+        }
+
+        if ($input->getOption('tags')) {
+            $options['command-tags'] = $input->getOption('tags');
         }
 
         $options['srcdir'] = dirname(

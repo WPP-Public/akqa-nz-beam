@@ -476,8 +476,8 @@ class Beam
      */
     protected function runPreLocalCommands()
     {
-        $commands = $this->getAllowedCommands('pre', 'local');
-        if(count($commands)){
+        $commands = $this->getFilteredCommands('pre', 'local');
+        if (count($commands)) {
             $this->runOutputHandler(
                 $this->options['outputhandler'],
                 array(
@@ -494,8 +494,8 @@ class Beam
      */
     protected function runPreTargetCommands()
     {
-        $commands = $this->getAllowedCommands('pre', 'target');
-        if(count($commands)){
+        $commands = $this->getFilteredCommands('pre', 'target');
+        if (count($commands)) {
             $this->runOutputHandler(
                 $this->options['outputhandler'],
                 array(
@@ -512,8 +512,8 @@ class Beam
      */
     protected function runPostLocalCommands()
     {
-        $commands = $this->getAllowedCommands('post', 'local');
-        if(count($commands)){
+        $commands = $this->getFilteredCommands('post', 'local');
+        if (count($commands)) {
             $this->runOutputHandler(
                 $this->options['outputhandler'],
                 array(
@@ -530,8 +530,8 @@ class Beam
      */
     protected function runPostTargetCommands()
     {
-        $commands = $this->getAllowedCommands('post', 'target');
-        if(count($commands)){
+        $commands = $this->getFilteredCommands('post', 'target');
+        if (count($commands)) {
             $this->runOutputHandler(
                 $this->options['outputhandler'],
                 array(
@@ -543,30 +543,47 @@ class Beam
             }
         }
     }
-    protected function getAllowedCommands($phase, $location)
-    {
-        $commands = array();
-        foreach ($this->config['commands'] as $command) {
-            if ($this->isAllowedCommand($command, $phase, $location)) {
-                $commands[] = $command;
-            }
-        }
-
-        return $commands;
-    }
     /**
-     * @param $command
      * @param $phase
      * @param $location
      * @return bool
      */
-    protected function isAllowedCommand($command, $phase, $location)
+    protected function getFilteredCommands($phase, $location)
     {
-        return
-            $command['phase'] === $phase &&
-            $command['location'] === $location &&
-            (count($command['servers']) === 0 || in_array($this->options['target'], $command['servers'])) &&
-            ($command['required'] || !is_callable($this->options['commandprompthandler']) || $this->options['commandprompthandler']($command));
+        $commands = array();
+
+        foreach ($this->config['commands'] as $command) {
+
+            if ($command['phase'] !== $phase) {
+                continue;
+            }
+
+            if ($command['location'] !== $location) {
+                continue;
+            }
+
+            if (count($command['servers']) !== 0 && !in_array($this->options['target'], $command['servers'])) {
+                continue;
+            }
+
+            if (!$command['required']) {
+
+                if ($command['tag'] && (count($this->options['command-tags']) === 0 || !in_array($command['tag'], $this->options['command-tags']))) {
+                    continue;
+                }
+
+                if (is_callable($this->options['commandprompthandler']) && !$this->options['commandprompthandler']($command)) {
+                    continue;
+                }
+
+            }
+
+            $commands[] = $command;
+
+        }
+
+        return $commands;
+        // if has tag, then default false unless tags specified
     }
     /**
      * @param   $command
@@ -594,7 +611,7 @@ class Beam
         } catch (\UnexpectedValueException $exception) {
             throw new \RuntimeException(
                 "Couldn't find host matching '{$server['host']}' in SSH config file.\n"
-                ."Public key authentication is currently required to execute commands on a target."
+                    . "Public key authentication is currently required to execute commands on a target."
             );
         }
 
@@ -620,11 +637,11 @@ class Beam
                 )
             );
         } catch (\RuntimeException $exception) {
-            if($exception->getMessage() == 'The authentication over the current SSH connection failed.'){
+            if ($exception->getMessage() == 'The authentication over the current SSH connection failed.') {
                 throw new \RuntimeException(
                     'Failed to authenticate over SSH to run a command on the target. This could be caused by a partial'
-                    ." definition for '{$server['host']}' in your ssh config file (currently, public key authentication"
-                    .' is required to execute commands on a target).'
+                        . " definition for '{$server['host']}' in your ssh config file (currently, public key authentication"
+                        . ' is required to execute commands on a target).'
                 );
             }
 
@@ -685,6 +702,7 @@ class Beam
                     'path',
                     'dryrun',
                     'workingcopy',
+                    'command-tags',
                     'vcsprovider',
                     'deploymentprovider',
                     'deploymentoutputhandler',
@@ -703,35 +721,37 @@ class Beam
             )->setDefaults(
                 array(
                     'path'                       => false,
-                    'dryrun'                    => false,
+                    'dryrun'                     => false,
                     'workingcopy'                => false,
+                    'command-tags'               => array(),
                     'vcsprovider'                => function (Options $options) {
                         return new Git($options['srcdir']);
                     },
-                    'deploymentoutputhandler' => null,
-                    'outputhandler' => null,
-                    'localcommandoutputhandler' => null,
+                    'deploymentoutputhandler'    => null,
+                    'outputhandler'              => null,
+                    'localcommandoutputhandler'  => null,
                     'targetcommandoutputhandler' => null,
                     'commandprompthandler'       => null
                 )
             )->setAllowedTypes(
                 array(
-                    'branch'                     => 'string',
-                    'srcdir'                     => 'string',
-                    'dryrun'                    => 'bool',
-                    'workingcopy'                => 'bool',
-                    'vcsprovider'                => __NAMESPACE__ . '\Vcs\VcsProvider',
-                    'deploymentprovider'         => __NAMESPACE__ . '\Deployment\DeploymentProvider',
+                    'branch'             => 'string',
+                    'srcdir'             => 'string',
+                    'dryrun'             => 'bool',
+                    'workingcopy'        => 'bool',
+                    'command-tags'       => 'array',
+                    'vcsprovider'        => __NAMESPACE__ . '\Vcs\VcsProvider',
+                    'deploymentprovider' => __NAMESPACE__ . '\Deployment\DeploymentProvider',
                 )
             )->setNormalizers(
                 array(
-                    'branch'             => function (Options $options, $value) {
+                    'branch'                     => function (Options $options, $value) {
                         return trim($value);
                     },
-                    'path'               => function (Options $options, $value) {
+                    'path'                       => function (Options $options, $value) {
                         return is_string($value) ? trim($value, '/') : false;
                     },
-                    'deploymentprovider' => function (Options $options, $value) use ($that) {
+                    'deploymentprovider'         => function (Options $options, $value) use ($that) {
                         if (is_callable($value)) {
                             $value = $value($options);
                         }
@@ -739,21 +759,21 @@ class Beam
 
                         return $value;
                     },
-                    'deploymentoutputhandler' => function (Options $options, $value) {
+                    'deploymentoutputhandler'    => function (Options $options, $value) {
                         if ($value !== null && !is_callable($value)) {
                             throw new \InvalidArgumentException('Deployment output handler must be null or callable');
                         }
 
                         return $value;
                     },
-                    'outputhandler' => function (Options $options, $value) {
+                    'outputhandler'              => function (Options $options, $value) {
                         if ($value !== null && !is_callable($value)) {
                             throw new \InvalidArgumentException('Output handler must be null or callable');
                         }
 
                         return $value;
                     },
-                    'localcommandoutputhandler' => function (Options $options, $value) {
+                    'localcommandoutputhandler'  => function (Options $options, $value) {
                         if ($value !== null && !is_callable($value)) {
                             throw new \InvalidArgumentException('Local command output handler must be null or callable');
                         }
@@ -767,7 +787,7 @@ class Beam
 
                         return $value;
                     },
-                    'commandprompthandler' => function (Options $options, $value) {
+                    'commandprompthandler'       => function (Options $options, $value) {
                         if ($value !== null && !is_callable($value)) {
                             throw new \InvalidArgumentException('Command prompt handler must be null or callable');
                         }
@@ -800,6 +820,7 @@ class Beam
                 return true;
             }
         }
+
         return false;
     }
     /**
