@@ -59,7 +59,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
         'wordpress'    => array(
             'wp-content/uploads/'
         ),
-        'zend'         => array(
+        'zf'         => array(
             '/www/uploads/',
             '/web/uploads/'
         )
