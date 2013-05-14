@@ -4,6 +4,7 @@ namespace Heyday\Component\Beam\Command;
 
 use Symfony\Component\Console\Command\Command as SymfonyCommand;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class SelfUpdateCommand extends SymfonyCommand
@@ -16,7 +17,14 @@ class SelfUpdateCommand extends SymfonyCommand
     {
         $this
             ->setName('self-update')
-            ->setDescription('Update beam');
+            ->setDescription('Update beam')
+            ->addOption(
+                'host',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'The host to download from',
+                'http://beam.heyday.net.nz'
+            );
     }
     /**
      * @param  InputInterface    $input
@@ -25,7 +33,8 @@ class SelfUpdateCommand extends SymfonyCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $url = "http://beam.heyday.net.nz/beam.phar";
+        $host = rtrim($input->getOption('host'), '/');
+        $url = "$host/beam.phar";
         $version = trim($this->getApplication()->getVersion());
 
         if ($version === '~package_version~') {
@@ -58,11 +67,13 @@ class SelfUpdateCommand extends SymfonyCommand
 
             unset($phar);
 
+            $permissions = fileperms($_SERVER['argv'][0]);
+
             if (false === @rename($tmpFile, $_SERVER['argv'][0])) {
                 throw new \RuntimeException(sprintf('Could not deploy new file to "%s".', $_SERVER['argv'][0]));
             }
 
-            chmod($_SERVER['argv'][0], 0755);
+            chmod($_SERVER['argv'][0], $permissions);
 
             $output->writeln('Beam updated');
 
