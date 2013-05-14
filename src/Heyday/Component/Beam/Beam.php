@@ -170,17 +170,16 @@ class Beam
                 false,
                 $deploymentResult
             );
+            if (!$this->isWorkingCopy()) {
+                $this->runPostLocalCommands();
+            }
+            $this->runPostTargetCommands();
         } else {
             $deploymentResult = $this->options['deploymentprovider']->down(
                 $this->options['deploymentoutputhandler'],
                 false,
                 $deploymentResult
             );
-        }
-
-        if ($this->isUp()) {
-            $this->runPostLocalCommands();
-            $this->runPostTargetCommands();
         }
 
         return $deploymentResult;
@@ -192,6 +191,7 @@ class Beam
     {
         if ($this->isUp()) {
             $this->prepareLocalPath();
+            $this->runPreLocalCommands();
             $deploymentResult = $this->options['deploymentprovider']->up(
                 $this->options['deploymentoutputhandler'],
                 true
@@ -214,9 +214,11 @@ class Beam
             $this->options['outputhandler']('Preparing local deploy path');
 
             if ($this->isTargetLockedRemote()) {
+                $this->options['outputhandler']('Updating remote branch');
                 $this->options['vcsprovider']->updateBranch($this->options['branch']);
             }
 
+            $this->options['outputhandler']('Exporting branch');
             $this->options['vcsprovider']->exportBranch(
                 $this->options['branch'],
                 $this->getLocalPath()
