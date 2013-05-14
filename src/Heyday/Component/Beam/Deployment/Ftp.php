@@ -222,4 +222,15 @@ class Ftp extends Deployment implements DeploymentProvider
             $server['webroot']
         );
     }
+
+    /**
+     * Limitations of this provider
+     * @return array
+     */
+    public function getLimitations()
+    {
+        return array(
+            DeploymentProvider::LIMITATION_REMOTECOMMAND
+        );
+    }
 }

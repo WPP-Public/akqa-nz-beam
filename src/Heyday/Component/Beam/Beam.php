@@ -9,6 +9,7 @@ use Heyday\Component\Beam\Vcs\Git;
 use Heyday\Component\Beam\Vcs\VcsProvider;
 use Ssh\Session;
 use Ssh\SshConfigFileConfiguration;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -94,7 +95,7 @@ class Beam
         $this->validateSetup();
     }
     /**
-     * Validates dynnamic options or options that the options resolver can't validate
+     * Validates dynamic options or options that the options resolver can't validate
      * @throws \InvalidArgumentException
      */
     protected function validateSetup()
@@ -133,6 +134,26 @@ class Beam
                     sprintf('The local path "%s" is not writable', $this->getLocalPathFolder())
                 );
             }
+        }
+
+        $hasRemoteCommands = $this->hasRemoteCommands();
+        $limitations = $this->options['deploymentprovider']->getLimitations();
+
+        if (is_array($limitations)) {
+
+            // Check if remote commands defined when not available
+            if (in_array(DeploymentProvider::LIMITATION_REMOTECOMMAND, $limitations)) {
+                throw new InvalidConfigurationException(
+                    'Commands are defined for the location "target" but the selected deployment provider cannot execute remote commands.'
+                );
+            }
+
+        }
+
+        if ($hasRemoteCommands && !extension_loaded('ssh2')) {
+            throw new InvalidConfigurationException(
+                'The PHP extension ssh2 is required to run commands on the location "target" but it is not loaded. (You may need to install it).'
+            );
         }
     }
     /**
@@ -463,14 +484,15 @@ class Beam
      */
     protected function runPreLocalCommands()
     {
-        $this->runOutputHandler(
-            $this->options['outputhandler'],
-            array(
-                'Running local pre-deployment commands'
-            )
-        );
-        foreach ($this->config['commands'] as $command) {
-            if ($this->isAllowedCommand($command, 'pre', 'local')) {
+        $commands = $this->getAllowedCommands('pre', 'local');
+        if(count($commands)){
+            $this->runOutputHandler(
+                $this->options['outputhandler'],
+                array(
+                    'Running local pre-deployment commands'
+                )
+            );
+            foreach ($commands as $command) {
                 $this->runLocalCommand($command);
             }
         }
@@ -480,14 +502,15 @@ class Beam
      */
     protected function runPreTargetCommands()
     {
-        $this->runOutputHandler(
-            $this->options['outputhandler'],
-            array(
-                'Running target pre-deployment commands'
-            )
-        );
-        foreach ($this->config['commands'] as $command) {
-            if ($this->isAllowedCommand($command, 'pre', 'target')) {
+        $commands = $this->getAllowedCommands('pre', 'target');
+        if(count($commands)){
+            $this->runOutputHandler(
+                $this->options['outputhandler'],
+                array(
+                    'Running target pre-deployment commands'
+                )
+            );
+            foreach ($commands as $command) {
                 $this->runTargetCommand($command);
             }
         }
@@ -497,14 +520,15 @@ class Beam
      */
     protected function runPostLocalCommands()
     {
-        $this->runOutputHandler(
-            $this->options['outputhandler'],
-            array(
-                'Running local post-deployment commands'
-            )
-        );
-        foreach ($this->config['commands'] as $command) {
-            if ($this->isAllowedCommand($command, 'post', 'local')) {
+        $commands = $this->getAllowedCommands('post', 'local');
+        if(count($commands)){
+            $this->runOutputHandler(
+                $this->options['outputhandler'],
+                array(
+                    'Running local post-deployment commands'
+                )
+            );
+            foreach ($commands as $command) {
                 $this->runLocalCommand($command);
             }
         }
@@ -514,17 +538,29 @@ class Beam
      */
     protected function runPostTargetCommands()
     {
-        $this->runOutputHandler(
-            $this->options['outputhandler'],
-            array(
-                'Running target post-deployment commands'
-            )
-        );
-        foreach ($this->config['commands'] as $command) {
-            if ($this->isAllowedCommand($command, 'post', 'target')) {
+        $commands = $this->getAllowedCommands('post', 'target');
+        if(count($commands)){
+            $this->runOutputHandler(
+                $this->options['outputhandler'],
+                array(
+                    'Running target post-deployment commands'
+                )
+            );
+            foreach ($commands as $command) {
                 $this->runTargetCommand($command);
             }
         }
+    }
+    protected function getAllowedCommands($phase, $location)
+    {
+        $commands = array();
+        foreach ($this->config['commands'] as $command) {
+            if ($this->isAllowedCommand($command, $phase, $location)) {
+                $commands[] = $command;
+            }
+        }
+
+        return $commands;
     }
     /**
      * @param $command
@@ -552,34 +588,55 @@ class Beam
                 'command:target'
             )
         );
-        //TODO requires ssh need an error if not ssh
+
         $server = $this->getServer();
-        $configuration = new SshConfigFileConfiguration(
-            '~/.ssh/config',
-            $server['host']
-        );
+
+        try {
+            $configuration = new SshConfigFileConfiguration(
+                '~/.ssh/config',
+                $server['host']
+            );
+            $authentication = $configuration->getAuthentication(null, $server['user']);
+
+        } catch (\UnexpectedValueException $exception) {
+            throw new \RuntimeException(
+                "Couldn't find host matching '{$server['host']}' in SSH config file.\n"
+                ."Public key authentication is currently required to execute commands on a target."
+            );
+        }
+
         $session = new Session(
             $configuration,
             // TODO: This authentication mechanism should be specifiable
-            $configuration->getAuthentication(
-                null,
-                $server['user']
-            )
+            $authentication
         );
+
         $exec = $session->getExec();
 
-        $this->runOutputHandler(
-            $this->options['targetcommandoutputhandler'],
-            array(
-                $exec->run(
-                    sprintf(
-                        'cd %s; %s',
-                        $server['webroot'],
-                        $command['command']
+        try {
+            $this->runOutputHandler(
+                $this->options['targetcommandoutputhandler'],
+                array(
+                    $exec->run(
+                        sprintf(
+                            'cd \'%s\' && %s',
+                            $server['webroot'],
+                            $command['command']
+                        )
                     )
                 )
-            )
-        );
+            );
+        } catch (\RuntimeException $exception) {
+            if($exception->getMessage() == 'The authentication over the current SSH connection failed.'){
+                throw new \RuntimeException(
+                    'Failed to authenticate over SSH to run a command on the target. This could be caused by a partial'
+                    ." definition for '{$server['host']}' in your ssh config file (currently, public key authentication"
+                    .' is required to execute commands on a target).'
+                );
+            }
+
+            throw $exception;
+        }
     }
     /**
      * @param   $command
@@ -736,5 +793,19 @@ class Beam
     protected function getConfigurationDefinition()
     {
         return new BeamConfiguration();
+    }
+
+    /**
+     * Returns true if any commands to run on the remote ("target") are defined
+     * @return boolean
+     */
+    protected function hasRemoteCommands()
+    {
+        foreach ($this->config['commands'] as $command) {
+            if ($command['location'] == 'target' && in_array($command['phase'], array('post', 'pre'))) {
+                return true;
+            }
+        }
+        return false;
     }
 }

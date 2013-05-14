@@ -243,4 +243,13 @@ class Sftp extends Deployment implements DeploymentProvider
 
         return $server['webroot'];
     }
+    /**
+     * @return array
+     */
+    public function getLimitations()
+    {
+        return array(
+            DeploymentProvider::LIMITATION_REMOTECOMMAND
+        );
+    }
 }
