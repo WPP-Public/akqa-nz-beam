@@ -208,8 +208,6 @@ class Rsync extends Deployment implements DeploymentProvider
                         case 'h':
                             $change['update'] = 'link';
                             break;
-                        case '.':
-                            $change['update'] = 'nochange';
                             break;
                     }
                     switch ($matches[3]) {
