@@ -106,4 +106,23 @@ class Git implements VcsProvider
 
         return $process;
     }
+    /**
+     * @param $branch
+     * @return mixed
+     */
+    public function getLog($branch)
+    {
+        $process = $this->process(
+            sprintf(
+                'git log -1 --format=medium %s',
+                $branch
+            )
+        );
+        return sprintf(
+            "Deployer: %s\nBranch: %s\n%s\n",
+            get_current_user(),
+            $branch,
+            $process->getOutput()
+        );
+    }
 }

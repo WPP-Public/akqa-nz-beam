@@ -433,7 +433,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
                 )
             )
         );
-        $this->assertTrue($beam->isServerLockedRemote());
+        $this->assertTrue($beam->isTargetLockedRemote());
     }
     public function testIsBranchRemote()
     {

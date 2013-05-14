@@ -32,4 +32,9 @@ interface VcsProvider
      * @throws \RuntimeException
      */
     public function updateBranch($branch);
+    /**
+     * @param $branch
+     * @return mixed
+     */
+    public function getLog($branch);
 }

@@ -125,7 +125,7 @@ class Beam
         }
 
         if ($this->isWorkingCopy()) {
-            if ($this->isServerLockedRemote()) {
+            if ($this->isTargetLockedRemote()) {
                 throw new \InvalidArgumentException('Working copy can\'t be used with a locked remote branch');
             }
         } else {
@@ -162,17 +162,9 @@ class Beam
      */
     public function doRun(DeploymentResult $deploymentResult = null)
     {
-        $isUp = $this->isUp();
+        $this->prepareLocalPath();
 
-        if (!$this->isPrepared() && !$this->isWorkingCopy()) {
-            $this->prepareLocalPath();
-
-            if ($isUp) {
-                $this->runPreLocalCommands();
-            }
-        }
-
-        if ($isUp) {
+        if ($this->isUp()) {
             $this->runPreTargetCommands();
             $deploymentResult = $this->options['deploymentprovider']->up(
                 $this->options['deploymentoutputhandler'],
@@ -187,7 +179,7 @@ class Beam
             );
         }
 
-        if ($isUp) {
+        if ($this->isUp()) {
             $this->runPostLocalCommands();
             $this->runPostTargetCommands();
         }
@@ -199,15 +191,7 @@ class Beam
      */
     public function doDryrun()
     {
-        $isUp = $this->isUp();
-
-        if (!$this->isPrepared() && !$this->isWorkingCopy()) {
-            $this->prepareLocalPath();
-
-            if ($isUp) {
-                $this->runPreLocalCommands();
-            }
-        }
+        $this->prepareLocalPath();
 
         if ($this->isUp()) {
             $deploymentResult = $this->options['deploymentprovider']->up(
@@ -228,17 +212,25 @@ class Beam
      */
     protected function prepareLocalPath()
     {
-        $this->options['outputhandler']('Preparing local deploy path');
+        if (!$this->isPrepared() && !$this->isWorkingCopy()) {
+            $this->options['outputhandler']('Preparing local deploy path');
 
-        if ($this->isServerLockedRemote()) {
-            $this->options['vcsprovider']->updateBranch($this->options['branch']);
+            if ($this->isTargetLockedRemote()) {
+                $this->options['vcsprovider']->updateBranch($this->options['branch']);
+            }
+
+            $this->options['vcsprovider']->exportBranch(
+                $this->options['branch'],
+                $this->getLocalPath()
+            );
+
+            $this->setPrepared(true);
+
+            if ($this->isUp()) {
+                $this->runPreLocalCommands();
+                $this->writeLog();
+            }
         }
-        $this->options['vcsprovider']->exportBranch(
-            $this->options['branch'],
-            $this->getLocalPath()
-        );
-
-        $this->setPrepared(true);
     }
     /**
      * Gets the from location for rsync
@@ -331,7 +323,7 @@ class Beam
      * Returns whether or not the server is locked to a remote branch
      * @return bool
      */
-    public function isServerLockedRemote()
+    public function isTargetLockedRemote()
     {
         $server = $this->getServer();
 
@@ -807,5 +799,15 @@ class Beam
             }
         }
         return false;
+    }
+    /**
+     *
+     */
+    protected function writeLog()
+    {
+        file_put_contents(
+            $this->getLocalPath() . '/.beamlog',
+            $this->options['vcsprovider']->getLog($this->options['branch'])
+        );
     }
 }

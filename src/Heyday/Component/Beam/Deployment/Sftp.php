@@ -183,7 +183,7 @@ class Sftp extends Deployment implements DeploymentProvider
 
         }
 
-        if (!$dryrun && !$this->beam->getOption('dryrun')) {
+        if (!$dryrun) {
             foreach ($deploymentResult as $change) {
                 if (is_callable($output)) {
                     $output();

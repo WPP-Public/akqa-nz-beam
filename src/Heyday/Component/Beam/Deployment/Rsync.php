@@ -132,7 +132,7 @@ class Rsync extends Deployment implements DeploymentProvider
             )
         );
 
-        if ($dryrun || $this->beam->getOption('dryrun')) {
+        if ($dryrun) {
             $command[] = '--dry-run';
         }
         if ($this->options['checksum']) {
@@ -173,6 +173,94 @@ class Rsync extends Deployment implements DeploymentProvider
         return implode(' ', $command);
     }
     /**
+     * @param $line
+     * @return array|bool
+     */
+    protected function parseLine($line)
+    {
+        $change = array();
+        $matches = array();
+        preg_match(
+            '/(?:(^\*[\w]+)|([<>.ch])([fdLDS])([.?+c][.?+s][.?+tT][.?+p][.?+o][.?+g][.?+]?[.?+a]?[.?+x]?)) (.*)/',
+            $line,
+            $matches
+        );
+        if ($matches[1] == '*deleting') {
+            $change['update'] = 'deleted';
+            $change['filename'] = $matches[5];
+            $change['filetype'] = preg_match('/\/$/', $matches[5]) ? 'directory' : 'file';
+            $change['reason'] = array('missing');
+        } else {
+            switch ($matches[2]) {
+                case '<':
+                    $change['update'] = 'sent';
+                    break;
+                case '>':
+                    $change['update'] = 'received';
+                    break;
+                case 'c':
+                    $change['update'] = 'created';
+                    break;
+                case 'h':
+                    $change['update'] = 'link';
+                    break;
+                case '.':
+                    $change['update'] = 'attributes';
+                    break;
+            }
+            switch ($matches[3]) {
+                case 'f':
+                    $change['filetype'] = 'file';
+                    break;
+                case 'd':
+                    $change['filetype'] = 'directory';
+                    break;
+                case 'L':
+                    $change['filetype'] = 'symlink';
+                    break;
+                case 'D':
+                    $change['filetype'] = 'device';
+                    break;
+                case 'S':
+                    $change['filetype'] = 'special';
+                    break;
+            }
+            $reason = array();
+            if ($matches[4][0] == 'c') {
+                $reason[] = 'checksum';
+            } elseif ($matches[4][0] == '+') {
+                $reason[] = 'new';
+            }
+            if ($matches[4][1] == 's') {
+                $reason[] = 'size';
+            }
+            if ($matches[4][2] == 't') {
+                $reason[] = 'time';
+            }
+            if ($matches[4][3] == 'p') {
+                $reason[] = 'permissions';
+            }
+            if ($matches[4][4] == 'o') {
+                $reason[] = 'owner';
+            }
+            if ($matches[4][5] == 'g') {
+                $reason[] = 'group';
+            }
+            if (isset($matches[4][7]) && $matches[4][7] == 'a') {
+                $reason[] = 'acl';
+            }
+            if (isset($matches[4][8]) && $matches[4][8] == 'x') {
+                $reason[] = 'extended';
+            }
+            if ($reason === array('time')) {
+                return false;
+            }
+            $change['reason'] = $reason;
+            $change['filename'] = $matches[5];
+        }
+        return $change;
+    }
+    /**
      * @param $output
      * @return array
      */
@@ -182,87 +270,10 @@ class Rsync extends Deployment implements DeploymentProvider
         foreach (explode(PHP_EOL, $output) as $line) {
             $line = trim($line);
             if ($line !== '') {
-                $change = array();
-                $matches = array();
-                preg_match(
-                    '/(?:(^\*[\w]+)|([<>.ch])([fdLDS])([.?+c][.?+s][.?+tT][.?+p][.?+o][.?+g][.?+]?[.?+a]?[.?+x]?)) (.*)/',
-                    $line,
-                    $matches
-                );
-                if ($matches[1] == '*deleting') {
-                    $change['update'] = 'deleted';
-                    $change['filename'] = $matches[5];
-                    $change['filetype'] = preg_match('/\/$/', $matches[5]) ? 'directory' : 'file';
-                    $change['reason'] = array('missing');
-                } else {
-                    switch ($matches[2]) {
-                        case '<':
-                            $change['update'] = 'sent';
-                            break;
-                        case '>':
-                            $change['update'] = 'received';
-                            break;
-                        case 'c':
-                            $change['update'] = 'created';
-                            break;
-                        case 'h':
-                            $change['update'] = 'link';
-                            break;
-                        case '.':
-                            $change['update'] = 'attributes';
-                            break;
-                    }
-                    switch ($matches[3]) {
-                        case 'f':
-                            $change['filetype'] = 'file';
-                            break;
-                        case 'd':
-                            $change['filetype'] = 'directory';
-                            break;
-                        case 'L':
-                            $change['filetype'] = 'symlink';
-                            break;
-                        case 'D':
-                            $change['filetype'] = 'device';
-                            break;
-                        case 'S':
-                            $change['filetype'] = 'special';
-                            break;
-                    }
-                    $reason = array();
-                    if ($matches[4][0] == 'c') {
-                        $reason[] = 'checksum';
-                    } elseif ($matches[4][0] == '+') {
-                        $reason[] = 'new';
-                    }
-                    if ($matches[4][1] == 's') {
-                        $reason[] = 'size';
-                    }
-                    if ($matches[4][2] == 't') {
-                        $reason[] = 'time';
-                    }
-                    if ($matches[4][3] == 'p') {
-                        $reason[] = 'permissions';
-                    }
-                    if ($matches[4][4] == 'o') {
-                        $reason[] = 'owner';
-                    }
-                    if ($matches[4][5] == 'g') {
-                        $reason[] = 'group';
-                    }
-                    if (isset($matches[4][7]) && $matches[4][7] == 'a') {
-                        $reason[] = 'acl';
-                    }
-                    if (isset($matches[4][8]) && $matches[4][8] == 'x') {
-                        $reason[] = 'extended';
-                    }
-                    if ($reason === array('time')) {
-                        continue;
-                    }
-                    $change['reason'] = $reason;
-                    $change['filename'] = $matches[5];
+                $change = $this->parseLine($line);
+                if ($change) {
+                    $changes[] = $change;
                 }
-                $changes[] = $change;
             }
         }
 

@@ -221,7 +221,12 @@ abstract class BeamCommand extends Command
                     throw new \RuntimeException('No changed files');
                 }
             } else {
-                $changedFiles = $beam->doRun();
+
+                if ($input->getOption('dryrun')) {
+                    $changedFiles = $beam->doDryrun();
+                } else {
+                    $changedFiles = $beam->doRun();
+                }
 
                 $deploymentResultHelper->outputChanges(
                     $formatterHelper,
