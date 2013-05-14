@@ -212,7 +212,7 @@ class Beam
      */
     protected function prepareLocalPath()
     {
-        if (!$this->isPrepared() && !$this->isWorkingCopy()) {
+        if (!$this->isPrepared() && !$this->isWorkingCopy() && !$this->isDown()) {
             $this->options['outputhandler']('Preparing local deploy path');
 
             if ($this->isTargetLockedRemote()) {
@@ -226,10 +226,8 @@ class Beam
 
             $this->setPrepared(true);
 
-            if ($this->isUp()) {
-                $this->runPreLocalCommands();
-                $this->writeLog();
-            }
+            $this->runPreLocalCommands();
+            $this->writeLog();
         }
     }
     /**
@@ -240,7 +238,7 @@ class Beam
      */
     public function getLocalPath()
     {
-        if ($this->isWorkingCopy()) {
+        if ($this->isWorkingCopy() || $this->isDown()) {
             $path = $this->options['srcdir'];
         } else {
             $path = sprintf(
