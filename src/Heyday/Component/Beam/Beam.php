@@ -483,14 +483,15 @@ class Beam
      */
     protected function runPreLocalCommands()
     {
-        $this->runOutputHandler(
-            $this->options['outputhandler'],
-            array(
-                'Running local pre-deployment commands'
-            )
-        );
-        foreach ($this->config['commands'] as $command) {
-            if ($this->isAllowedCommand($command, 'pre', 'local')) {
+        $commands = $this->getAllowedCommands('pre', 'local');
+        if(count($commands)){
+            $this->runOutputHandler(
+                $this->options['outputhandler'],
+                array(
+                    'Running local pre-deployment commands'
+                )
+            );
+            foreach ($commands as $command) {
                 $this->runLocalCommand($command);
             }
         }
@@ -500,14 +501,15 @@ class Beam
      */
     protected function runPreTargetCommands()
     {
-        $this->runOutputHandler(
-            $this->options['outputhandler'],
-            array(
-                'Running target pre-deployment commands'
-            )
-        );
-        foreach ($this->config['commands'] as $command) {
-            if ($this->isAllowedCommand($command, 'pre', 'target')) {
+        $commands = $this->getAllowedCommands('pre', 'target');
+        if(count($commands)){
+            $this->runOutputHandler(
+                $this->options['outputhandler'],
+                array(
+                    'Running target pre-deployment commands'
+                )
+            );
+            foreach ($commands as $command) {
                 $this->runTargetCommand($command);
             }
         }
@@ -517,14 +519,15 @@ class Beam
      */
     protected function runPostLocalCommands()
     {
-        $this->runOutputHandler(
-            $this->options['outputhandler'],
-            array(
-                'Running local post-deployment commands'
-            )
-        );
-        foreach ($this->config['commands'] as $command) {
-            if ($this->isAllowedCommand($command, 'post', 'local')) {
+        $commands = $this->getAllowedCommands('post', 'local');
+        if(count($commands)){
+            $this->runOutputHandler(
+                $this->options['outputhandler'],
+                array(
+                    'Running local post-deployment commands'
+                )
+            );
+            foreach ($commands as $command) {
                 $this->runLocalCommand($command);
             }
         }
@@ -534,17 +537,29 @@ class Beam
      */
     protected function runPostTargetCommands()
     {
-        $this->runOutputHandler(
-            $this->options['outputhandler'],
-            array(
-                'Running target post-deployment commands'
-            )
-        );
-        foreach ($this->config['commands'] as $command) {
-            if ($this->isAllowedCommand($command, 'post', 'target')) {
+        $commands = $this->getAllowedCommands('post', 'target');
+        if(count($commands)){
+            $this->runOutputHandler(
+                $this->options['outputhandler'],
+                array(
+                    'Running target post-deployment commands'
+                )
+            );
+            foreach ($commands as $command) {
                 $this->runTargetCommand($command);
             }
         }
+    }
+    protected function getAllowedCommands($phase, $location)
+    {
+        $commands = array();
+        foreach ($this->config['commands'] as $command) {
+            if ($this->isAllowedCommand($command, $phase, $location)) {
+                $commands[] = $command;
+            }
+        }
+
+        return $commands;
     }
     /**
      * @param $command
