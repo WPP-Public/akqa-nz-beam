@@ -45,7 +45,8 @@ class DeploymentResultConfiguration extends Configuration implements Configurati
         'sent',
         'received',
         'created',
-        'link'
+        'link',
+        'attributes'
     );
     /**
      * @return TreeBuilder

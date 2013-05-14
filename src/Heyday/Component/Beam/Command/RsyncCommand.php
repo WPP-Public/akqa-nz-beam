@@ -63,7 +63,6 @@ class RsyncCommand extends BeamCommand
                 'delete' => $input->getOption('delete'),
                 'compress' => !$input->getOption('no-compress'),
                 'delay-updates' => !$input->getOption('no-delay-updates')
-                // TODO: Add dry-run?
             )
         );
 

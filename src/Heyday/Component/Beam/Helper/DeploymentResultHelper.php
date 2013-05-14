@@ -63,7 +63,8 @@ class DeploymentResultHelper extends Helper
             'sent' => 0,
             'received' => 0,
             'created' => 0,
-            'deleted' => 0
+            'deleted' => 0,
+            'attributes' => 0
         );
 
         foreach ($deploymentResult as $change) {

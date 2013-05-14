@@ -208,6 +208,8 @@ class Rsync extends Deployment implements DeploymentProvider
                         case 'h':
                             $change['update'] = 'link';
                             break;
+                        case '.':
+                            $change['update'] = 'attributes';
                             break;
                     }
                     switch ($matches[3]) {
@@ -253,6 +255,9 @@ class Rsync extends Deployment implements DeploymentProvider
                     }
                     if (isset($matches[4][8]) && $matches[4][8] == 'x') {
                         $reason[] = 'extended';
+                    }
+                    if ($reason === array('time')) {
+                        continue;
                     }
                     $change['reason'] = $reason;
                     $change['filename'] = $matches[5];
