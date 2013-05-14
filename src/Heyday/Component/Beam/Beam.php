@@ -587,34 +587,55 @@ class Beam
                 'command:target'
             )
         );
-        //TODO requires ssh need an error if not ssh (partly addressed with DeploymentProvider::getLimitations)
+
         $server = $this->getServer();
-        $configuration = new SshConfigFileConfiguration(
-            '~/.ssh/config',
-            $server['host']
-        );
+
+        try {
+            $configuration = new SshConfigFileConfiguration(
+                '~/.ssh/config',
+                $server['host']
+            );
+            $authentication = $configuration->getAuthentication(null, $server['user']);
+
+        } catch (\UnexpectedValueException $exception) {
+            throw new \RuntimeException(
+                "Couldn't find host matching '{$server['host']}' in SSH config file.\n"
+                ."Public key authentication is currently required to execute commands on a target."
+            );
+        }
+
         $session = new Session(
             $configuration,
             // TODO: This authentication mechanism should be specifiable
-            $configuration->getAuthentication(
-                null,
-                $server['user']
-            )
+            $authentication
         );
+
         $exec = $session->getExec();
 
-        $this->runOutputHandler(
-            $this->options['targetcommandoutputhandler'],
-            array(
-                $exec->run(
-                    sprintf(
-                        'cd %s; %s',
-                        $server['webroot'],
-                        $command['command']
+        try {
+            $this->runOutputHandler(
+                $this->options['targetcommandoutputhandler'],
+                array(
+                    $exec->run(
+                        sprintf(
+                            'cd \'%s\' && %s',
+                            $server['webroot'],
+                            $command['command']
+                        )
                     )
                 )
-            )
-        );
+            );
+        } catch (\RuntimeException $exception) {
+            if($exception->getMessage() == 'The authentication over the current SSH connection failed.'){
+                throw new \RuntimeException(
+                    'Failed to authenticate over SSH to run a command on the target. This could be caused by a partial'
+                    ." definition for '{$server['host']}' in your ssh config file (currently, public key authentication"
+                    .' is required to execute commands on a target).'
+                );
+            }
+
+            throw $exception;
+        }
     }
     /**
      * @param   $command
