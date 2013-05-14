@@ -19,7 +19,7 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
             array(
                 array(
                     'commands' => array(
-                        'test command' => array(
+                        array(
                             'command' => 'test',
                             'phase' => 'pre',
                             'location' => 'target',
@@ -35,7 +35,7 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                             'silverstripe',
                             'symfony',
                             'wordpress',
-                            'zend'
+                            'zf'
                         ),
                         'patterns' => array(
                             'test',
@@ -56,13 +56,15 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(
             array(
                 'commands' => array(
-                    'test command' => array(
+                    array(
                         'command' => 'test',
                         'phase' => 'pre',
                         'location' => 'target',
                         'servers' => array(
                             'live'
-                        )
+                        ),
+                        'required' => false,
+                        'tag' => false
                     )
                 ),
                 'exclude' => array(
