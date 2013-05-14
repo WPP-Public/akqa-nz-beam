@@ -167,10 +167,6 @@ abstract class BeamCommand extends Command
                 $beam
             );
 
-            if (!$this->isOkay($output, $dialogHelper, $formatterHelper)) {
-                throw new \RuntimeException('User canceled');
-            }
-
             $output->writeln(
                 $formatterHelper->formatSection(
                     'warn',

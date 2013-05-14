@@ -570,6 +570,7 @@ class Beam
     }
     /**
      * @param   $command
+     * @throws \RuntimeException
      */
     protected function runTargetCommand($command)
     {
@@ -653,6 +654,7 @@ class Beam
     /**
      * @param $handler
      * @param $arguments
+     * @return bool|mixed
      */
     protected function runOutputHandler($handler, $arguments)
     {
