@@ -299,7 +299,7 @@ abstract class BeamCommand extends Command
             $options['path'] = $input->getOption('path');
         }
         if ($input->getOption('dryrun')) {
-            $options['dry-run'] = true;
+            $options['dryrun'] = true;
         }
         if ($input->getOption('workingcopy')) {
             $options['workingcopy'] = true;
@@ -390,7 +390,7 @@ abstract class BeamCommand extends Command
                 ),
                 $formatterHelper->formatSection(
                     'warn',
-                    'You\'re about to sync files between',
+                    $action,
                     'comment'
                 ),
                 $formatterHelper->formatSection(

@@ -132,7 +132,7 @@ class Rsync extends Deployment implements DeploymentProvider
             )
         );
 
-        if ($dryrun || $this->beam->getOption('dry-run')) {
+        if ($dryrun || $this->beam->getOption('dryrun')) {
             $command[] = '--dry-run';
         }
         if ($this->options['checksum']) {

@@ -689,7 +689,7 @@ class Beam
                 array(
                     'branch',
                     'path',
-                    'dry-run',
+                    'dryrun',
                     'workingcopy',
                     'vcsprovider',
                     'deploymentprovider',
@@ -709,7 +709,7 @@ class Beam
             )->setDefaults(
                 array(
                     'path'                       => false,
-                    'dry-run'                    => false,
+                    'dryrun'                    => false,
                     'workingcopy'                => false,
                     'vcsprovider'                => function (Options $options) {
                         return new Git($options['srcdir']);
@@ -724,7 +724,7 @@ class Beam
                 array(
                     'branch'                     => 'string',
                     'srcdir'                     => 'string',
-                    'dry-run'                    => 'bool',
+                    'dryrun'                    => 'bool',
                     'workingcopy'                => 'bool',
                     'vcsprovider'                => __NAMESPACE__ . '\Vcs\VcsProvider',
                     'deploymentprovider'         => __NAMESPACE__ . '\Deployment\DeploymentProvider',

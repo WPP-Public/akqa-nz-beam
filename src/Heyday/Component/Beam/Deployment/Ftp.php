@@ -134,7 +134,7 @@ class Ftp extends Deployment implements DeploymentProvider
 
         }
 
-        if (!$dryrun && !$this->beam->getOption('dry-run')) {
+        if (!$dryrun && !$this->beam->getOption('dryrun')) {
             $writecontext = stream_context_create(array('ftp' => array('overwrite' => true)));
             foreach ($deploymentResult as $change) {
                 if (is_callable($output)) {
