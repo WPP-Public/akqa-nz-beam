@@ -187,32 +187,35 @@ abstract class BeamCommand extends Command
                 $count = count($deploymentResult);
                 // If there is more that 1 item there are updates,
                 // If there is 1 and it is nochange treat it as no update
-                if ($count > 1 || (isset($deploymentResult[0]) && $deploymentResult[0]['update'] != 'nochange')) {
+                if ($count > 0) {
                     $deploymentResultHelper->outputChanges($formatterHelper, $output, $deploymentResult);
                     // Output a summary of the changes
                     $deploymentResultHelper->outputChangesSummary($formatterHelper, $output, $deploymentResult);
-                    // If we have confirmation do the beam
-                    if ($this->isOkay($output, $dialogHelper, $formatterHelper)) {
-                        // Set the output handler for displaying the progress bar etc
-                        $beam->setOption(
-                            'deploymentoutputhandler',
-                            $this->getDeploymentOutputHandler(
-                                $output,
-                                $progressHelper,
-                                $formatterHelper,
-                                $deploymentResult
-                            )
-                        );
-                        // Run the deployment
-                        $deploymentResult = $beam->doRun($deploymentResult);
+                    if (!$input->getOption('dryrun')) {
+                        // If we have confirmation do the beam
+                        if ($this->isOkay($output, $dialogHelper, $formatterHelper)) {
+                            // Set the output handler for displaying the progress bar etc
+                            $beam->setOption(
+                                'deploymentoutputhandler',
+                                $this->getDeploymentOutputHandler(
+                                    $output,
+                                    $progressHelper,
+                                    $formatterHelper,
+                                    $deploymentResult
+                                )
+                            );
 
-                        $deploymentResultHelper->outputChangesSummary(
-                            $formatterHelper,
-                            $output,
-                            $deploymentResult
-                        );
-                    } else {
-                        throw new \RuntimeException('User canceled');
+                            // Run the deployment
+                            $deploymentResult = $beam->doRun($deploymentResult);
+
+                            $deploymentResultHelper->outputChangesSummary(
+                                $formatterHelper,
+                                $output,
+                                $deploymentResult
+                            );
+                        } else {
+                            throw new \RuntimeException('User canceled');
+                        }
                     }
                 } else {
                     throw new \RuntimeException('No changed files');
