@@ -162,9 +162,8 @@ class Beam
      */
     public function doRun(DeploymentResult $deploymentResult = null)
     {
-        $this->prepareLocalPath();
-
         if ($this->isUp()) {
+            $this->prepareLocalPath();
             $this->runPreTargetCommands();
             $deploymentResult = $this->options['deploymentprovider']->up(
                 $this->options['deploymentoutputhandler'],
@@ -191,9 +190,8 @@ class Beam
      */
     public function doDryrun()
     {
-        $this->prepareLocalPath();
-
         if ($this->isUp()) {
+            $this->prepareLocalPath();
             $deploymentResult = $this->options['deploymentprovider']->up(
                 $this->options['deploymentoutputhandler'],
                 true
