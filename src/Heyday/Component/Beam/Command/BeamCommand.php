@@ -381,6 +381,13 @@ abstract class BeamCommand extends Command
                 $beam->getTargetPath()
             );
         }
+
+        if ($beam->getOption('dryrun')){
+            $action = 'You\'re about to do a <comment>dry run</comment> for a sync between';
+        } else {
+            $action = 'You\'re about to sync files between';
+        }
+
         $output->writeln(
             array(
                 $formatterHelper->formatSection(
