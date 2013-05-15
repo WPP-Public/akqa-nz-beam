@@ -142,7 +142,7 @@ class Beam
         if (is_array($limitations)) {
 
             // Check if remote commands defined when not available
-            if (in_array(DeploymentProvider::LIMITATION_REMOTECOMMAND, $limitations)) {
+            if ($hasRemoteCommands && in_array(DeploymentProvider::LIMITATION_REMOTECOMMAND, $limitations)) {
                 throw new InvalidConfigurationException(
                     'Commands are defined for the location "target" but the selected deployment provider cannot execute remote commands.'
                 );
@@ -814,7 +814,7 @@ class Beam
     protected function hasRemoteCommands()
     {
         foreach ($this->config['commands'] as $command) {
-            if ($command['location'] == 'target' && in_array($command['phase'], array('post', 'pre'))) {
+            if ($command['location'] === 'target') {
                 return true;
             }
         }
