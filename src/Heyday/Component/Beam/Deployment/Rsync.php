@@ -18,10 +18,6 @@ class Rsync extends Deployment implements DeploymentProvider
      */
     protected $options;
     /**
-     *
-     */
-    const PROCESS_TIMEOUT = 300;
-    /**
      * @param array $options
      */
     public function __construct(array $options)
@@ -99,7 +95,7 @@ class Rsync extends Deployment implements DeploymentProvider
             null,
             null,
             null,
-            static::PROCESS_TIMEOUT
+            null
         );
         $process->run($output);
         if (!$process->isSuccessful()) {

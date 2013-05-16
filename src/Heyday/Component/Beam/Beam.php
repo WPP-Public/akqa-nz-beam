@@ -22,10 +22,6 @@ use Symfony\Component\Process\Process;
 class Beam
 {
     /**
-     *
-     */
-    const PROCESS_TIMEOUT = 300; //TODO: Should this be a const?
-    /**
      * @var array
      */
     protected $config;
@@ -395,7 +391,7 @@ class Beam
      * @param  int     $timeout
      * @return Process
      */
-    protected function getProcess($commandline, $cwd = null, $timeout = self::PROCESS_TIMEOUT)
+    protected function getProcess($commandline, $cwd = null, $timeout = null)
     {
         return new Process(
             $commandline,
