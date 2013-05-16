@@ -189,6 +189,17 @@ class BeamTest extends \PHPUnit_Framework_TestCase
      */
     public function testBeamConstructWorkingCopyLockedRemote()
     {
+        $vcsProvider = $this->getVcsProviderStub(
+            true,
+            array(
+                'remotes/origin/master'
+            )
+        );
+        $vcsProvider->expects($this->once())
+            ->method('isRemote')
+            ->with($this->equalTo('remotes/origin/master'))
+            ->will($this->returnValue(true));
+
         new Beam(
             array(
                 array(
@@ -205,7 +216,8 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             ),
             $this->getCombinedOptions(
                 array(
-                    'workingcopy' => true
+                    'workingcopy' => true,
+                    'vcsprovider' => $vcsProvider
                 )
             )
         );
@@ -259,45 +271,6 @@ class BeamTest extends \PHPUnit_Framework_TestCase
                 $this->validOptions
             )
         );
-    }
-
-    public function testGetRemotePath()
-    {
-        $this->markTestIncomplete();
-//        $beam = new Beam(
-//            array(
-//                $this->validConfig
-//            ),
-//            $this->validOptions
-//        );
-//        $this->assertEquals('testuser@testhost:/test/webroot', $beam->getRemotePath());
-//        $beam = new Beam(
-//            array(
-//                $this->validConfig
-//            ),
-//            $this->getCombinedOptions(
-//                array(
-//                    'path' => 'testing/'
-//                )
-//            )
-//        );
-//        $this->assertEquals('testuser@testhost:/test/webroot/testing', $beam->getRemotePath());
-//        $beam = new Beam(
-//            array(
-//                array(
-//                    'servers' => array(
-//                        'live' => array(
-//                            'user' => 'testuser',
-//                            'host' => 'testhost',
-//                            'webroot' => '/test/webroot/'
-//                        )
-//                    ),
-//                    'exclude' => array()
-//                )
-//            ),
-//            $this->validOptions
-//        );
-//        $this->assertEquals('testuser@testhost:/test/webroot', $beam->getRemotePath());
     }
 
     public function testGetLocalPath()
@@ -408,6 +381,17 @@ class BeamTest extends \PHPUnit_Framework_TestCase
     }
     public function testIsServerLockedRemote()
     {
+        $vcsProvider = $this->getVcsProviderStub(
+            true,
+            array(
+                'remotes/origin/master'
+            )
+        );
+        $vcsProvider->expects($this->once())
+            ->method('isRemote')
+            ->with($this->equalTo('remotes/origin/master'))
+            ->will($this->returnValue(true));
+
         $beam = new Beam(
             array(
                 array(
@@ -424,12 +408,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             ),
             $this->getCombinedOptions(
                 array(
-                    'vcsprovider' => $this->getVcsProviderStub(
-                        true,
-                        array(
-                            'remotes/origin/master'
-                        )
-                    )
+                    'vcsprovider' => $vcsProvider
                 )
             )
         );
@@ -437,6 +416,11 @@ class BeamTest extends \PHPUnit_Framework_TestCase
     }
     public function testIsBranchRemote()
     {
+        $vcsProvider = $this->getVcsProviderStub(true, array('remotes/origin/master'));
+        $vcsProvider->expects($this->once())
+            ->method('isRemote')
+            ->with($this->equalTo('remotes/origin/master'))
+            ->will($this->returnValue(true));
         $beam = new Beam(
             array(
                 array(
@@ -453,7 +437,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             $this->getCombinedOptions(
                 array(
                     'branch' => 'remotes/origin/master',
-                    'vcsprovider' => $this->getVcsProviderStub(true, array('remotes/origin/master'))
+                    'vcsprovider' => $vcsProvider
                 )
             )
         );

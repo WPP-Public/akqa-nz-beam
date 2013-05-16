@@ -191,7 +191,6 @@ class Beam
     {
         if ($this->isUp()) {
             $this->prepareLocalPath();
-            $this->runPreLocalCommands();
             $deploymentResult = $this->options['deploymentprovider']->up(
                 $this->options['deploymentoutputhandler'],
                 true
@@ -325,7 +324,7 @@ class Beam
     {
         $server = $this->getServer();
 
-        return $this->isServerLocked() && $this->isRemote($server['branch']);
+        return $this->isServerLocked() && $this->options['vcsprovider']->isRemote($server['branch']);
     }
     /**
      * Returns whether or not the branch is remote
@@ -333,16 +332,7 @@ class Beam
      */
     public function isBranchRemote()
     {
-        return $this->isRemote($this->options['branch']);
-    }
-    /**
-     * A helper method to determine if a branch name is remote
-     * @param $branch
-     * @return bool
-     */
-    protected function isRemote($branch)
-    {
-        return substr($branch, 0, 8) === 'remotes/';
+        return $this->options['vcsprovider']->isRemote($this->options['branch']);
     }
     /**
      * A helper method for determining if beam is operating with an extra path

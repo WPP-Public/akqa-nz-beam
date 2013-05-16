@@ -81,11 +81,11 @@ class Git implements VcsProvider
      */
     public function updateBranch($branch)
     {
-        $parts = explode('/', $branch);
-        if (!isset($parts[1])) {
+        $parts = $this->getRemoteName($branch);
+        if (!$parts) {
             throw new \InvalidArgumentException('The git vcs provider can only update remotes');
         }
-        $this->process(sprintf('(git remote update --prune %s)', $parts[1]));
+        $this->process(sprintf('git remote update --prune %s', $parts[0]));
     }
     /**
      * A helper method that returns a process with some defaults
@@ -124,5 +124,26 @@ class Git implements VcsProvider
             $branch,
             $process->getOutput()
         );
+    }
+    /**
+     * @param $branch
+     * @return bool
+     */
+    public function isRemote($branch)
+    {
+        return (bool) $this->getRemoteName($branch);
+    }
+    /**
+     * @param $branch
+     * @return array|bool
+     */
+    public function getRemoteName($branch)
+    {
+        $matches = array();
+        if (1 === preg_match('{^remotes/(.+)/(.+)}', $branch, $matches)) {
+            return array_slice($matches, 1);
+        } else {
+            return false;
+        }
     }
 }
