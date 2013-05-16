@@ -81,16 +81,24 @@ class Git implements VcsProvider
      */
     protected function process($command)
     {
-        $process = new Process(
-            $command,
-            $this->srcdir
-        );
+        $process = $this->getProcess($command);
         $process->run();
         if (!$process->isSuccessful()) {
             throw new \RuntimeException($process->getErrorOutput());
         }
 
         return $process;
+    }
+    /**
+     * @param $command
+     * @return Process
+     */
+    protected function getProcess($command)
+    {
+        return new Process(
+            $command,
+            $this->srcdir
+        );
     }
     /**
      * @param $branch
