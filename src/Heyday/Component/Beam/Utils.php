@@ -179,4 +179,26 @@ class Utils
     {
         return json_decode($data, true);
     }
+    /**
+     * @param $location
+     */
+    public static function removeDirectory($location)
+    {
+        if (file_exists($location)) {
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($location),
+                \RecursiveIteratorIterator::CHILD_FIRST
+            );
+            foreach ($iterator as $file) {
+                if (in_array($file->getBasename(), array('.', '..'))) {
+                    continue;
+                } elseif ($file->isDir()) {
+                    rmdir($file->getPathname());
+                } elseif ($file->isFile() || $file->isLink()) {
+                    unlink($file->getPathname());
+                }
+            }
+            rmdir($location);
+        }
+    }
 }

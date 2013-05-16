@@ -2,6 +2,7 @@
 
 namespace Heyday\Component\Beam\Vcs;
 
+use Heyday\Component\Beam\Utils;
 use Symfony\Component\Process\Process;
 
 class Git implements VcsProvider
@@ -49,22 +50,7 @@ class Git implements VcsProvider
      */
     public function exportBranch($branch, $location)
     {
-        if (file_exists($location)) {
-            $iterator = new \RecursiveIteratorIterator(
-                new \RecursiveDirectoryIterator($location),
-                \RecursiveIteratorIterator::CHILD_FIRST
-            );
-            foreach ($iterator as $file) {
-                if (in_array($file->getBasename(), array('.', '..'))) {
-                    continue;
-                } elseif ($file->isDir()) {
-                    rmdir($file->getPathname());
-                } elseif ($file->isFile() || $file->isLink()) {
-                    unlink($file->getPathname());
-                }
-            }
-            rmdir($location);
-        }
+        Utils::removeDirectory($location);
 
         mkdir($location, 0755);
 
