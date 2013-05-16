@@ -291,6 +291,22 @@ class Beam
         $this->prepared = $prepared;
     }
     /**
+     * @param $key
+     * @param $value
+     * @return void
+     */
+    public function setOption($key, $value)
+    {
+        $this->options = $this->options = $this->getOptionsResolver()->resolve(
+            array_merge(
+                $this->options,
+                array(
+                    $key => $value
+                )
+            )
+        );
+    }
+    /**
      * @return boolean
      */
     public function isPrepared()
@@ -411,34 +427,6 @@ class Beam
         );
     }
     /**
-     * A helper method that runs a process and checks its success, erroring if it failed
-     * @param  Process           $process
-     * @param  callable          $output
-     * @throws \RuntimeException
-     */
-    protected function runProcess(Process $process, \Closure $output = null)
-    {
-        $process->run($output);
-        if (!$process->isSuccessful()) {
-            throw new \RuntimeException($process->getErrorOutput());
-        }
-    }
-    /**
-     * @param $key
-     * @param $value
-     */
-    public function setOption($key, $value)
-    {
-        $this->options = $this->options = $this->getOptionsResolver()->resolve(
-            array_merge(
-                $this->options,
-                array(
-                    $key => $value
-                )
-            )
-        );
-    }
-    /**
      * @param $option
      * @return mixed
      * @throws \InvalidArgumentException
@@ -472,6 +460,19 @@ class Beam
                     $config
                 )
             );
+        }
+    }
+    /**
+     * A helper method that runs a process and checks its success, erroring if it failed
+     * @param  Process           $process
+     * @param  callable          $output
+     * @throws \RuntimeException
+     */
+    protected function runProcess(Process $process, \Closure $output = null)
+    {
+        $process->run($output);
+        if (!$process->isSuccessful()) {
+            throw new \RuntimeException($process->getErrorOutput());
         }
     }
     /**
