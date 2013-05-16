@@ -2,6 +2,7 @@
 
 namespace Heyday\Component\Beam\Vcs;
 
+use Heyday\Component\Beam\Utils;
 use Symfony\Component\Process\Process;
 
 class Git implements VcsProvider
@@ -49,22 +50,7 @@ class Git implements VcsProvider
      */
     public function exportBranch($branch, $location)
     {
-        if (file_exists($location)) {
-            $iterator = new \RecursiveIteratorIterator(
-                new \RecursiveDirectoryIterator($location),
-                \RecursiveIteratorIterator::CHILD_FIRST
-            );
-            foreach ($iterator as $file) {
-                if (in_array($file->getBasename(), array('.', '..'))) {
-                    continue;
-                } elseif ($file->isDir()) {
-                    rmdir($file->getPathname());
-                } elseif ($file->isFile() || $file->isLink()) {
-                    unlink($file->getPathname());
-                }
-            }
-            rmdir($location);
-        }
+        Utils::removeDirectory($location);
 
         mkdir($location, 0755);
 
@@ -81,11 +67,11 @@ class Git implements VcsProvider
      */
     public function updateBranch($branch)
     {
-        $parts = explode('/', $branch);
-        if (!isset($parts[1])) {
+        $parts = $this->getRemoteName($branch);
+        if (!$parts) {
             throw new \InvalidArgumentException('The git vcs provider can only update remotes');
         }
-        $this->process(sprintf('(git remote update --prune %s)', $parts[1]));
+        $this->process(sprintf('git remote update --prune %s', $parts[0]));
     }
     /**
      * A helper method that returns a process with some defaults
@@ -95,16 +81,24 @@ class Git implements VcsProvider
      */
     protected function process($command)
     {
-        $process = new Process(
-            $command,
-            $this->srcdir
-        );
+        $process = $this->getProcess($command);
         $process->run();
         if (!$process->isSuccessful()) {
             throw new \RuntimeException($process->getErrorOutput());
         }
 
         return $process;
+    }
+    /**
+     * @param $command
+     * @return Process
+     */
+    protected function getProcess($command)
+    {
+        return new Process(
+            $command,
+            $this->srcdir
+        );
     }
     /**
      * @param $branch
@@ -124,5 +118,26 @@ class Git implements VcsProvider
             $branch,
             $process->getOutput()
         );
+    }
+    /**
+     * @param $branch
+     * @return bool
+     */
+    public function isRemote($branch)
+    {
+        return (bool) $this->getRemoteName($branch);
+    }
+    /**
+     * @param $branch
+     * @return array|bool
+     */
+    public function getRemoteName($branch)
+    {
+        $matches = array();
+        if (1 === preg_match('{^remotes/(.+)/(.+)}', $branch, $matches)) {
+            return array_slice($matches, 1);
+        } else {
+            return false;
+        }
     }
 }

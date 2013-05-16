@@ -37,4 +37,9 @@ interface VcsProvider
      * @return mixed
      */
     public function getLog($branch);
+    /**
+     * @param $branch
+     * @return bool
+     */
+    public function isRemote($branch);
 }

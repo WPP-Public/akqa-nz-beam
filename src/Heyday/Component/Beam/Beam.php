@@ -187,7 +187,6 @@ class Beam
     {
         if ($this->isUp()) {
             $this->prepareLocalPath();
-            $this->runPreLocalCommands();
             $deploymentResult = $this->options['deploymentprovider']->up(
                 $this->options['deploymentoutputhandler'],
                 true
@@ -207,14 +206,29 @@ class Beam
     protected function prepareLocalPath()
     {
         if (!$this->isPrepared() && !$this->isWorkingCopy() && !$this->isDown()) {
-            $this->options['outputhandler']('Preparing local deploy path');
+            $this->runOutputHandler(
+                $this->options['outputhandler'],
+                array(
+                    'Preparing local deploy path'
+                )
+            );
 
             if ($this->isTargetLockedRemote()) {
-                $this->options['outputhandler']('Updating remote branch');
+                $this->runOutputHandler(
+                    $this->options['outputhandler'],
+                    array(
+                        'Updating remote branch'
+                    )
+                );
                 $this->options['vcsprovider']->updateBranch($this->options['branch']);
             }
 
-            $this->options['outputhandler']('Exporting branch');
+            $this->runOutputHandler(
+                $this->options['outputhandler'],
+                array(
+                    'Exporting branch'
+                )
+            );
             $this->options['vcsprovider']->exportBranch(
                 $this->options['branch'],
                 $this->getLocalPath()
@@ -321,7 +335,7 @@ class Beam
     {
         $server = $this->getServer();
 
-        return $this->isServerLocked() && $this->isRemote($server['branch']);
+        return $this->isServerLocked() && $this->options['vcsprovider']->isRemote($server['branch']);
     }
     /**
      * Returns whether or not the branch is remote
@@ -329,16 +343,7 @@ class Beam
      */
     public function isBranchRemote()
     {
-        return $this->isRemote($this->options['branch']);
-    }
-    /**
-     * A helper method to determine if a branch name is remote
-     * @param $branch
-     * @return bool
-     */
-    protected function isRemote($branch)
-    {
-        return substr($branch, 0, 8) === 'remotes/';
+        return $this->options['vcsprovider']->isRemote($this->options['branch']);
     }
     /**
      * A helper method for determining if beam is operating with an extra path
