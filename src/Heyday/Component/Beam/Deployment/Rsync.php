@@ -181,7 +181,7 @@ class Rsync extends Deployment implements DeploymentProvider
         $change = array();
         $matches = array();
         preg_match(
-            '/(?:(^\*[\w]+)|([<>.ch])([fdLDS])([.?+c][.?+s][.?+tT][.?+p][.?+o][.?+g][.?+]?[.?+a]?[.?+x]?)) (.*)/',
+            '/(?:(^\*[\w]+)|([<>.ch])([fdLDS])([.?+c][.?+s][.?+tT][.?+p][.?+o][.?+g][.?+]?[.?+a]?[.?+x]?)) (.+)/',
             $line,
             $matches
         );
