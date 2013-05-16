@@ -210,14 +210,29 @@ class Beam
     protected function prepareLocalPath()
     {
         if (!$this->isPrepared() && !$this->isWorkingCopy() && !$this->isDown()) {
-            $this->options['outputhandler']('Preparing local deploy path');
+            $this->runOutputHandler(
+                $this->options['outputhandler'],
+                array(
+                    'Preparing local deploy path'
+                )
+            );
 
             if ($this->isTargetLockedRemote()) {
-                $this->options['outputhandler']('Updating remote branch');
+                $this->runOutputHandler(
+                    $this->options['outputhandler'],
+                    array(
+                        'Updating remote branch'
+                    )
+                );
                 $this->options['vcsprovider']->updateBranch($this->options['branch']);
             }
 
-            $this->options['outputhandler']('Exporting branch');
+            $this->runOutputHandler(
+                $this->options['outputhandler'],
+                array(
+                    'Exporting branch'
+                )
+            );
             $this->options['vcsprovider']->exportBranch(
                 $this->options['branch'],
                 $this->getLocalPath()
