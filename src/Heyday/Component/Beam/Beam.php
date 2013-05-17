@@ -22,10 +22,6 @@ use Symfony\Component\Process\Process;
 class Beam
 {
     /**
-     *
-     */
-    const PROCESS_TIMEOUT = 300; //TODO: Should this be a const?
-    /**
      * @var array
      */
     protected $config;
@@ -100,6 +96,26 @@ class Beam
      */
     protected function validateSetup()
     {
+        // Prevent a server with empty options being used
+        $requiredKeys = array(
+            'user',
+            'host',
+            'webroot',
+        );
+
+        $server = $this->getServer();
+        $emptyKeys = array();
+        foreach($requiredKeys as $key){
+            if(empty($server[$key])){
+                $emptyKeys[] = $key;
+            }
+        }
+
+        if (count($emptyKeys)) {
+            $options = implode(', ', $emptyKeys);
+            throw new \InvalidArgumentException("The server '{$this->options['target']}' has empty values for required options: $options");
+        }
+
         if ($this->options['branch']) {
             if ($this->isServerLocked() && $this->options['branch'] !== $this->getServerLockedBranch()) {
                 throw new \InvalidArgumentException(
@@ -416,7 +432,7 @@ class Beam
      * @param  int     $timeout
      * @return Process
      */
-    protected function getProcess($commandline, $cwd = null, $timeout = self::PROCESS_TIMEOUT)
+    protected function getProcess($commandline, $cwd = null, $timeout = null)
     {
         return new Process(
             $commandline,
