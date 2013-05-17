@@ -100,9 +100,9 @@ class Rsync extends Deployment implements DeploymentProvider
     }
     /**
      * Builds the rsync command based of current options
-     * @param      $fromPath
-     * @param      $toPath
-     * @param bool $dryrun
+     * @param         $fromPath
+     * @param         $toPath
+     * @param  bool   $dryrun
      * @return string
      */
     protected function buildCommand($fromPath, $toPath, $dryrun = false)
@@ -247,6 +247,7 @@ class Rsync extends Deployment implements DeploymentProvider
             $change['reason'] = $reason;
             $change['filename'] = $matches[5];
         }
+
         return $change;
     }
     /**

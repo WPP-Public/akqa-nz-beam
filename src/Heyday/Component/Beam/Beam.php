@@ -105,8 +105,8 @@ class Beam
 
         $server = $this->getServer();
         $emptyKeys = array();
-        foreach($requiredKeys as $key){
-            if(empty($server[$key])){
+        foreach ($requiredKeys as $key) {
+            if (empty($server[$key])) {
                 $emptyKeys[] = $key;
             }
         }
@@ -582,10 +582,11 @@ class Beam
             }
             $commands[] = $command;
         }
+
         return $commands;
     }
     /**
-     * @param   $command
+     * @param                    $command
      * @throws \RuntimeException
      */
     protected function runTargetCommand($command)
@@ -644,7 +645,7 @@ class Beam
                 );
             }
 
-            if(!$this->promptCommandFailureContinue($command, $exception)){
+            if (!$this->promptCommandFailureContinue($command, $exception)) {
                 exit(1);
             }
         }
@@ -670,14 +671,15 @@ class Beam
                 $this->options['localcommandoutputhandler']
             );
         } catch (\RuntimeException $exception) {
-            if(!$this->promptCommandFailureContinue($command, $exception)){
+            if (!$this->promptCommandFailureContinue($command, $exception)) {
                 exit(1);
             }
         }
     }
 
-    protected function promptCommandFailureContinue($command, $exception){
-        if(!is_callable($this->options['commandfailurehandler'])){
+    protected function promptCommandFailureContinue($command, $exception)
+    {
+        if (!is_callable($this->options['commandfailurehandler'])) {
             throw $exception;
         }
 

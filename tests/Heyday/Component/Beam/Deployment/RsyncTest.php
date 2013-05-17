@@ -55,6 +55,7 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
     {
         $method = new \ReflectionMethod(__NAMESPACE__ . '\Rsync', $methodName);
         $method->setAccessible(true);
+
         return $method;
     }
 
@@ -86,7 +87,6 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
                 $this->equalTo($output)
             )
             ->will($this->returnValue($this->getDeploymentResultMock()));
-
 
         $rsync->expects($this->once())
             ->method('getTargetPath')
@@ -126,7 +126,6 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
             )
             ->will($this->returnValue($this->getDeploymentResultMock()));
 
-
         $rsync->expects($this->once())
             ->method('getTargetPath')
             ->will($this->returnValue('topath'));
@@ -165,7 +164,6 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
             )
             ->will($this->returnValue($this->getDeploymentResultMock()));
 
-
         $rsync->expects($this->once())
             ->method('getTargetPath')
             ->will($this->returnValue('topath'));
@@ -203,7 +201,6 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
                 $this->equalTo($output)
             )
             ->will($this->returnValue($this->getDeploymentResultMock()));
-
 
         $rsync->expects($this->once())
             ->method('getTargetPath')
@@ -666,7 +663,6 @@ OUTPUT
                 '/testto'
             )
         );
-
 
     }
 }

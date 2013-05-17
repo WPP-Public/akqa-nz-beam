@@ -4,7 +4,6 @@ namespace Heyday\Component\Beam\Vcs;
 
 use org\bovigo\vfs\vfsStream;
 
-
 class GitTest extends \PHPUnit_Framework_TestCase
 {
     protected $gitMock;

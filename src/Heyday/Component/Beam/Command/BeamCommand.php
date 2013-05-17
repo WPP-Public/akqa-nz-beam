@@ -428,7 +428,7 @@ abstract class BeamCommand extends Command
             );
         }
 
-        if ($beam->getOption('dryrun')){
+        if ($beam->getOption('dryrun')) {
             $action = 'You\'re about to do a <comment>dry run</comment> for a sync between';
         } else {
             $action = 'You\'re about to sync files between';

@@ -1,7 +1,6 @@
 <?php
 namespace Heyday\Component\Beam\Config;
 
-
 class JsonConfigLoaderTest extends \PHPUnit_Framework_TestCase
 {
     /**

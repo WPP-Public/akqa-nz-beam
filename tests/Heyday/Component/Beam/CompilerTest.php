@@ -1,7 +1,6 @@
 <?php
 namespace Heyday\Component\Beam;
 
-
 class CompilerTest extends \PHPUnit_Framework_TestCase
 {
     /**
