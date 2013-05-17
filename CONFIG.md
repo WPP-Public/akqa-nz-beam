@@ -54,15 +54,15 @@ Servers are individual, named deployment targets. When using `beam up` or `beam 
 
 **The following properties are required for each defined server:**
 
- * **`user`** - Username to log into the server with
- * **`host`** - Host name or IP address to log into ther server with
- * **`webroot`** - Path to the deployment directory on the server. Relative paths are relative to the user's home directory. A trailing slash is optional.
+ * `user` - Username to log into the server with
+ * `host` - Host name or IP address to log into ther server with
+ * `webroot` - Path to the deployment directory on the server. Relative paths are relative to the user's home directory. A trailing slash is optional.
 
 **Optional properties:**
 
- * **`branch`** *(string)* - Branch to lock this server to. When specified, a `beam up` to this server will always send the branch specified here, regardless of the currently checked out branch and the `--branch` and `--workingcopy` flags. This is useful for ensuring that only one branch can be deployed to, for example, your production server. Any git branch is valid here, including remote branches like `remotes/origin/master`.
+ * `branch` *(string)* - Branch to lock this server to. When specified, a `beam up` to this server will always send the branch specified here, regardless of the currently checked out branch and the `--branch` and `--workingcopy` flags. This is useful for ensuring that only one branch can be deployed to, for example, your production server. Any git branch is valid here, including remote branches like `remotes/origin/master`.
 
- * **`password`** *(string)* - Password to use for (S)FTP deployments. This is not used by the default (`rsync`) deployment method.
+ * `password` *(string)* - Password to use for (S)FTP deployments. This is not used by the default (`rsync`) deployment method.
 
 
 ## Exclude
@@ -86,7 +86,7 @@ When using the `rsync` deployment method (default), patterns are passed directly
 
 When using (S)FTP, patterns are interpreted internally by beam and follow the basic rules of rsync's path matching.
 
-Valid values for **`applications`** are: `gear`, `silverstripe`, `symfony`, `wordpress` and `zf`
+Valid values for `applications` are: `gear`, `silverstripe`, `symfony`, `wordpress` and `zf`
 
 
 ## Commands
@@ -118,13 +118,13 @@ Note that running commands on a target requires an SSH connection to the target.
 
 **Each command must define:**
 
- * **`command`** - Command to execute. This can be is anything you would normally type on a shell
- * **`phase`** - Phase of deployment to execute the command in: `pre` or `post` for before or after the sync occurs
- * **`location`** - What machine to run the command on: `local` or `target`
+ * `command` - Command to execute. This can be is anything you would normally type on a shell
+ * `phase` - Phase of deployment to execute the command in: `pre` or `post` for before or after the sync occurs
+ * `location` - What machine to run the command on: `local` or `target`
 
 **Additionally, the following can be specified:**
 
- * **`servers`** *(array)* - A list of server configs by name that a command is limited to. When this option is not defined, the command will run when deploying to any server.
- * **`tag`** *(string)* - A tag for use with the `--tags (-t)` option. Tagged commands are not run unless a their tag is specified when `beam` is run. Multiple commands can have the same tag.
- * **`required`** *(boolean: false)* - Specifies that a command is required for the deployment to complete successfully. Required commands do not prompt when `--command-prompt` is used, are run regardless of tags, and beam will abort if a required command fails.
- * **`tty`** *(boolean: false)* - Whether the command requires a terminal (TTY) environment. Any command that requires user input/interaction will need this option enabled to work correctly. When set to true, the i/o streams (stdin, stderr, stdout) of the command process are connected to the current terminal instead of being managed internally by `beam`.
+ * `servers` *(array)* - A list of server configs by name that a command is limited to. When this option is not defined, the command will run when deploying to any server.
+ * `tag` *(string)* - A tag for use with the `--tags (-t)` option. Tagged commands are not run unless a their tag is specified when `beam` is run. Multiple commands can have the same tag.
+ * `required` *(boolean: false)* - Specifies that a command is required for the deployment to complete successfully. Required commands do not prompt when `--command-prompt` is used, are run regardless of tags, and beam will abort if a required command fails.
+ * `tty` *(boolean: false)* - Whether the command requires a terminal (TTY) environment. Any command that requires user input/interaction will need this option enabled to work correctly. When set to true, the i/o streams (stdin, stderr, stdout) of the command process are connected to the current terminal instead of being managed internally by `beam`.
