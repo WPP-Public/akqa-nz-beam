@@ -96,6 +96,25 @@ class Beam
      */
     protected function validateSetup()
     {
+        // Prevent a server with empty options being used
+        $requiredKeys = array(
+            'user',
+            'host',
+            'webroot',
+        );
+
+        $emptyKeys = array();
+        foreach($requiredKeys as $key){
+            if(empty($this->options[$key])){
+                $emptyKeys[] = $key;
+            }
+        }
+
+        if (count($emptyKeys)) {
+            $options = implode(', ', $emptyKeys);
+            throw new \InvalidArgumentException("The server '{$this->options['target']}' has empty values for required options: $options");
+        }
+
         if ($this->options['branch']) {
             if ($this->isServerLocked() && $this->options['branch'] !== $this->getServerLockedBranch()) {
                 throw new \InvalidArgumentException(
