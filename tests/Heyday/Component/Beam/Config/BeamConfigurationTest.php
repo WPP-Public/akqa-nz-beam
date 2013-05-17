@@ -64,7 +64,8 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                             'live'
                         ),
                         'required' => false,
-                        'tag' => false
+                        'tag' => false,
+                        'tty' => false
                     )
                 ),
                 'exclude' => array(
