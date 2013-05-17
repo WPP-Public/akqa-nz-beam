@@ -18,10 +18,6 @@ class Rsync extends Deployment implements DeploymentProvider
      */
     protected $options;
     /**
-     *
-     */
-    const PROCESS_TIMEOUT = 300;
-    /**
      * @param array $options
      */
     public function __construct(array $options)
@@ -87,20 +83,13 @@ class Rsync extends Deployment implements DeploymentProvider
     /**
      * @param                    $command
      * @param  callable          $output
-     * @param  bool              $dryrun
-     * @return array
+     * @return DeploymentResult
      * @throws \RuntimeException
      */
     protected function deploy($command, \Closure $output = null)
     {
         $this->generateExcludesFile();
-        $process = new Process(
-            $command,
-            null,
-            null,
-            null,
-            static::PROCESS_TIMEOUT
-        );
+        $process = $this->getProcess($command);
         $process->run($output);
         if (!$process->isSuccessful()) {
             throw new \RuntimeException($process->getErrorOutput());
@@ -111,13 +100,13 @@ class Rsync extends Deployment implements DeploymentProvider
     }
     /**
      * Builds the rsync command based of current options
+     * @param      $fromPath
+     * @param      $toPath
      * @param bool $dryrun
-     * @internal param bool $forcedryrun
      * @return string
      */
     protected function buildCommand($fromPath, $toPath, $dryrun = false)
     {
-
         $command = array(
             array(
                 'rsync %s/ %s',
@@ -333,5 +322,21 @@ class Rsync extends Deployment implements DeploymentProvider
     public function getLimitations()
     {
         return null;
+    }
+    /**
+     * @param $command
+     * @return Process
+     */
+    protected function getProcess($command)
+    {
+        $process = new Process(
+            $command,
+            null,
+            null,
+            null,
+            null
+        );
+
+        return $process;
     }
 }
