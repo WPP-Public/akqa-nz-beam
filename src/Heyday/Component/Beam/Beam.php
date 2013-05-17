@@ -664,7 +664,9 @@ class Beam
                 );
             }
 
-            throw $exception;
+            if(!$this->promptCommandFailureContinue($command, $exception)){
+                exit(1);
+            }
         }
     }
     /**
@@ -679,13 +681,27 @@ class Beam
                 'command:local'
             )
         );
-        $this->runProcess(
-            $this->getProcess(
-                $command['command'],
-                $this->getLocalPath()
-            ),
-            $this->options['localcommandoutputhandler']
-        );
+        try {
+            $this->runProcess(
+                $this->getProcess(
+                    $command['command'],
+                    $this->getLocalPath()
+                ),
+                $this->options['localcommandoutputhandler']
+            );
+        } catch (\RuntimeException $exception) {
+            if(!$this->promptCommandFailureContinue($command, $exception)){
+                exit(1);
+            }
+        }
+    }
+
+    protected function promptCommandFailureContinue($command, $exception){
+        if(!is_callable($this->options['commandfailurehandler'])){
+            throw $exception;
+        }
+
+        return $this->options['commandfailurehandler']($command, $exception);
     }
     /**
      * @param $handler
@@ -750,7 +766,8 @@ class Beam
                     'outputhandler'              => null,
                     'localcommandoutputhandler'  => null,
                     'targetcommandoutputhandler' => null,
-                    'commandprompthandler'       => null
+                    'commandprompthandler'       => null,
+                    'commandfailurehandler'      => null
                 )
             )->setAllowedTypes(
                 array(
@@ -809,6 +826,13 @@ class Beam
                     'commandprompthandler'       => function (Options $options, $value) {
                         if ($value !== null && !is_callable($value)) {
                             throw new \InvalidArgumentException('Command prompt handler must be null or callable');
+                        }
+
+                        return $value;
+                    },
+                    'commandfailurehandler'      => function (Options $options, $value) {
+                        if ($value !== null && !is_callable($value)) {
+                            throw new \InvalidArgumentException('Command failure handler must be null or callable');
                         }
 
                         return $value;

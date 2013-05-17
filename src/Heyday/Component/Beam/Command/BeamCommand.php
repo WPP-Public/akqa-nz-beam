@@ -296,6 +296,7 @@ abstract class BeamCommand extends Command
     {
         $formatterHelper = $this->formatterHelper;
         $dialogHelper = $this->dialogHelper;
+        $that = $this;
 
         $options = array(
             'direction' => $input->getArgument('direction'),
@@ -315,7 +316,6 @@ abstract class BeamCommand extends Command
             $options['workingcopy'] = true;
         }
         if ($input->getOption('command-prompt')) {
-            $that = $this;
             $options['commandprompthandler'] = function ($command) use ($that, $output, $dialogHelper, $formatterHelper) {
                 return in_array(
                     $dialogHelper->askConfirmation(
@@ -334,6 +334,38 @@ abstract class BeamCommand extends Command
                 );
             };
         }
+
+        $options['commandfailurehandler'] = function ($command, $exception) use ($that, $output, $dialogHelper, $formatterHelper) {
+
+            // Ensure the output of the failed command is shown
+            if (OutputInterface::VERBOSITY_VERBOSE !== $output->getVerbosity()) {
+                $output->write( $formatterHelper->formatSection('Error', trim($exception->getMessage(), "\n")."\n", 'error' ) );
+            }
+
+            $output->write(
+                $formatterHelper->formatSection('Error', 'Error running: '.$command['command']."\n", 'error')
+            );
+
+            if ($command['required']) {
+                throw new \RuntimeException('A command marked as required exited with a non-zero status');
+            }
+
+            return in_array(
+                $dialogHelper->askConfirmation(
+                    $output,
+                    $formatterHelper->formatSection(
+                        'Prompt',
+                        $that->getQuestion('A command exited with a non-zero status. Do you want to continue', 'y'),
+                        'error'
+                    ),
+                    'y'
+                ),
+                array(
+                    'y',
+                    'yes'
+                )
+            );
+        };
 
         if ($input->getOption('tags')) {
             $options['command-tags'] = $input->getOption('tags');
