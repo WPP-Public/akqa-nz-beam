@@ -480,114 +480,93 @@ class Beam
      */
     protected function runPreLocalCommands()
     {
-        $commands = $this->getFilteredCommands('pre', 'local');
-        if (count($commands)) {
-            $this->runOutputHandler(
-                $this->options['outputhandler'],
-                array(
-                    'Running local pre-deployment commands'
-                )
-            );
-            foreach ($commands as $command) {
-                $this->runLocalCommand($command);
-            }
-        }
+        $this->runCommands(
+            $this->getFilteredCommands('pre','local'),
+            'Running local pre-deployment commands',
+            'runLocalCommand'
+        );
     }
     /**
      *
      */
     protected function runPreTargetCommands()
     {
-        $commands = $this->getFilteredCommands('pre', 'target');
-        if (count($commands)) {
-            $this->runOutputHandler(
-                $this->options['outputhandler'],
-                array(
-                    'Running target pre-deployment commands'
-                )
-            );
-            foreach ($commands as $command) {
-                $this->runTargetCommand($command);
-            }
-        }
+        $this->runCommands(
+            $this->getFilteredCommands('pre','target'),
+            'Running target pre-deployment commands',
+            'runTargetCommand'
+        );
     }
     /**
      *
      */
     protected function runPostLocalCommands()
     {
-        $commands = $this->getFilteredCommands('post', 'local');
-        if (count($commands)) {
-            $this->runOutputHandler(
-                $this->options['outputhandler'],
-                array(
-                    'Running local post-deployment commands'
-                )
-            );
-            foreach ($commands as $command) {
-                $this->runLocalCommand($command);
-            }
-        }
+        $this->runCommands(
+            $this->getFilteredCommands('post', 'local'),
+            'Running local post-deployment commands',
+            'runLocalCommand'
+        );
     }
     /**
      *
      */
     protected function runPostTargetCommands()
     {
-        $commands = $this->getFilteredCommands('post', 'target');
+        $this->runCommands(
+            $this->getFilteredCommands('post', 'target'),
+            'Running target post-deployment commands',
+            'runTargetCommand'
+        );
+    }
+    /**
+     * @param $commands
+     * @param $message
+     * @param $method
+     */
+    protected function runCommands($commands, $message, $method)
+    {
         if (count($commands)) {
             $this->runOutputHandler(
                 $this->options['outputhandler'],
                 array(
-                    'Running target post-deployment commands'
+                    $message
                 )
             );
             foreach ($commands as $command) {
-                $this->runTargetCommand($command);
+                $this->$method($command);
             }
         }
     }
     /**
      * @param $phase
      * @param $location
-     * @return bool
+     * @return array
      */
     protected function getFilteredCommands($phase, $location)
     {
         $commands = array();
-
         foreach ($this->config['commands'] as $command) {
-
             if ($command['phase'] !== $phase) {
                 continue;
             }
-
             if ($command['location'] !== $location) {
                 continue;
             }
-
             if (count($command['servers']) !== 0 && !in_array($this->options['target'], $command['servers'])) {
                 continue;
             }
-
             if (!$command['required']) {
-
                 if ($command['tag'] && (count($this->options['command-tags']) === 0 || !in_array($command['tag'], $this->options['command-tags']))) {
                     continue;
                 }
-
                 if (is_callable($this->options['commandprompthandler']) && !$this->options['commandprompthandler']($command)) {
                     continue;
                 }
-
             }
-
             $commands[] = $command;
-
         }
-
         return $commands;
-        // if has tag, then default false unless tags specified
     }
     /**
      * @param   $command
