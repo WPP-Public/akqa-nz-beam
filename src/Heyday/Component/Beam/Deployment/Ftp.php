@@ -4,8 +4,6 @@ namespace Heyday\Component\Beam\Deployment;
 
 use Heyday\Component\Beam\Beam;
 use Heyday\Component\Beam\Deployment\DeploymentProvider;
-use Heyday\Component\Beam\Deployment\DeploymentResult;
-use Heyday\Component\Beam\Utils;
 
 /**
  * Class Ftp
@@ -79,6 +77,7 @@ class Ftp extends ManualChecksum implements DeploymentProvider
         if (null === $this->writeContext) {
             $this->writeContext = stream_context_create(array('ftp' => array('overwrite' => true)));
         }
+
         return $this->writeContext;
     }
 

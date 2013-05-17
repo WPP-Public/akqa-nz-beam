@@ -127,6 +127,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
         $stat = $this->getSftp()->lstat(
             $this->getTargetFilePath($path)
         );
+
         return $stat['size'];
     }
     /**
