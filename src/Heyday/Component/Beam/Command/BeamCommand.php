@@ -137,8 +137,6 @@ abstract class BeamCommand extends Command
 
             if (OutputInterface::VERBOSITY_VERBOSE === $output->getVerbosity()) {
 
-                $options['targetcommandoutputhandler'] = $options['outputhandler'];
-
                 $options['localcommandoutputhandler'] = function ($type, $data) use ($output, $formatterHelper) {
                     if ($type == 'out') {
                         $output->write(
@@ -157,6 +155,8 @@ abstract class BeamCommand extends Command
                         );
                     }
                 };
+
+                $options['targetcommandoutputhandler'] = $options['localcommandoutputhandler'];
 
             }
 

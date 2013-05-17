@@ -165,12 +165,6 @@ class Beam
             }
 
         }
-
-        if ($hasRemoteCommands && !extension_loaded('ssh2')) {
-            throw new InvalidConfigurationException(
-                'The PHP extension ssh2 is required to run commands on the location "target" but it is not loaded. (You may need to install it).'
-            );
-        }
     }
     /**
      * @param  Deployment\DeploymentResult $deploymentResult
@@ -586,7 +580,6 @@ class Beam
     }
     /**
      * @param   $command
-     * @throws \RuntimeException
      */
     protected function runTargetCommand($command)
     {
@@ -599,55 +592,23 @@ class Beam
         );
 
         $server = $this->getServer();
-
-        try {
-            $configuration = new SshConfigFileConfiguration(
-                '~/.ssh/config',
-                $server['host']
-            );
-            $authentication = $configuration->getAuthentication(null, $server['user']);
-
-        } catch (\UnexpectedValueException $exception) {
-            throw new \RuntimeException(
-                "Couldn't find host matching '{$server['host']}' in SSH config file.\n"
-                    . "Public key authentication is currently required to execute commands on a target."
-            );
-        }
-
-        $session = new Session(
-            $configuration,
-            // TODO: This authentication mechanism should be specifiable
-            $authentication
+        $userComponent = $server['user'] <> '' ? $server['user'].'@' : '';
+        $remoteCmd = sprintf(
+            'cd \'%s\' && %s',
+            $server['webroot'],
+            $command['command']
         );
 
-        $exec = $session->getExec();
+        $args = array(
+            'ssh',
+            $command['tty'] ? '-t' : '',
+            $userComponent.$server['host'],
+            escapeshellcmd($remoteCmd)
+        );
 
-        try {
-            $this->runOutputHandler(
-                $this->options['targetcommandoutputhandler'],
-                array(
-                    $exec->run(
-                        sprintf(
-                            'cd \'%s\' && %s',
-                            $server['webroot'],
-                            $command['command']
-                        )
-                    )
-                )
-            );
-        } catch (\RuntimeException $exception) {
-            if ($exception->getMessage() == 'The authentication over the current SSH connection failed.') {
-                throw new \RuntimeException(
-                    'Failed to authenticate over SSH to run a command on the target. This could be caused by a partial'
-                        . " definition for '{$server['host']}' in your ssh config file (currently, public key authentication"
-                        . ' is required to execute commands on a target).'
-                );
-            }
+        $command['command'] = implode(' ', $args);
 
-            if(!$this->promptCommandFailureContinue($command, $exception)){
-                exit(1);
-            }
-        }
+        $this->doExecCommand($command, $this->options['targetcommandoutputhandler']);
     }
     /**
      * @param   $command
@@ -661,21 +622,47 @@ class Beam
                 'command:local'
             )
         );
+
+        $this->doExecCommand($command, $this->options['localcommandoutputhandler']);
+    }
+    /**
+     * @param array $command
+     * @param $outputHandler
+     */
+    protected function doExecCommand($command, $outputHandler)
+    {
         try {
-            $this->runProcess(
-                $this->getProcess(
-                    $command['command'],
-                    $this->getLocalPath()
-                ),
-                $this->options['localcommandoutputhandler']
-            );
+
+            if ($command['tty']) {
+                passthru($command['command'], $exit);
+                if ($exit !== 0) {
+                    throw new \RuntimeException('Command running through passthru() returned non-zero exit status');
+                }
+            } else {
+                $this->runProcess(
+                    $this->getProcess(
+                        $command['command'],
+                        $this->getLocalPath()
+                    ),
+                    $outputHandler
+                );
+            }
+
         } catch (\RuntimeException $exception) {
+
             if(!$this->promptCommandFailureContinue($command, $exception)){
                 exit(1);
             }
+
         }
     }
 
+    /**
+     * @param $command
+     * @param $exception
+     * @return mixed
+     * @throws $exception
+     */
     protected function promptCommandFailureContinue($command, $exception){
         if(!is_callable($this->options['commandfailurehandler'])){
             throw $exception;

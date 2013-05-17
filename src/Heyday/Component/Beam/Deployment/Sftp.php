@@ -248,6 +248,12 @@ class Sftp extends Deployment implements DeploymentProvider
      */
     public function getLimitations()
     {
+        if (!extension_loaded('ssh2')){
+            throw new InvalidConfigurationException(
+                'The PHP ssh2 extension is required to use SFTP deployment, but it is not loaded. (You may need to install it).'
+            );
+        }
+
         return array(
             DeploymentProvider::LIMITATION_REMOTECOMMAND
         );
