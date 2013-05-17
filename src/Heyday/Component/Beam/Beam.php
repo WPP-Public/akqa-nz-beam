@@ -103,9 +103,10 @@ class Beam
             'webroot',
         );
 
+        $server = $this->getServer();
         $emptyKeys = array();
         foreach($requiredKeys as $key){
-            if(empty($this->options[$key])){
+            if(empty($server[$key])){
                 $emptyKeys[] = $key;
             }
         }
