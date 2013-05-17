@@ -465,4 +465,53 @@ class BeamTest extends \PHPUnit_Framework_TestCase
         );
         $this->assertTrue($beam->hasPath());
     }
+    public function testMatchTag()
+    {
+        $beam = new Beam(
+            array(
+                $this->validConfig
+            ),
+            $this->validOptions
+        );
+
+        $class = new \ReflectionClass($beam);
+        $matchTag = $class->getMethod('matchTag');
+        $matchTag->setAccessible(true);
+
+        $tests = array(
+            'kitten' => array(
+                'kitten' => true,
+                'kitties' => false,
+                'kittens-deploy' => false,
+                'puppies' => false
+            ),
+            'kitten*' => array(
+                'kitten' => true,
+                'kitties' => false,
+                'kittens-deploy' => true,
+                'puppies' => false
+            ),
+            'kit*' => array(
+                'kitten' => true,
+                'kitties' => true,
+                'kittens-deploy' => true,
+                'puppies' => false
+            ),
+            '*deploy' => array(
+                'kitten' => false,
+                'kitties' => false,
+                'kittens-deploy' => true,
+                'deploy-velociraptors' => false,
+                'puppies-deploy' => true
+            )
+        );
+
+        foreach ($tests as $input => $asserts) {
+            $beam->setOption('command-tags', array($input));
+
+            foreach ($asserts as $tag => $expected) {
+                $this->assertEquals($expected, $matchTag->invoke($beam, $tag), "Input value '$input' incorrectly matched tag $tag");
+            }
+        }
+    }
 }

@@ -105,7 +105,7 @@ abstract class BeamCommand extends Command
                 'tags',
                 't',
                 InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY,
-                'Run the specified tagged commands'
+                'Run the specified tagged commands (wildcards supported).'
             )
             ->addConfigOption();
     }
