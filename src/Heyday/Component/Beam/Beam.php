@@ -105,8 +105,8 @@ class Beam
 
         $server = $this->getServer();
         $emptyKeys = array();
-        foreach($requiredKeys as $key){
-            if(empty($server[$key])){
+        foreach ($requiredKeys as $key) {
+            if (empty($server[$key])) {
                 $emptyKeys[] = $key;
             }
         }
@@ -491,7 +491,7 @@ class Beam
     protected function runPreLocalCommands()
     {
         $this->runCommands(
-            $this->getFilteredCommands('pre','local'),
+            $this->getFilteredCommands('pre', 'local'),
             'Running local pre-deployment commands',
             'runLocalCommand'
         );
@@ -502,7 +502,7 @@ class Beam
     protected function runPreTargetCommands()
     {
         $this->runCommands(
-            $this->getFilteredCommands('pre','target'),
+            $this->getFilteredCommands('pre', 'target'),
             'Running target pre-deployment commands',
             'runTargetCommand'
         );
@@ -576,6 +576,7 @@ class Beam
             }
             $commands[] = $command;
         }
+
         return $commands;
     }
     /**
@@ -592,7 +593,9 @@ class Beam
         );
 
         $server = $this->getServer();
+
         $userComponent = $server['user'] <> '' ? $server['user'].'@' : '';
+
         $remoteCmd = sprintf(
             'cd \'%s\' && %s',
             $server['webroot'],
@@ -650,12 +653,13 @@ class Beam
 
         } catch (\RuntimeException $exception) {
 
-            if(!$this->promptCommandFailureContinue($command, $exception)){
+            if (!$this->promptCommandFailureContinue($command, $exception)) {
                 exit(1);
             }
 
         }
     }
+
 
     /**
      * @param $command
@@ -663,7 +667,8 @@ class Beam
      * @return mixed
      * @throws $exception
      */
-    protected function promptCommandFailureContinue($command, $exception){
+    protected function promptCommandFailureContinue($command, $exception)
+    {
         if(!is_callable($this->options['commandfailurehandler'])){
             throw $exception;
         }

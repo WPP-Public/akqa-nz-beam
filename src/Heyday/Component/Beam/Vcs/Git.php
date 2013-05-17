@@ -112,6 +112,7 @@ class Git implements VcsProvider
                 $branch
             )
         );
+
         return sprintf(
             "Deployer: %s\nBranch: %s\n%s\n",
             get_current_user(),

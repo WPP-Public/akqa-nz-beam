@@ -2,10 +2,7 @@
 
 namespace Heyday\Component\Beam\Deployment;
 
-use Heyday\Component\Beam\Beam;
 use Heyday\Component\Beam\Deployment\DeploymentProvider;
-use Heyday\Component\Beam\Deployment\DeploymentResult;
-use Heyday\Component\Beam\Utils;
 use Ssh\Authentication\Password;
 use Ssh\Configuration;
 use Ssh\Session;
@@ -15,23 +12,16 @@ use Ssh\SshConfigFileConfiguration;
  * Class Sftp
  * @package Heyday\Component\Beam\Deployment
  */
-class Sftp extends Deployment implements DeploymentProvider
+class Sftp extends ManualChecksum implements DeploymentProvider
 {
-    /**
-     * @var
-     */
-    protected $fullmode;
     /**
      * @var
      */
     protected $sftp;
     /**
-     * @param bool $fullmode
+     * @var
      */
-    public function __construct($fullmode = false)
-    {
-        $this->fullmode = $fullmode;
-    }
+    protected $targetPath;
     /**
      * @return \Ssh\Sftp
      * @throws \RuntimeException
@@ -42,7 +32,7 @@ class Sftp extends Deployment implements DeploymentProvider
             $server = $this->beam->getServer();
 
             if ($server['webroot'][0] !== '/') {
-                throw new \RuntimeException('Webrrot must be a absolute path when using sftp');
+                throw new \RuntimeException('Webroot must be a absolute path when using sftp');
             }
 
             if (isset($server['password'])) {
@@ -75,173 +65,84 @@ class Sftp extends Deployment implements DeploymentProvider
         return $this->sftp;
     }
     /**
-     * @param  callable         $output
-     * @param  bool             $dryrun
-     * @param  DeploymentResult $deploymentResult
-     * @return mixed
+     * @{inheritDoc}
      */
-    public function up(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
+    protected function writeContent($targetpath, $content)
     {
-        // TODO: implement delete
-        $dir = $this->beam->getLocalPath();
-
-        $sftp = $this->getSftp();
-
-        $files = Utils::getAllowedFilesFromDirectory(
-            $this->beam->getConfig('exclude'),
-            $dir . ($this->beam->hasPath() ? '/' . $this->beam->getOption('path') : '')
+        $this->getSftp()->write(
+            $this->getTargetFilePath($targetpath),
+            $content
         );
-
-        $localchecksums = Utils::checksumsFromFiles($files, $dir);
-
-        $targetchecksums = array();
-
-        $targetchecksumfile = $this->getTargetFilePath('checksums.json');
-
-        if (function_exists('bzdecompress') && $sftp->exists($targetchecksumfile . '.bz2')) {
-            $targetchecksums = Utils::checksumsFromBz2($sftp->read($targetchecksumfile . '.bz2'));
-        } elseif (function_exists('gzinflate') && $sftp->exists($targetchecksumfile . '.gz')) {
-            $targetchecksums = Utils::checksumsFromGz($sftp->read($targetchecksumfile . '.gz'));
-        } elseif ($sftp->exists($targetchecksumfile)) {
-            $targetchecksums = Utils::checksumsFromString($sftp->read($targetchecksumfile));
-        }
-
-        $targetchecksums = Utils::getFilteredChecksums(
-            $this->beam->getConfig('exclude'),
-            $targetchecksums
-        );
-
-        if (null === $deploymentResult) {
-
-            $result = array();
-
-            foreach ($files as $file) {
-                $path = $file->getPathname();
-                $targetfile = $this->getTargetFilePath($path);
-                $relativefilename = Utils::getRelativePath($dir, $path);
-
-                if ($this->fullmode) {
-
-                    if ($sftp->exists($targetfile)) {
-                        if (isset($targetchecksums[$relativefilename]) && $targetchecksums[$relativefilename] !== $localchecksums[$relativefilename]) {
-                            $result[] = array(
-                                'update'        => 'sent',
-                                'filename'      => $targetfile,
-                                'localfilename' => $path,
-                                'filetype'      => 'file',
-                                'reason'        => array('checksum')
-                            );
-                        } else {
-                            $targetStat = $sftp->stat($targetfile);
-                            $localStat = stat($path);
-                            if ($targetStat['size'] != $localStat['size']) {
-                                $result[] = array(
-                                    'update'        => 'sent',
-                                    'filename'      => $targetfile,
-                                    'localfilename' => $path,
-                                    'filetype'      => 'file',
-                                    'reason'        => array('size')
-                                );
-                            }
-                        }
-                    } else {
-                        $result[] = array(
-                            'update'        => 'created',
-                            'filename'      => $targetfile,
-                            'localfilename' => $path,
-                            'filetype'      => 'file',
-                            'reason'        => array('missing')
-                        );
-                    }
-
-                } else {
-
-                    if (isset($targetchecksums[$relativefilename])) {
-                        if ($targetchecksums[$relativefilename] !== $localchecksums[$relativefilename]) {
-                            $result[] = array(
-                                'update'        => 'sent',
-                                'filename'      => $targetfile,
-                                'localfilename' => $path,
-                                'filetype'      => 'file',
-                                'reason'        => array('checksum')
-                            );
-                        }
-                    } else {
-                        $result[] = array(
-                            'update'        => 'created',
-                            'filename'      => $targetfile,
-                            'localfilename' => $path,
-                            'filetype'      => 'file',
-                            'reason'        => array('missing')
-                        );
-                    }
-
-                }
-            }
-
-            $deploymentResult = new DeploymentResult($result);
-
-        }
-
-        if (!$dryrun) {
-            foreach ($deploymentResult as $change) {
-                if (is_callable($output)) {
-                    $output();
-                }
-                $dir = dirname($change['filename']);
-                if (!$sftp->exists($dir)) {
-                    $sftp->mkdir($dir, 0755, true);
-                }
-                $sftp->send($change['localfilename'], $change['filename']);
-            }
-            // Save the checksums to the server
-            $sftp->write(
-                $this->getTargetFilePath('checksums.json.bz2'),
-                Utils::checksumsToBz2(
-                    $this->beam->hasPath() ? array_merge(
-                        $targetchecksums,
-                        $localchecksums
-                    ) : $localchecksums
-                )
-            );
-        }
-
-        return $deploymentResult;
     }
     /**
-     * @param  callable          $output
-     * @param  bool              $dryrun
-     * @param  DeploymentResult  $deploymentResult
-     * @throws \RuntimeException
-     * @return mixed
+     * @{inheritDoc}
      */
-    public function down(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
+    protected function write($localpath, $targetpath)
     {
-        // TODO: Implement down() method.
-        throw new \RuntimeException('Not implemented');
+        $this->getSftp()->send(
+            $localpath,
+            $this->getTargetFilePath($targetpath)
+        );
     }
+    /**
+     * @{inheritDoc}
+     */
+    protected function read($path)
+    {
+        return $this->getSftp()->read(
+            $this->getTargetFilePath($path)
+        );
+    }
+    /**
+     * @{inheritDoc}
+     */
+    protected function exists($path)
+    {
+        return $this->getSftp()->exists(
+            $this->getTargetFilePath($path)
+        );
+    }
+    /**
+     * @{inheritDoc}
+     */
+    protected function mkdir($path)
+    {
+        $this->getSftp()->mkdir(
+            $this->getTargetFilePath($path),
+            0755,
+            true
+        );
+    }
+    /**
+     * @{inheritDoc}
+     */
+    protected function size($path)
+    {
+        $stat = $this->getSftp()->lstat(
+            $this->getTargetFilePath($path)
+        );
 
+        return $stat['size'];
+    }
     /**
      * @param $path
      * @return mixed|string
      */
     protected function getTargetFilePath($path)
     {
-        $server = $this->beam->getServer();
-        if ($path[0] == '/') {
-            return str_replace($this->beam->getLocalPath(), $server['webroot'], $path);
-        } else {
-            return $server['webroot'] . '/' . $path;
-        }
+        return $this->getTargetPath() . '/' . $path;
     }
     /**
      * @return mixed
      */
     public function getTargetPath()
     {
-        $server = $this->beam->getServer();
+        if (null === $this->targetPath) {
+            $server = $this->beam->getServer();
+            $this->targetPath = $server['webroot'];
+        }
 
-        return $server['webroot'];
+        return $this->targetPath;
     }
     /**
      * @return array

@@ -6,9 +6,9 @@ use Heyday\Component\Beam\Deployment\DeploymentResult;
 use Heyday\Component\Beam\Deployment\Rsync;
 use Symfony\Component\Console\Helper\FormatterHelper;
 use Symfony\Component\Console\Helper\ProgressHelper;
-use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Class RsyncCommand
@@ -59,9 +59,9 @@ class RsyncCommand extends BeamCommand
         $options = parent::getOptions($input, $output);
         $options['deploymentprovider'] = new Rsync(
             array(
-                'checksum' => !$input->getOption('no-checksum'),
-                'delete' => $input->getOption('delete'),
-                'compress' => !$input->getOption('no-compress'),
+                'checksum'      => !$input->getOption('no-checksum'),
+                'delete'        => $input->getOption('delete'),
+                'compress'      => !$input->getOption('no-compress'),
                 'delay-updates' => !$input->getOption('no-delay-updates')
             )
         );

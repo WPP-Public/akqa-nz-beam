@@ -4,13 +4,13 @@ namespace Heyday\Component\Beam\Command;
 
 use Heyday\Component\Beam\Beam;
 use Heyday\Component\Beam\Deployment\DeploymentResult;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Helper\FormatterHelper;
 use Symfony\Component\Console\Helper\ProgressHelper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Application;
 
 /**
  * Class BeamCommand
@@ -316,7 +316,12 @@ abstract class BeamCommand extends Command
             $options['workingcopy'] = true;
         }
         if ($input->getOption('command-prompt')) {
-            $options['commandprompthandler'] = function ($command) use ($that, $output, $dialogHelper, $formatterHelper) {
+            $options['commandprompthandler'] = function ($command) use (
+                $that,
+                $output,
+                $dialogHelper,
+                $formatterHelper
+            ) {
                 return in_array(
                     $dialogHelper->askConfirmation(
                         $output,
@@ -335,15 +340,22 @@ abstract class BeamCommand extends Command
             };
         }
 
-        $options['commandfailurehandler'] = function ($command, $exception) use ($that, $output, $dialogHelper, $formatterHelper) {
+        $options['commandfailurehandler'] = function ($command, $exception) use (
+            $that,
+            $output,
+            $dialogHelper,
+            $formatterHelper
+        ) {
 
             // Ensure the output of the failed command is shown
             if (OutputInterface::VERBOSITY_VERBOSE !== $output->getVerbosity()) {
-                $output->write( $formatterHelper->formatSection('Error', trim($exception->getMessage(), "\n")."\n", 'error' ) );
+                $output->write(
+                    $formatterHelper->formatSection('Error', trim($exception->getMessage(), "\n") . "\n", 'error')
+                );
             }
 
             $output->write(
-                $formatterHelper->formatSection('Error', 'Error running: '.$command['command']."\n", 'error')
+                $formatterHelper->formatSection('Error', 'Error running: ' . $command['command'] . "\n", 'error')
             );
 
             if ($command['required']) {
@@ -428,7 +440,7 @@ abstract class BeamCommand extends Command
             );
         }
 
-        if ($beam->getOption('dryrun')){
+        if ($beam->getOption('dryrun')) {
             $action = 'You\'re about to do a <comment>dry run</comment> for a sync between';
         } else {
             $action = 'You\'re about to sync files between';

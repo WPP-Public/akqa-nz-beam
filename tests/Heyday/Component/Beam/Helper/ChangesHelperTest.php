@@ -1,7 +1,6 @@
 <?php
 namespace Heyday\Component\Beam\Helper;
 
-
 class ChangesHelperTest extends \PHPUnit_Framework_TestCase
 {
     /**

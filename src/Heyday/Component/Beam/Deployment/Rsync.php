@@ -2,7 +2,6 @@
 
 namespace Heyday\Component\Beam\Deployment;
 
-use Heyday\Component\Beam\Beam;
 use Heyday\Component\Beam\Deployment\DeploymentResult;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Process\Process;
@@ -34,19 +33,19 @@ class Rsync extends Deployment implements DeploymentProvider
         );
         $resolver->setAllowedTypes(
             array(
-                'checksum' => 'bool',
-                'delete' => 'bool',
-                'archive' => 'bool',
-                'compress' => 'bool',
+                'checksum'      => 'bool',
+                'delete'        => 'bool',
+                'archive'       => 'bool',
+                'compress'      => 'bool',
                 'delay-updates' => 'bool'
             )
         );
         $resolver->setDefaults(
             array(
-                'checksum' => true,
-                'delete' => false,
-                'archive' => true,
-                'compress' => true,
+                'checksum'      => true,
+                'delete'        => false,
+                'archive'       => true,
+                'compress'      => true,
                 'delay-updates' => true
             )
         );
@@ -100,9 +99,9 @@ class Rsync extends Deployment implements DeploymentProvider
     }
     /**
      * Builds the rsync command based of current options
-     * @param      $fromPath
-     * @param      $toPath
-     * @param bool $dryrun
+     * @param         $fromPath
+     * @param         $toPath
+     * @param  bool   $dryrun
      * @return string
      */
     protected function buildCommand($fromPath, $toPath, $dryrun = false)
@@ -247,6 +246,7 @@ class Rsync extends Deployment implements DeploymentProvider
             $change['reason'] = $reason;
             $change['filename'] = $matches[5];
         }
+
         return $change;
     }
     /**

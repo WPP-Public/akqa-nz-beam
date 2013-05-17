@@ -1,7 +1,6 @@
 <?php
 namespace Heyday\Component\Beam\Command;
 
-
 class GenerateDeployCommandTest extends \PHPUnit_Framework_TestCase
 {
     /**
