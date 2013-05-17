@@ -4,6 +4,10 @@ namespace Heyday\Component\Beam\Deployment;
 
 use Heyday\Component\Beam\Utils;
 
+/**
+ * Class ManualChecksum
+ * @package Heyday\Component\Beam\Deployment
+ */
 abstract class ManualChecksum extends Deployment
 {
     /**
@@ -167,11 +171,36 @@ abstract class ManualChecksum extends Deployment
             DeploymentProvider::LIMITATION_REMOTECOMMAND
         );
     }
-
+    /**
+     * @param $targetpath
+     * @param $content
+     * @return mixed
+     */
     abstract protected function writeContent($targetpath, $content);
+    /**
+     * @param $localpath
+     * @param $targetpath
+     * @return mixed
+     */
     abstract protected function write($localpath, $targetpath);
+    /**
+     * @param $path
+     * @return mixed
+     */
     abstract protected function read($path);
+    /**
+     * @param $path
+     * @return mixed
+     */
     abstract protected function exists($path);
+    /**
+     * @param $path
+     * @return mixed
+     */
     abstract protected function mkdir($path);
+    /**
+     * @param $path
+     * @return mixed
+     */
     abstract protected function size($path);
 }

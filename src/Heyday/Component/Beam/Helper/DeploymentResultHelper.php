@@ -60,10 +60,10 @@ class DeploymentResultHelper extends Helper
         DeploymentResult $deploymentResult
     ) {
         $totals = array(
-            'sent' => 0,
-            'received' => 0,
-            'created' => 0,
-            'deleted' => 0,
+            'sent'       => 0,
+            'received'   => 0,
+            'created'    => 0,
+            'deleted'    => 0,
             'attributes' => 0
         );
 

@@ -39,19 +39,19 @@ class GenerateConfigCommand extends SymfonyCommand
 
         $template = array(
             'exclude' => array(
-                'patterns'     => array(),
+                'patterns' => array(),
             ),
             'servers' => array(
-                's1' => array(
-                    'user'     => '',
-                    'host'     => '',
-                    'webroot'  => '',
+                's1'   => array(
+                    'user'    => '',
+                    'host'    => '',
+                    'webroot' => '',
                 ),
                 'live' => array(
-                    'user'     => '',
-                    'host'     => '',
-                    'webroot'  => '',
-                    'branch'   => 'remotes/origin/master'
+                    'user'    => '',
+                    'host'    => '',
+                    'webroot' => '',
+                    'branch'  => 'remotes/origin/master'
                 )
             ),
         );
@@ -61,7 +61,7 @@ class GenerateConfigCommand extends SymfonyCommand
 
         $output->writeln(
             "<info>Success: beam.json file saved to " . getcwd() .
-                "/beam.json - be sure to check the file before using it</info>"
+            "/beam.json - be sure to check the file before using it</info>"
         );
 
     }

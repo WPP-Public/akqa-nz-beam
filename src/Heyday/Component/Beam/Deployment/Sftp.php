@@ -64,10 +64,8 @@ class Sftp extends ManualChecksum implements DeploymentProvider
 
         return $this->sftp;
     }
-
     /**
-     * @param $targetpath
-     * @param $content
+     * @{inheritDoc}
      */
     protected function writeContent($targetpath, $content)
     {
@@ -77,8 +75,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
         );
     }
     /**
-     * @param $localpath
-     * @param $targetpath
+     * @{inheritDoc}
      */
     protected function write($localpath, $targetpath)
     {
@@ -88,8 +85,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
         );
     }
     /**
-     * @param $path
-     * @return string
+     * @{inheritDoc}
      */
     protected function read($path)
     {
@@ -98,8 +94,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
         );
     }
     /**
-     * @param $path
-     * @return bool
+     * @{inheritDoc}
      */
     protected function exists($path)
     {
@@ -108,7 +103,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
         );
     }
     /**
-     * @param $path
+     * @{inheritDoc}
      */
     protected function mkdir($path)
     {
@@ -119,8 +114,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
         );
     }
     /**
-     * @param $path
-     * @return mixed
+     * @{inheritDoc}
      */
     protected function size($path)
     {

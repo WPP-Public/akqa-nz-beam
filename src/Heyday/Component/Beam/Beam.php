@@ -497,7 +497,7 @@ class Beam
     protected function runPreLocalCommands()
     {
         $this->runCommands(
-            $this->getFilteredCommands('pre','local'),
+            $this->getFilteredCommands('pre', 'local'),
             'Running local pre-deployment commands',
             'runLocalCommand'
         );
@@ -508,7 +508,7 @@ class Beam
     protected function runPreTargetCommands()
     {
         $this->runCommands(
-            $this->getFilteredCommands('pre','target'),
+            $this->getFilteredCommands('pre', 'target'),
             'Running target pre-deployment commands',
             'runTargetCommand'
         );
@@ -611,7 +611,7 @@ class Beam
         } catch (\UnexpectedValueException $exception) {
             throw new \RuntimeException(
                 "Couldn't find host matching '{$server['host']}' in SSH config file.\n"
-                    . "Public key authentication is currently required to execute commands on a target."
+                . "Public key authentication is currently required to execute commands on a target."
             );
         }
 
@@ -640,8 +640,8 @@ class Beam
             if ($exception->getMessage() == 'The authentication over the current SSH connection failed.') {
                 throw new \RuntimeException(
                     'Failed to authenticate over SSH to run a command on the target. This could be caused by a partial'
-                        . " definition for '{$server['host']}' in your ssh config file (currently, public key authentication"
-                        . ' is required to execute commands on a target).'
+                    . " definition for '{$server['host']}' in your ssh config file (currently, public key authentication"
+                    . ' is required to execute commands on a target).'
                 );
             }
 

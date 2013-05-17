@@ -2,7 +2,6 @@
 
 namespace Heyday\Component\Beam\Deployment;
 
-use Heyday\Component\Beam\Beam;
 use Heyday\Component\Beam\Deployment\DeploymentProvider;
 
 /**
@@ -32,6 +31,9 @@ class Ftp extends ManualChecksum implements DeploymentProvider
         $this->ssl = $ssl;
         parent::__construct($fullmode);
     }
+    /**
+     * @{inheritDoc}
+     */
     protected function writeContent($targetpath, $content)
     {
         file_put_contents(
@@ -41,6 +43,9 @@ class Ftp extends ManualChecksum implements DeploymentProvider
             $this->getWriteContext()
         );
     }
+    /**
+     * @{inheritDoc}
+     */
     protected function write($localpath, $targetpath)
     {
         file_put_contents(
@@ -50,28 +55,45 @@ class Ftp extends ManualChecksum implements DeploymentProvider
             $this->getWriteContext()
         );
     }
+    /**
+     * @{inheritDoc}
+     */
     protected function read($path)
     {
         return file_get_contents($this->getTargetFilePath($path));
     }
+    /**
+     * @{inheritDoc}
+     */
     protected function exists($path)
     {
         return file_exists($this->getTargetFilePath($path));
     }
+    /**
+     * @{inheritDoc}
+     */
     protected function mkdir($path)
     {
         mkdir($this->getTargetFilePath($path), 0755, true);
     }
+    /**
+     * @{inheritDoc}
+     */
     protected function size($path)
     {
         return filesize($this->getTargetFilePath($path));
     }
-
+    /**
+     * @param $path
+     * @return string
+     */
     protected function getTargetFilePath($path)
     {
         return $this->getTargetPath() . '/' . $path;
     }
-
+    /**
+     * @return resource
+     */
     protected function getWriteContext()
     {
         if (null === $this->writeContext) {
@@ -80,7 +102,6 @@ class Ftp extends ManualChecksum implements DeploymentProvider
 
         return $this->writeContext;
     }
-
     /**
      * @throws \RuntimeException
      * @return mixed
