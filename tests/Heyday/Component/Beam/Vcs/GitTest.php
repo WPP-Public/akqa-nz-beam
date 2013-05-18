@@ -171,12 +171,10 @@ OUTPUT
             ->will($this->returnValue($processMock));
 
         $user = get_current_user();
-        $deployDate = date('r');
         $this->assertEquals(
             <<<OUTPUT
 Deployer: $user
 Ref: master
-Deploy date: $deployDate
 commit 4627bea545766a6a50abffa0512aa0c0a7c85158
 Merge: 1d25c4e 0c85469
 Author: Author <email@test.com>

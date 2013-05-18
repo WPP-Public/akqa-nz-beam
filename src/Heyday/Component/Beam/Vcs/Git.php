@@ -115,10 +115,9 @@ class Git implements VcsProvider
         );
 
         return sprintf(
-            "Deployer: %s\nRef: %s\nDeploy date: %s\n%s\n",
+            "Deployer: %s\nRef: %s\n%s\n",
             get_current_user(),
             $ref,
-            date('r'),
             $process->getOutput()
         );
     }
