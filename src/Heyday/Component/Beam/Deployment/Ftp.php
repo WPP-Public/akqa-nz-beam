@@ -23,24 +23,74 @@ class Ftp extends ManualChecksum implements DeploymentProvider
      */
     protected $writeContext;
     /**
+     * @var
+     */
+    protected $connection;
+    /**
+     * @var
+     */
+    protected $server;
+    /**
+     * @var
+     */
+    protected $protocolString;
+    /**
      * @param bool $fullmode
+     * @param bool $delete
      * @param bool $ssl
      */
-    public function __construct($fullmode = false, $ssl = false)
+    public function __construct($fullmode = false, $delete = false, $ssl = false)
     {
         $this->ssl = $ssl;
-        parent::__construct($fullmode);
+        parent::__construct($fullmode, $delete);
+    }
+    /**
+     * @param $key
+     * @throws \InvalidArgumentException
+     * @return mixed
+     */
+    protected function getConfig($key)
+    {
+        if (null === $this->server) {
+            $this->server = $this->beam->getServer();
+            if (!isset($this->server['password'])) {
+                throw new \InvalidArgumentException('FTP Password is required');
+            }
+        }
+        return $this->server[$key];
+    }
+    /**
+     * @return resource
+     * @throws \RuntimeException
+     */
+    protected function getConnection()
+    {
+        if (null === $this->connection) {
+            $this->connection = ftp_connect($this->getConfig('host'));
+            if (!@ftp_login( // Suppress warning
+                $this->connection,
+                $this->getConfig('user'),
+                $this->getConfig('password')
+            )) {
+                throw new \RuntimeException('FTP login failed');
+            }
+        }
+
+        return $this->connection;
     }
     /**
      * @{inheritDoc}
      */
     protected function writeContent($targetpath, $content)
     {
-        file_put_contents(
+        $handle = fopen('php://temp', 'r+');
+        fwrite($handle, $content);
+        rewind($handle);
+        ftp_fput(
+            $this->getConnection(),
             $this->getTargetFilePath($targetpath),
-            $content,
-            0,
-            $this->getWriteContext()
+            $handle,
+            FTP_BINARY
         );
     }
     /**
@@ -48,11 +98,11 @@ class Ftp extends ManualChecksum implements DeploymentProvider
      */
     protected function write($localpath, $targetpath)
     {
-        file_put_contents(
+        ftp_put(
+            $this->getConnection(),
             $this->getTargetFilePath($targetpath),
-            file_get_contents($localpath),
-            0,
-            $this->getWriteContext()
+            $localpath,
+            FTP_BINARY
         );
     }
     /**
@@ -60,28 +110,48 @@ class Ftp extends ManualChecksum implements DeploymentProvider
      */
     protected function read($path)
     {
-        return file_get_contents($this->getTargetFilePath($path));
+        $handle = fopen('php://temp', 'r+');
+        if (
+            @ftp_fget(
+                $this->getConnection(),
+                $handle,
+                $this->getTargetFilePath($path),
+                FTP_BINARY
+            )
+        ) {
+            rewind($handle);
+            return stream_get_contents($handle);
+        }
+        return false;
     }
     /**
      * @{inheritDoc}
      */
     protected function exists($path)
     {
-        return file_exists($this->getTargetFilePath($path));
+        return file_exists($this->getProtocolPath($path));
     }
     /**
      * @{inheritDoc}
      */
     protected function mkdir($path)
     {
-        mkdir($this->getTargetFilePath($path), 0755, true);
+        mkdir($this->getProtocolPath($path), 0755, true);
     }
     /**
      * @{inheritDoc}
      */
     protected function size($path)
     {
-        return filesize($this->getTargetFilePath($path));
+        return filesize($this->getProtocolPath($path));
+    }
+    /**
+     * @param $path
+     * @return mixed
+     */
+    protected function delete($path)
+    {
+        ftp_delete($this->getConnection(), $this->getTargetFilePath($path));
     }
     /**
      * @param $path
@@ -92,41 +162,48 @@ class Ftp extends ManualChecksum implements DeploymentProvider
         return $this->getTargetPath() . '/' . $path;
     }
     /**
-     * @return resource
-     */
-    protected function getWriteContext()
-    {
-        if (null === $this->writeContext) {
-            $this->writeContext = stream_context_create(array('ftp' => array('overwrite' => true)));
-        }
-
-        return $this->writeContext;
-    }
-    /**
      * @throws \RuntimeException
      * @return mixed
      */
     public function getTargetPath()
     {
         if (null === $this->targetPath) {
-            $server = $this->beam->getServer();
-            if (!isset($server['password'])) {
-                throw new \RuntimeException('Ftp requires a password');
-            }
-            if ($server['webroot'][0] !== '/') {
+            $webroot = $this->getConfig('webroot');
+            if ($webroot[0] !== '/') {
                 throw new \RuntimeException('Webroot must be a absolute path when using ftp');
             }
-
-            $this->targetPath = sprintf(
-                'ftp%s://%s:%s@%s%s',
-                $this->ssl ? 's' : '',
-                $server['user'],
-                $server['password'],
-                $server['host'],
-                $server['webroot']
-            );
+            $this->targetPath = $webroot;
         }
 
         return $this->targetPath;
+    }
+    /**
+     * @return string
+     */
+    protected function getProtocol()
+    {
+        if (null === $this->protocolString) {
+            $this->protocolString = sprintf(
+                'ftp%s://%s:%s@%s%s',
+                $this->ssl ? 's' : '',
+                $this->getConfig('user'),
+                $this->getConfig('password'),
+                $this->getConfig('host'),
+                $this->getConfig('webroot')
+            );
+        }
+        return $this->protocolString;
+    }
+    /**
+     * @param $path
+     * @return string
+     */
+    protected function getProtocolPath($path)
+    {
+        return sprintf(
+            '%s/%s',
+            $this->getProtocol(),
+            $path
+        );
     }
 }

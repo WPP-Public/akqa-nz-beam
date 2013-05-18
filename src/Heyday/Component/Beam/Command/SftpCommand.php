@@ -27,6 +27,11 @@ class SftpCommand extends BeamCommand
                 'f',
                 InputOption::VALUE_NONE,
                 'Does a more full check on the target, relying less on the checksums file'
+            )->addOption(
+                'delete',
+                '',
+                InputOption::VALUE_NONE,
+                'Delete mode'
             );
     }
     /**
@@ -36,7 +41,10 @@ class SftpCommand extends BeamCommand
     protected function getOptions(InputInterface $input, OutputInterface $output)
     {
         $options = parent::getOptions($input, $output);
-        $options['deploymentprovider'] = new Sftp($input->getOption('full'));
+        $options['deploymentprovider'] = new Sftp(
+            $input->getOption('full'),
+            $input->getOption('delete')
+        );
 
         return $options;
     }

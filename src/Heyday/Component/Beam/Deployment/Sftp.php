@@ -126,6 +126,16 @@ class Sftp extends ManualChecksum implements DeploymentProvider
     }
     /**
      * @param $path
+     * @return mixed
+     */
+    protected function delete($path)
+    {
+        $this->getSftp()->unlink(
+            $this->getTargetFilePath($path)
+        );
+    }
+    /**
+     * @param $path
      * @return mixed|string
      */
     protected function getTargetFilePath($path)
@@ -145,12 +155,13 @@ class Sftp extends ManualChecksum implements DeploymentProvider
         return $this->targetPath;
     }
     /**
+     * @throws InvalidConfigurationException
      * @return array
      */
     public function getLimitations()
     {
         if (!extension_loaded('ssh2')){
-            throw new InvalidConfigurationException(
+            throw new \InvalidConfigurationException(
                 'The PHP ssh2 extension is required to use SFTP deployment, but it is not loaded. (You may need to install it).'
             );
         }

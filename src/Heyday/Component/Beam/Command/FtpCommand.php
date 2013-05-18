@@ -28,6 +28,11 @@ class FtpCommand extends BeamCommand
                 InputOption::VALUE_NONE,
                 'Does a more full check on the target, relying less on the checksums file'
             )->addOption(
+                'delete',
+                '',
+                InputOption::VALUE_NONE,
+                'Delete mode'
+            )->addOption(
                 'ssl',
                 's',
                 InputOption::VALUE_NONE,
@@ -43,6 +48,7 @@ class FtpCommand extends BeamCommand
         $options = parent::getOptions($input, $output);
         $options['deploymentprovider'] = new Ftp(
             $input->getOption('full'),
+            $input->getOption('delete'),
             $input->getOption('ssl')
         );
 
