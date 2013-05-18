@@ -101,7 +101,7 @@ OUTPUT
         $this->assertFalse($git->exists());
     }
 
-    public function testExportBranch()
+    public function testExportRef()
     {
         vfsStream::setup(
             'root',
@@ -119,7 +119,7 @@ OUTPUT
             ->method('process')
             ->with($this->equalTo('(git archive master) | (cd vfs://root && tar -xf -)'));
 
-        $this->gitMock->exportBranch('master', vfsStream::url('root'));
+        $this->gitMock->exportRef('master', vfsStream::url('root'));
 
         $this->assertFalse(file_exists(vfsStream::url('root/.git/hello')));
         $this->assertFalse(file_exists(vfsStream::url('root/.git')));
@@ -174,7 +174,7 @@ OUTPUT
         $this->assertEquals(
             <<<OUTPUT
 Deployer: $user
-Branch: master
+Ref: master
 commit 4627bea545766a6a50abffa0512aa0c0a7c85158
 Merge: 1d25c4e 0c85469
 Author: Author <email@test.com>

@@ -48,7 +48,7 @@ class Git implements VcsProvider
     /**
      * @{inheritDoc}
      */
-    public function exportBranch($branch, $location)
+    public function exportRef($branch, $location)
     {
         Utils::removeDirectory($location);
 
@@ -71,6 +71,7 @@ class Git implements VcsProvider
         if (!$parts) {
             throw new \InvalidArgumentException('The git vcs provider can only update remotes');
         }
+        // TODO: Replace with git fetch --all ?
         $this->process(sprintf('git remote update --prune %s', $parts[0]));
     }
     /**
@@ -101,22 +102,22 @@ class Git implements VcsProvider
         );
     }
     /**
-     * @param $branch
+     * @param $ref
      * @return mixed
      */
-    public function getLog($branch)
+    public function getLog($ref)
     {
         $process = $this->process(
             sprintf(
                 'git log -1 --format=medium %s',
-                $branch
+                $ref
             )
         );
 
         return sprintf(
-            "Deployer: %s\nBranch: %s\n%s\n",
+            "Deployer: %s\nRef: %s\n%s\n",
             get_current_user(),
-            $branch,
+            $ref,
             $process->getOutput()
         );
     }
@@ -140,5 +141,16 @@ class Git implements VcsProvider
         } else {
             return false;
         }
+    }
+    public function isValidRef($ref)
+    {
+        $process = $this->process(
+            sprintf(
+                'git show %s',
+                $ref
+            )
+        );
+
+        return $process->getExitCode() == 0;
     }
 }

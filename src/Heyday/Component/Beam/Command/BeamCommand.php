@@ -65,11 +65,10 @@ abstract class BeamCommand extends Command
                 InputArgument::REQUIRED,
                 'Config name of target location to be beamed from or to'
             )
-            ->addOption(
-                'branch',
-                'b',
-                InputOption::VALUE_REQUIRED,
-                'The branch to be beamed up'
+            ->addArgument(
+                'ref',
+                InputArgument::OPTIONAL,
+                'The object in your VCS to beam up (ie. HEAD~1, master, f147a16)'
             )
             ->addOption(
                 'path',
@@ -300,12 +299,9 @@ abstract class BeamCommand extends Command
 
         $options = array(
             'direction' => $input->getArgument('direction'),
-            'target'    => $input->getArgument('target')
+            'target'    => $input->getArgument('target'),
+            'ref'    => $input->getArgument('ref')
         );
-
-        if ($input->getOption('branch')) {
-            $options['branch'] = $input->getOption('branch');
-        }
         if ($input->getOption('path')) {
             $options['path'] = $input->getOption('path');
         }
@@ -422,7 +418,7 @@ abstract class BeamCommand extends Command
             $fromMessage = sprintf(
                 'From: %s @ %s',
                 $beam->getCombinedPath($beam->getLocalPath()),
-                $beam->getOption('branch')
+                $beam->getOption('ref')
             );
             $toMessage = sprintf(
                 'To:   %s',
@@ -432,7 +428,7 @@ abstract class BeamCommand extends Command
             $toMessage = sprintf(
                 'To: %s @ %s',
                 $beam->getCombinedPath($beam->getLocalPath()),
-                $beam->getOption('branch')
+                $beam->getOption('ref')
             );
             $fromMessage = sprintf(
                 'From:   %s',
