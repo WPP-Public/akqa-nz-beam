@@ -19,6 +19,12 @@ interface VcsProvider
      */
     public function getAvailableBranches();
     /**
+     * Checks if a ref is valid in the source directory
+     * @param $ref
+     * @return boolean
+     */
+    public function isValidRef($ref);
+    /**
      * A helper method for determining whether the src directory has a version control system
      * @return bool
      */
@@ -26,17 +32,17 @@ interface VcsProvider
     /**
      * Exports the appropriate branch for deployment
      */
-    public function exportBranch($branch, $location);
+    public function exportRef($branch, $location);
     /**
      * Updates the local remote branches
      * @throws \RuntimeException
      */
     public function updateBranch($branch);
     /**
-     * @param $branch
+     * @param $ref
      * @return mixed
      */
-    public function getLog($branch);
+    public function getLog($ref);
     /**
      * @param $branch
      * @return bool

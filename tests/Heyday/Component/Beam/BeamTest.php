@@ -133,31 +133,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
         );
     }
     /**
-     * @expectedExceptionMessage Invalid branch "test" valid options are: 'test1', 'test2'
-     * @expectedException \InvalidArgumentException
-     */
-    public function testBeamConstructInvalidBranch()
-    {
-        new Beam(
-            array(
-                $this->validConfig
-            ),
-            $this->getCombinedOptions(
-                array(
-                    'branch' => 'test',
-                    'vcsprovider' => $this->getVcsProviderStub(
-                        true,
-                        array(
-                            'test1',
-                            'test2'
-                        )
-                    )
-                )
-            )
-        );
-    }
-    /**
-     * @expectedExceptionMessage Specified branch "test" doesn't match the locked branch "master"
+     * @expectedExceptionMessage Specified ref "test" doesn't match the locked branch "master"
      * @expectedException \InvalidArgumentException
      */
     public function testBeamConstructInvalidLockedBranch()
@@ -178,7 +154,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             ),
             $this->getCombinedOptions(
                 array(
-                    'branch' => 'test'
+                    'ref' => 'test'
                 )
             )
         );
@@ -436,7 +412,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             ),
             $this->getCombinedOptions(
                 array(
-                    'branch' => 'remotes/origin/master',
+                    'ref' => 'remotes/origin/master',
                     'vcsprovider' => $vcsProvider
                 )
             )

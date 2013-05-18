@@ -80,11 +80,11 @@ class Beam
             throw new \InvalidArgumentException('You can\'t use beam without a vcs.');
         }
 
-        if (!$this->isWorkingCopy() && !$this->options['branch']) {
+        if (!$this->isWorkingCopy() && !$this->options['ref']) {
             if ($this->isServerLocked()) {
-                $this->options['branch'] = $this->getServerLockedBranch();
+                $this->options['ref'] = $this->getServerLockedBranch();
             } else {
-                $this->options['branch'] = $this->options['vcsprovider']->getCurrentBranch();
+                $this->options['ref'] = $this->options['vcsprovider']->getCurrentBranch();
             }
         }
 
@@ -116,24 +116,24 @@ class Beam
             throw new \InvalidArgumentException("The server '{$this->options['target']}' has empty values for required options: $options");
         }
 
-        if ($this->options['branch']) {
-            if ($this->isServerLocked() && $this->options['branch'] !== $this->getServerLockedBranch()) {
+        if ($this->options['ref']) {
+            // TODO: Allow refs from the same branch (ie master~1) when locked. Git can show what branches a ref is in by using: git branch --contains [ref]
+            if ($this->isServerLocked() && $this->options['ref'] !== $this->getServerLockedBranch()) {
                 throw new \InvalidArgumentException(
                     sprintf(
-                        'Specified branch "%s" doesn\'t match the locked branch "%s"',
-                        $this->options['branch'],
+                        'Specified ref "%s" doesn\'t match the locked branch "%s"',
+                        $this->options['ref'],
                         $this->getServerLockedBranch()
                     )
                 );
             }
 
-            $branches = $this->options['vcsprovider']->getAvailableBranches();
-
-            if (!in_array($this->options['branch'], $branches)) {
+            if (!$this->options['vcsprovider']->isValidRef($this->options['ref'])) {
+                $branches = $this->options['vcsprovider']->getAvailableBranches();
                 throw new \InvalidArgumentException(
                     sprintf(
-                        'Invalid branch "%s" valid options are: %s',
-                        $this->options['branch'],
+                        'Ref "%s" is not valid. Available branches are: %s',
+                        $this->options['ref'],
                         '\'' . implode('\', \'', $branches) . '\''
                     )
                 );
@@ -234,17 +234,18 @@ class Beam
                         'Updating remote branch'
                     )
                 );
-                $this->options['vcsprovider']->updateBranch($this->options['branch']);
+
+                $this->options['vcsprovider']->updateBranch($this->options['ref']);
             }
 
             $this->runOutputHandler(
                 $this->options['outputhandler'],
                 array(
-                    'Exporting branch'
+                    'Exporting ref'
                 )
             );
-            $this->options['vcsprovider']->exportBranch(
-                $this->options['branch'],
+            $this->options['vcsprovider']->exportRef(
+                $this->options['ref'],
                 $this->getLocalPath()
             );
 
@@ -373,7 +374,7 @@ class Beam
      */
     public function isBranchRemote()
     {
-        return $this->options['vcsprovider']->isRemote($this->options['branch']);
+        return $this->options['vcsprovider']->isRemote($this->options['ref']);
     }
     /**
      * A helper method for determining if beam is operating with an extra path
@@ -726,7 +727,7 @@ class Beam
             )
         )->setOptional(
                 array(
-                    'branch',
+                    'ref',
                     'path',
                     'dryrun',
                     'workingcopy',
@@ -764,7 +765,7 @@ class Beam
                 )
             )->setAllowedTypes(
                 array(
-                    'branch'             => 'string',
+                    'ref'             => 'string',
                     'srcdir'             => 'string',
                     'dryrun'             => 'bool',
                     'workingcopy'        => 'bool',
@@ -774,7 +775,7 @@ class Beam
                 )
             )->setNormalizers(
                 array(
-                    'branch'                     => function (Options $options, $value) {
+                    'ref'                     => function (Options $options, $value) {
                         return trim($value);
                     },
                     'path'                       => function (Options $options, $value) {
@@ -866,7 +867,7 @@ class Beam
     {
         file_put_contents(
             $this->getLocalPath() . '/.beamlog',
-            $this->options['vcsprovider']->getLog($this->options['branch'])
+            $this->options['vcsprovider']->getLog($this->options['ref'])
         );
     }
 }
