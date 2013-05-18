@@ -765,7 +765,7 @@ class Beam
                 )
             )->setAllowedTypes(
                 array(
-                    'ref'             => 'string',
+                    'ref'                => 'string',
                     'srcdir'             => 'string',
                     'dryrun'             => 'bool',
                     'workingcopy'        => 'bool',
@@ -775,7 +775,7 @@ class Beam
                 )
             )->setNormalizers(
                 array(
-                    'ref'                     => function (Options $options, $value) {
+                    'ref'                        => function (Options $options, $value) {
                         return trim($value);
                     },
                     'path'                       => function (Options $options, $value) {
