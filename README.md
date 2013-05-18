@@ -33,6 +33,7 @@ then:
 
 Each project you want to use `beam` with requires a `beam.json` file which configures the following things:
 
+
 **Servers**
 
 An object with arbitrarily named object properties
@@ -50,7 +51,10 @@ An array of objects
 * `command`
 * `location`
 * `phase`
-* `required` [optional] 
+* `required` [optional]
+* `tag` [optional]
+* `tty` [optional]
+
 
 **Excludes**
 

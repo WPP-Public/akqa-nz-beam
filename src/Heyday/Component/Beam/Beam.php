@@ -567,7 +567,7 @@ class Beam
                 continue;
             }
             if (!$command['required']) {
-                if ($command['tag'] && (count($this->options['command-tags']) === 0 || !in_array($command['tag'], $this->options['command-tags']))) {
+                if ($command['tag'] && (count($this->options['command-tags']) === 0 || !$this->matchTag($command['tag']))) {
                     continue;
                 }
                 if (is_callable($this->options['commandprompthandler']) && !$this->options['commandprompthandler']($command)) {
@@ -578,6 +578,27 @@ class Beam
         }
 
         return $commands;
+    }
+
+    /**
+     * Checks if a tag matches one passed on the command line.
+     * Wildcard matching is supported supported
+     * @param $tag
+     * @return bool
+     */
+    protected function matchTag($tag)
+    {
+        if (in_array($tag, $this->options['command-tags'])) {
+            return true;
+        }
+
+        foreach ($this->options['command-tags'] as $pattern) {
+            if(preg_match('/[\?\*]/', $pattern) && fnmatch($pattern, $tag)){
+                return true;
+            }
+        }
+
+        return false;
     }
     /**
      * @param   $command
