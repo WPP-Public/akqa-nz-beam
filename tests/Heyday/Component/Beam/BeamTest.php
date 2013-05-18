@@ -53,6 +53,9 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             ->method('getAvailableBranches')
             ->will($this->returnValue($available));
         $vcsProviderStub->expects($this->any())
+            ->method('isValidRef')
+            ->will($this->returnValue(true));
+        $vcsProviderStub->expects($this->any())
             ->method('exists')
             ->will($this->returnValue($exists));
 
