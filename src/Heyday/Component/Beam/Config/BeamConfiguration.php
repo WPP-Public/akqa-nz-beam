@@ -148,7 +148,6 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
                     ->end()
                 ->end()
                 ->arrayNode('exclude')
-                    ->isRequired()
                     ->children()
                         ->arrayNode('applications')
                             ->prototype('scalar')
@@ -188,6 +187,10 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
                             }
                         }
 
+                        if (!isset($v['exclude'])) {
+                            $v['exclude'] = $self->buildExcludes(false);
+                        }
+
                         return $v;
                     }
                 )
@@ -202,6 +205,13 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
     public function buildExcludes($value)
     {
         $excludes = array();
+
+        if (!$value) {
+            $value = array(
+                'applications' => array(),
+                'patterns' => array()
+            );
+        }
 
         if (!in_array('_base', $value['applications'])) {
             $value['applications'][] = '_base';

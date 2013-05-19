@@ -39,8 +39,6 @@ Each project you intend to use `beam` with requires a `beam.json` configuration 
 			"host": "host",
 			"webroot": "/path"
 		}
-	},
-	"exclude": {
 	}
 }
 ```
