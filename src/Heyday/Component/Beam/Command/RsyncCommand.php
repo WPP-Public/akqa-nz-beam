@@ -48,6 +48,16 @@ class RsyncCommand extends BeamCommand
                 '',
                 InputOption::VALUE_NONE,
                 'Transfers as it runs not all at the end'
+            )->addOption(
+                'owner',
+                '',
+                InputOption::VALUE_NONE,
+                'Transfer file and directory owners'
+            )->addOption(
+                'group',
+                '',
+                InputOption::VALUE_NONE,
+                'Transfer file and directory groups'
             );
     }
     /**
@@ -62,7 +72,9 @@ class RsyncCommand extends BeamCommand
                 'checksum'      => !$input->getOption('no-checksum'),
                 'delete'        => $input->getOption('delete'),
                 'compress'      => !$input->getOption('no-compress'),
-                'delay-updates' => !$input->getOption('no-delay-updates')
+                'delay-updates' => !$input->getOption('no-delay-updates'),
+                'owner'         => $input->getOption('owner'),
+                'group'         => $input->getOption('group')
             )
         );
 
