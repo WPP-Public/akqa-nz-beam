@@ -207,13 +207,20 @@ abstract class BeamCommand extends Command
                             );
 
                             // Run the deployment
-                            $deploymentResult = $beam->doRun($deploymentResult);
+                            try {
+                                $deploymentResult = $beam->doRun($deploymentResult);
+                            } catch (\Exception $exception) {
+                                if (!$this->handleDeploymentProviderFailure($exception, $output)) {
+                                    exit(1);
+                                }
+                            }
 
                             $deploymentResultHelper->outputChangesSummary(
                                 $formatterHelper,
                                 $output,
                                 $deploymentResult
                             );
+
                         } else {
                             throw new \RuntimeException('User canceled');
                         }
@@ -250,6 +257,32 @@ abstract class BeamCommand extends Command
             );
         }
 
+    }
+    protected function handleDeploymentProviderFailure(\Exception $exception, OutputInterface $output)
+    {
+        $output->writeln(
+            $this->formatterHelper->formatSection(
+                'Error',
+                $exception->getMessage(),
+                'error'
+            )
+        );
+
+        return in_array(
+            $this->dialogHelper->askConfirmation(
+                $output,
+                $this->formatterHelper->formatSection(
+                    'Prompt',
+                    $this->getQuestion('The deployment provider threw an exception. Do you want to continue?', 'n'),
+                    'error'
+                ),
+                false
+            ),
+            array(
+                'y',
+                'yes'
+            )
+        );
     }
     /**
      * @param \Symfony\Component\Console\Output\OutputInterface  $output
