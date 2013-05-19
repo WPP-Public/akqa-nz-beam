@@ -622,7 +622,7 @@ OUTPUT
         $rsync->setBeam($beamMock);
 
         $this->assertEquals(
-            'rsync /testfrom/ /testto -rlpgoD --itemize-changes --exclude-from="/test" --checksum --compress --delay-updates',
+            'rsync /testfrom/ /testto -rlpD --itemize-changes --exclude-from="/test" --checksum --compress --delay-updates',
             $this->getAccessibleMethod('buildCommand')->invoke(
                 $rsync,
                 '/testfrom',
@@ -631,7 +631,7 @@ OUTPUT
         );
 
         $this->assertEquals(
-            'rsync /testfrom/ /testto -rlpgoD --itemize-changes --exclude-from="/test" --dry-run --checksum --compress --delay-updates',
+            'rsync /testfrom/ /testto -rlpD --itemize-changes --exclude-from="/test" --dry-run --checksum --compress --delay-updates',
             $this->getAccessibleMethod('buildCommand')->invoke(
                 $rsync,
                 '/testfrom',
@@ -656,7 +656,7 @@ OUTPUT
         $rsync->setBeam($beamMock);
 
         $this->assertEquals(
-            'rsync /testfrom/ /testto -rlpgoD --itemize-changes --exclude-from="/test" --checksum --delete --compress --delay-updates',
+            'rsync /testfrom/ /testto -rlpD --itemize-changes --exclude-from="/test" --checksum --delete --compress --delay-updates',
             $this->getAccessibleMethod('buildCommand')->invoke(
                 $rsync,
                 '/testfrom',
