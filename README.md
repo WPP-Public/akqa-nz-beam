@@ -31,7 +31,7 @@ Each project you intend to use `beam` with requires a `beam.json` configuration 
 
 #### Basic `beam.json`
 
-```
+```json
 {
 	"servers": {
 		"live": {
@@ -45,9 +45,15 @@ Each project you intend to use `beam` with requires a `beam.json` configuration 
 }
 ```
 
+#### Config generation
+
+```bash
+$ beam genconfig
+```
+
 ### Examples
 
-```
+```bash
 $ beam up live                  //regular sync from git
 $ beam up live --dryrun         //don't offer to sync the files, just display changes
 $ beam up live --noprompt       //skips the summary of files to be changed and doesn't prompt for confirmation
