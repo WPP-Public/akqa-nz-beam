@@ -120,4 +120,55 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
             $processedConfig
         );
     }
+
+    public function testExcludesEmpty()
+    {
+        $processor = new Processor();
+        $processedConfig = $processor->processConfiguration(
+            $this->config,
+            array(
+                array(
+                    'servers' => array(
+                        'live' => array(
+                            'user' => 'test',
+                            'host' => 'test',
+                            'webroot' => 'test'
+                        )
+                    )
+                )
+            )
+        );
+        $this->assertEquals(
+            array(
+                'servers' => array(
+                    'live' => array(
+                        'user' => 'test',
+                        'host' => 'test',
+                        'webroot' => 'test'
+                    )
+                ),
+                'commands' => array(),
+                'exclude' => array(
+                    '*~',
+                    '.DS_Store',
+                    '.gitignore',
+                    '.mergesources.yml',
+                    'README.md',
+                    'composer.json',
+                    'composer.lock',
+                    'deploy.json',
+                    'beam.json',
+                    'deploy.properties',
+                    'sftp-config.json',
+                    'checksums.json*',
+                    '/access-logs/',
+                    '/cgi-bin/',
+                    '/.idea/',
+                    '.svn/',
+                    '.git/'
+                )
+            ),
+            $processedConfig
+        );
+    }
 }
