@@ -30,14 +30,6 @@ class Beam
      */
     protected $options;
     /**
-     * @var \Heyday\Component\Beam\Vcs\VcsProvider
-     */
-    protected $vcsProvider;
-    /**
-     * @var \Heyday\Component\Beam\Deployment\DeploymentProvider
-     */
-    protected $deploymentProvider;
-    /**
      * @var bool
      */
     protected $prepared = false;
@@ -100,7 +92,7 @@ class Beam
         $requiredKeys = array(
             'user',
             'host',
-            'webroot',
+            'webroot'
         );
 
         $server = $this->getServer();
@@ -580,7 +572,6 @@ class Beam
 
         return $commands;
     }
-
     /**
      * Checks if a tag matches one passed on the command line.
      * Wildcard matching is supported supported
@@ -589,12 +580,8 @@ class Beam
      */
     protected function matchTag($tag)
     {
-        if (in_array($tag, $this->options['command-tags'])) {
-            return true;
-        }
-
         foreach ($this->options['command-tags'] as $pattern) {
-            if(preg_match('/[\?\*]/', $pattern) && fnmatch($pattern, $tag)){
+            if (fnmatch($pattern, $tag)) {
                 return true;
             }
         }

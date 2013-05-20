@@ -142,6 +142,10 @@ class Git implements VcsProvider
             return false;
         }
     }
+    /**
+     * @param $ref
+     * @return bool
+     */
     public function isValidRef($ref)
     {
         $process = $this->process(
