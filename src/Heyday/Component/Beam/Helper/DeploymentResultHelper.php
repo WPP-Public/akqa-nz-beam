@@ -30,23 +30,34 @@ class DeploymentResultHelper extends Helper
         OutputInterface $output,
         DeploymentResult $deploymentResult
     ) {
-        foreach ($deploymentResult as $change) {
-            if ($change['reason'] != array('time')) {
-                $output->writeLn(
-                    $formatter->formatSection(
-                        sprintf(
-                            '%s:%s',
-                            $change['update'],
-                            $change['filetype']
-                        ),
+        $count = count($deploymentResult);
+        if (OutputInterface::VERBOSITY_VERBOSE === $output->getVerbosity() || $count <= 200) {
+            foreach ($deploymentResult as $change) {
+                if ($change['reason'] != array('time')) {
+                    $output->writeLn(
                         $formatter->formatSection(
-                            implode(',', $change['reason']),
-                            $change['filename'],
-                            'comment'
+                            sprintf(
+                                '%s:%s',
+                                $change['update'],
+                                $change['filetype']
+                            ),
+                            $formatter->formatSection(
+                                implode(',', $change['reason']),
+                                $change['filename'],
+                                'comment'
+                            )
                         )
-                    )
-                );
+                    );
+                }
             }
+        } else {
+            $output->writeln(
+                $formatter->formatSection(
+                    'warn',
+                    'There are ' . $count . ' changes (use -v to see them all)',
+                    'comment'
+                )
+            );
         }
     }
     /**
