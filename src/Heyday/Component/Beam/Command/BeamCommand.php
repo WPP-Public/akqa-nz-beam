@@ -44,7 +44,6 @@ abstract class BeamCommand extends Command
             $helperSet = $this->getHelperSet();
             $this->formatterHelper = $helperSet->get('formatter');
             $this->progressHelper = $helperSet->get('contentprogress');
-            $this->progressHelper->setFormat('[%bar%] %current%/%max% files');
             $this->deploymentResultHelper = $helperSet->get('deploymentresult');
             $this->dialogHelper = $helperSet->get('dialog');
         }

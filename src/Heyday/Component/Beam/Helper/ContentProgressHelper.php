@@ -41,6 +41,11 @@ class ContentProgressHelper extends ProgressHelper
     public function __construct()
     {
         $this->cols = exec('tput cols');
+        $this->setBarCharacter(json_decode('"\u2550"'));
+        $this->setEmptyBarCharacter(' ');
+        $this->setProgressCharacter(' ');
+        $bar = json_decode('"\u2503"');
+        $this->setFormat("$bar%bar%$bar %current%/%max% files");
     }
 
     /**
