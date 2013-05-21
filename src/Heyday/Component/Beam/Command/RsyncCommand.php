@@ -115,7 +115,7 @@ class RsyncCommand extends BeamCommand
             }
             if ($type == 'out') {
                 // add the current data to the buffer
-                $buffer .= ltrim($data, PHP_EOL);
+                $buffer .= $data;
                 // get the pos of any last newline
                 $pos = strrpos($buffer, PHP_EOL);
                 // there isn't a last newline then skip and continue filling the buffer
