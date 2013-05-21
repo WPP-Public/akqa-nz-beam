@@ -82,7 +82,6 @@ class ContentProgressHelper extends ProgressHelper
         $output->write(str_repeat("\x20", $this->cols)); //next line and end line
         parent::start($output, $max);
     }
-
     /**
      * @param int    $step
      * @param bool   $redraw
@@ -130,21 +129,25 @@ class ContentProgressHelper extends ProgressHelper
      */
     private function overwrite(OutputInterface $output, $messages)
     {
-        $output->write("\033[A"); //up line
-        $output->write("\x0D"); //start line
-        $output->write("\033[K"); //next line and end line
-        $output->write("\x0D"); //start line
-        $output->write($this->content);
+        $content = array();
+        $content[] = "\033[?25l"; //make cursor invisible as we are moving it
+        $content[] = "\033[A"; //up line
+        $content[] = "\x0D"; //start line
+        $content[] = "\033[K"; //next line and end line
+        $content[] = "\x0D"; //start line
+        $content[] = $this->content;
 
         if (strlen($this->content) !== $this->cols) {
-            $output->write("\033[B"); // next line if content wasn't long enough
+            $content[] = "\033[B"; // next line if content wasn't long enough
         }
 
-        // start of line
-        $output->write("\x0D");
-        $output->write("\033[K"); //next line and end line
-        $output->write("\x0D");
-        $output->write($messages);
+        $content[] = "\x0D"; //start line
+        $content[] = "\033[K"; //next line and end line
+        $content[] = "\x0D"; //start line
+        $content[] = $messages;
+        $content[] = "\033[?12l\033[?25h"; // make cursor normal
+
+        $output->write(implode('', $content));
     }
 
     /**
