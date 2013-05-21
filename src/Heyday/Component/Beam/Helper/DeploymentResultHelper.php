@@ -54,7 +54,7 @@ class DeploymentResultHelper extends Helper
             $output->writeln(
                 $formatter->formatSection(
                     'warn',
-                    'There are ' . $count . ' changes (use -v to see them all)',
+                    '<comment>There are more than 200 changes. Use -v to see a list</comment>',
                     'comment'
                 )
             );
