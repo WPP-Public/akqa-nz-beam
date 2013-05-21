@@ -45,7 +45,7 @@ class ContentProgressHelper extends ProgressHelper
         $this->setEmptyBarCharacter(' ');
         $this->setProgressCharacter(' ');
         $bar = json_decode('"\u2503"');
-        $this->setFormat("$bar%bar%$bar %current%/%max% files");
+        $this->setFormat("\033[34m$bar%bar%$bar\033[0m %current%/%max% files");
     }
 
     /**
@@ -134,25 +134,25 @@ class ContentProgressHelper extends ProgressHelper
      */
     private function overwrite(OutputInterface $output, $messages)
     {
-        $content = array();
-        $content[] = "\033[?25l"; //make cursor invisible as we are moving it
-        $content[] = "\033[A"; //up line
-        $content[] = "\x0D"; //start line
-        $content[] = "\033[K"; //next line and end line
-        $content[] = "\x0D"; //start line
-        $content[] = $this->content;
+        $content = '';
+        $content .= "\033[?25l"; //make cursor invisible as we are moving it
+        $content .= "\033[A"; //up line
+        $content .= "\x0D"; //start line
+        $content .= "\033[K"; //next line and end line
+        $content .= "\x0D"; //start line
+        $content .= $this->content;
 
         if (strlen($this->content) !== $this->cols) {
-            $content[] = "\033[B"; // next line if content wasn't long enough
+            $content .= "\033[B"; // next line if content wasn't long enough
         }
 
-        $content[] = "\x0D"; //start line
-        $content[] = "\033[K"; //next line and end line
-        $content[] = "\x0D"; //start line
-        $content[] = $messages;
-        $content[] = "\033[?12l\033[?25h"; // make cursor normal
+        $content .= "\x0D"; //start line
+        $content .= "\033[K"; //next line and end line
+        $content .= "\x0D"; //start line
+        $content .= $messages;
+        $content .= "\033[?12l\033[?25h"; // make cursor normal
 
-        $output->write(implode('', $content));
+        $output->write($content);
     }
 
     /**
