@@ -527,6 +527,7 @@ abstract class BeamCommand extends Command
      */
     protected function isOkay(OutputInterface $output, $dialogHelper, $formatterHelper)
     {
+        //TODO: Respect no-interaction
         return in_array(
             $dialogHelper->askConfirmation(
                 $output,

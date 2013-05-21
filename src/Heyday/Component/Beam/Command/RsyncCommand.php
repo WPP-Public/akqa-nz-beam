@@ -17,6 +17,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 class RsyncCommand extends BeamCommand
 {
     /**
+     * @var
+     */
+    protected $deploymentProvider;
+    /**
      *
      */
     protected function configure()
@@ -67,7 +71,7 @@ class RsyncCommand extends BeamCommand
     protected function getOptions(InputInterface $input, OutputInterface $output)
     {
         $options = parent::getOptions($input, $output);
-        $options['deploymentprovider'] = new Rsync(
+        $options['deploymentprovider'] = $this->deploymentProvider = new Rsync(
             array(
                 'checksum'      => !$input->getOption('no-checksum'),
                 'delete'        => $input->getOption('delete'),
@@ -90,6 +94,7 @@ class RsyncCommand extends BeamCommand
         DeploymentResult $deploymentResult
     ) {
         $count = count($deploymentResult);
+        $deploymentProvider = $this->deploymentProvider;
 
         return function (
             $type,
@@ -99,23 +104,32 @@ class RsyncCommand extends BeamCommand
             $progressHelper,
             $formatterHelper,
             $count,
-            $deploymentResult
+            $deploymentProvider
         ) {
             static $totalSteps = 0;
+            static $buffer = '';
             if ($totalSteps == 0) {
                 $progressHelper->setAutoWidth($count);
                 // Start the progress bar
                 $progressHelper->start($output, $count, 'File: ');
             }
             if ($type == 'out') {
-                // Advance 1 for each line we get in the data
-                $steps = substr_count($data, PHP_EOL);
-                // We call advance once per step as opposed to all steps at once
-                // so the redrawFrequency can be applied correctly
-                for ($i = 0; $i < $steps; $i++) {
-                    $progressHelper->advance(1, false, $deploymentResult[$totalSteps + $i]['filename']);
+                // add the current data to the buffer
+                $buffer .= ltrim($data, PHP_EOL);
+                // get the pos of any last newline
+                $pos = strrpos($buffer, PHP_EOL);
+                // there isn't a last newline then skip and continue filling the buffer
+                if ($pos !== false) {
+                    // get the changes from the start of the buffer to the last newline
+                    $changes = $deploymentProvider->formatOutput(substr($buffer, 0, $pos));
+                    foreach ($changes as $change) {
+                        // update the progress bar and increment the steps
+                        $progressHelper->advance(1, false, $change['filename']);
+                        $totalSteps++;
+                    }
+                    // clear the processed buffer keeping anything after the last newline
+                    $buffer = ltrim(substr($buffer, $pos), PHP_EOL);
                 }
-                $totalSteps += $steps;
                 // Check if we have finished (rsync stops outputing data
                 // before things have entirely finished)
                 if ($totalSteps >= $count) {

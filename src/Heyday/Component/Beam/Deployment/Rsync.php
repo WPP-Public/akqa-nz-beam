@@ -270,7 +270,7 @@ class Rsync extends Deployment implements DeploymentProvider
      * @param $output
      * @return array
      */
-    protected function formatOutput($output)
+    public function formatOutput($output)
     {
         $changes = array();
         foreach (explode(PHP_EOL, $output) as $line) {
