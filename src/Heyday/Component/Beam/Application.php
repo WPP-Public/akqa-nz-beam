@@ -2,6 +2,7 @@
 
 namespace Heyday\Component\Beam;
 
+use Heyday\Component\Beam\Command\CompletionCommand;
 use Heyday\Component\Beam\Command\CompileCommand;
 use Heyday\Component\Beam\Command\FtpCommand;
 use Heyday\Component\Beam\Command\GenerateConfigCommand;
@@ -66,6 +67,7 @@ class Application extends BaseApplication
         $commands[] = new SelfUpdateCommand();
         $commands[] = new MakeChecksumsCommand();
         $commands[] = new CompileCommand();
+        $commands[] = new CompletionCommand();
 
         return $commands;
     }
