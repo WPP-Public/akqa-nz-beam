@@ -30,7 +30,7 @@
     },
     "autoload": {
         "psr-0": {
-            "Heyday\\Component": "src/"
+            "Heyday\\Component\\": "src/"
         }
     },
     "bin": [
