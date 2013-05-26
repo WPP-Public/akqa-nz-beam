@@ -3,7 +3,7 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "4339b89e61d8f6921fe06967cf583205",
+    "hash": "777e607cda8c0144b59c092dc083c3a2",
     "packages": [
         {
             "name": "herzult/php-ssh",
@@ -56,16 +56,16 @@
         },
         {
             "name": "stecman/symfony-console-completion",
-            "version": "v0.1.0-beta",
+            "version": "v0.1.1-beta",
             "source": {
                 "type": "git",
                 "url": "https://github.com/stecman/symfony-console-completion.git",
-                "reference": "v0.1.0-beta"
+                "reference": "v0.1.1-beta"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/stecman/symfony-console-completion/zipball/v0.1.0-beta",
-                "reference": "v0.1.0-beta",
+                "url": "https://api.github.com/repos/stecman/symfony-console-completion/zipball/v0.1.1-beta",
+                "reference": "v0.1.1-beta",
                 "shasum": ""
             },
             "require": {
@@ -90,8 +90,8 @@
                     "email": "stephen@stecman.co.nz"
                 }
             ],
-            "description": "Automatic BASH completion for the Symfony Console Component.",
-            "time": "2013-05-26 08:57:46"
+            "description": "Automatic BASH completion for Symfony Console Component based applications.",
+            "time": "2013-05-26 22:34:13"
         },
         {
             "name": "symfony/config",
