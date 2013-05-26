@@ -21,7 +21,8 @@
         "symfony/process": "~2.2.0",
         "symfony/options-resolver": "~2.2.0",
         "symfony/config": "~2.2.0",
-        "herzult/php-ssh": "~0.1.0"
+        "herzult/php-ssh": "~0.1.0",
+		"stecman/symfony-console-completion": "0.1.0-beta"
     },
     "require-dev": {
         "phpunit/phpunit": "~3.7",
@@ -30,7 +31,8 @@
     },
     "autoload": {
         "psr-0": {
-            "Heyday\\Component": "src/"
+            "Heyday\\Component": "src/",
+            "Stecman": "src/"
         }
     },
     "bin": [
