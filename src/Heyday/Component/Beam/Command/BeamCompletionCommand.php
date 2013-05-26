@@ -25,20 +25,26 @@ class BeamCompletionCommand extends CompletionCommand {
             $config = null;
         }
 
+        // Get the real second word
+        $realCommandName = $this->getInputCommandName();
+
         // Add argument handlers
         $handler->addHandlers(array(
 
             Completion::makeGlobalHandler(
                 'direction', Completion::TYPE_ARGUMENT,
-                function() use ($app) {
+                function() use ($app, $realCommandName) {
                     $values = array('up', 'down');
 
                     // Fix for single command mode
                     foreach ($app->all() as $cmd) {
                         $name = $cmd->getName();
-                        if($name != 'rsync'){
-                            $values[] = $cmd->getName();
+
+                        if ($realCommandName == $name) {
+                            return array('up down');
                         }
+
+                        $values[] = $name;
                     }
 
                     return $values;
@@ -144,16 +150,15 @@ class BeamCompletionCommand extends CompletionCommand {
         // Inject rsync as the command if another command is not specified
         $cmdNames = '';
         foreach ($this->getApplication()->all() as $cmd) {
-            $name = $cmd->getName();
-            if ($name != 'rsync') {
-                $cmdNames .= $name.'|';
-            }
+            $cmdNames .= $cmd->getName().'|';
         }
         $cmdNames = trim($cmdNames,'|');
 
-        if ($commandLine = preg_replace("/^([a-zA-Z\-_0-9]+) ?(?!$cmdNames)/", '${1} rsync ', $commandLine)) {
-            $charIndex += 6;
-            $wordIndex ++;
+        if ($commandLine = preg_replace("/^([a-zA-Z\-_0-9]+) (?!$cmdNames)/", '${1} rsync ', $commandLine, 1, $count)) {
+            if ($count == 1) {
+                $charIndex += 6;
+                $wordIndex ++;
+            }
         }
 
         $words = array_filter(
@@ -169,7 +174,14 @@ class BeamCompletionCommand extends CompletionCommand {
             'charIndex' => $charIndex,
             'words' => $words
         );
+    }
 
+    protected function getInputCommandName()
+    {
+        $commandLine = getenv('COMP_LINE');
+        if (preg_match('/[a-zA-Z\-_0-9]+ ([a-zA-Z\-_0-9]+)/', $commandLine, $matches)) {
+            return $matches[1];
+        }
     }
 
 }
