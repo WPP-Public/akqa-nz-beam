@@ -61,7 +61,8 @@ class Compiler
             ->name('*.php')
             ->exclude('Tests')
             ->in("$vendorDir/herzult/php-ssh/src/")
-            ->in("$vendorDir/symfony/");
+            ->in("$vendorDir/symfony/")
+            ->in("$vendorDir/stecman/symfony-console-completion/src/");
 
         foreach ($finder as $file) {
             $this->addFile($phar, $file);
