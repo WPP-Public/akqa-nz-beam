@@ -41,7 +41,7 @@ class BeamCompletionCommand extends CompletionCommand {
                         $name = $cmd->getName();
 
                         if ($realCommandName == $name) {
-                            return array('up down');
+                            return array('up', 'down');
                         }
 
                         $values[] = $name;
