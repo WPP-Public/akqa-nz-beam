@@ -44,6 +44,10 @@ class BeamCompletionCommand extends CompletionCommand {
                             return array('up', 'down');
                         }
 
+                        if ($name == '_completion') {
+                            continue;
+                        }
+
                         $values[] = $name;
                     }
 
