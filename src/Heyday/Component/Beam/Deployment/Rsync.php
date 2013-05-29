@@ -28,9 +28,7 @@ class Rsync extends Deployment implements DeploymentProvider
                 'delete',
                 'archive',
                 'compress',
-                'delay-updates',
-                'owner',
-                'group',
+                'delay-updates'
             )
         );
         $resolver->setAllowedTypes(
@@ -39,9 +37,7 @@ class Rsync extends Deployment implements DeploymentProvider
                 'delete'        => 'bool',
                 'archive'       => 'bool',
                 'compress'      => 'bool',
-                'delay-updates' => 'bool',
-                'owner'         => 'bool',
-                'group'         => 'bool'
+                'delay-updates' => 'bool'
             )
         );
         $resolver->setDefaults(
@@ -50,9 +46,7 @@ class Rsync extends Deployment implements DeploymentProvider
                 'delete'        => false,
                 'archive'       => true,
                 'compress'      => true,
-                'delay-updates' => true,
-                'owner'         => false,
-                'group'         => false
+                'delay-updates' => true
             )
         );
         $this->options = $resolver->resolve($options);
@@ -114,12 +108,6 @@ class Rsync extends Deployment implements DeploymentProvider
     {
 
         $flags = 'rlpD'; // recursion, links, perms, devices, specials
-        if ($this->options['owner']){
-            $flags .= 'o'; // owner
-        }
-        if ($this->options['group']){
-            $flags .= 'g'; // group
-        }
 
         $command = array(
             array(
