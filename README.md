@@ -56,7 +56,7 @@ $ beam up live                  # regular sync from git
 $ beam up live --dryrun         # don't offer to sync the files, just display changes
 $ beam up live --noprompt       # skips the summary of files to be changed and doesn't prompt for confirmation
 $ beam up live -v               # verbose (see the output of commands)
-$ beam up live --delete         # delete files on target not present on local
+$ beam up live --nodelete       # don't delete files on target that are not present on local
 $ beam up live -p somepath      # only sync the specified path
 $ beam up live --command-prompt # prompt on non-required commands
 $ beam up live -t sometag       # include commands tagged with "sometag"

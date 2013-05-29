@@ -36,10 +36,10 @@ class RsyncCommand extends BeamCommand
                 'Performs a faster file change check'
             )
             ->addOption(
-                'delete',
+                'nodelete',
                 '',
                 InputOption::VALUE_NONE,
-                'Use with caution, deletes items that don\'t exist at the target'
+                'Don\'t delete extraneous files on the target'
             )
             ->addOption(
                 'no-compress',
@@ -74,7 +74,7 @@ class RsyncCommand extends BeamCommand
         $options['deploymentprovider'] = $this->deploymentProvider = new Rsync(
             array(
                 'checksum'      => !$input->getOption('no-checksum'),
-                'delete'        => $input->getOption('delete'),
+                'delete'        => !$input->getOption('nodelete'),
                 'compress'      => !$input->getOption('no-compress'),
                 'delay-updates' => !$input->getOption('no-delay-updates'),
                 'owner'         => $input->getOption('owner'),
