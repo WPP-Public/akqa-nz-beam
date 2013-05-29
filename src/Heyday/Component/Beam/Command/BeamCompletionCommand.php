@@ -65,23 +65,21 @@ class BeamCompletionCommand extends CompletionCommand {
                         return array_keys($config['servers']);
                     }
                 }
-            ),
-
-            Completion::makeGlobalHandler(
-                'ref', Completion::TYPE_ARGUMENT,
-                function(){
-                    $raw = shell_exec('git show-ref --abbr');
-                    if (preg_match_all('/refs\/(?:heads|tags)?\/?(.*)/', $raw, $matches)) {
-                        return $matches[1];
-                    }
-                }
             )
 
         ));
 
         // Add option handlers
         $handler->addHandlers(array(
-
+            Completion::makeGlobalHandler(
+                'ref', Completion::TYPE_OPTION,
+                function(){
+                    $raw = shell_exec('git show-ref --abbr');
+                    if (preg_match_all('/refs\/(?:heads|tags)?\/?(.*)/', $raw, $matches)) {
+                        return $matches[1];
+                    }
+                }
+            ),
             Completion::makeGlobalHandler(
                 'tags', Completion::TYPE_OPTION,
                 function() use ($config) {

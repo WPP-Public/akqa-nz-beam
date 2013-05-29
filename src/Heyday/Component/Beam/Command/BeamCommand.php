@@ -64,9 +64,10 @@ abstract class BeamCommand extends Command
                 InputArgument::REQUIRED,
                 'Config name of target location to be beamed from or to'
             )
-            ->addArgument(
+            ->addOption(
                 'ref',
-                InputArgument::OPTIONAL,
+                'r',
+                InputOption::VALUE_REQUIRED,
                 'The object in your VCS to beam up (ie. HEAD~1, master, f147a16)'
             )
             ->addOption(
@@ -349,9 +350,11 @@ abstract class BeamCommand extends Command
 
         $options = array(
             'direction' => $input->getArgument('direction'),
-            'target'    => $input->getArgument('target'),
-            'ref'    => $input->getArgument('ref')
+            'target'    => $input->getArgument('target')
         );
+        if ($input->getOption('ref')) {
+            $options['ref'] = $input->getOption('ref');
+        }
         if ($input->getOption('path')) {
             $options['path'] = $input->getOption('path');
         }
