@@ -193,36 +193,54 @@ abstract class BeamCommand extends Command
                     $deploymentResultHelper->outputChangesSummary($formatterHelper, $output, $deploymentResult);
                     if (!$input->getOption('dryrun')) {
                         // If we have confirmation do the beam
-                        if ($this->isOkay($output, $dialogHelper, $formatterHelper)) {
-                            // Set the output handler for displaying the progress bar etc
-                            $beam->setOption(
-                                'deploymentoutputhandler',
-                                $this->getDeploymentOutputHandler(
-                                    $output,
-                                    $progressHelper,
-                                    $formatterHelper,
-                                    $deploymentResult
-                                )
-                            );
-
-                            // Run the deployment
-                            try {
-                                $deploymentResult = $beam->doRun($deploymentResult);
-                            } catch (\Exception $exception) {
-                                if (!$this->handleDeploymentProviderFailure($exception, $output)) {
-                                    exit(1);
-                                }
-                            }
-
-                            $deploymentResultHelper->outputChangesSummary(
-                                $formatterHelper,
-                                $output,
-                                $deploymentResult
-                            );
-
-                        } else {
+                        if (!$this->isOkay($output, $dialogHelper, $formatterHelper)) {
                             throw new \RuntimeException('User canceled');
                         }
+
+                        $deleteCount = $deploymentResult->getUpdateCount('deleted');
+
+                        if (
+                            $deleteCount > 0
+                            && !$this->isOkay(
+                                $output,
+                                $dialogHelper,
+                                $formatterHelper,
+                                sprintf(
+                                    '%d file%s going to be deleted in this deployment, are you sure this is okay?',
+                                    $deleteCount,
+                                    $deleteCount === 1 ? ' is' : 's are'
+                                ),
+                                'no'
+                            )
+                        ) {
+                            throw new \RuntimeException('User canceled');
+                        }
+
+                        // Set the output handler for displaying the progress bar etc
+                        $beam->setOption(
+                            'deploymentoutputhandler',
+                            $this->getDeploymentOutputHandler(
+                                $output,
+                                $progressHelper,
+                                $formatterHelper,
+                                $deploymentResult
+                            )
+                        );
+
+                        // Run the deployment
+                        try {
+                            $deploymentResult = $beam->doRun($deploymentResult);
+                        } catch (\Exception $exception) {
+                            if (!$this->handleDeploymentProviderFailure($exception, $output)) {
+                                exit(1);
+                            }
+                        }
+
+                        $deploymentResultHelper->outputChangesSummary(
+                            $formatterHelper,
+                            $output,
+                            $deploymentResult
+                        );
                     }
                 } else {
                     throw new \RuntimeException('No changed files');
@@ -390,19 +408,12 @@ abstract class BeamCommand extends Command
                 throw new \RuntimeException('A command marked as required exited with a non-zero status');
             }
 
-            return in_array(
-                $dialogHelper->askConfirmation(
-                    $output,
-                    $formatterHelper->formatSection(
-                        'Prompt',
-                        $that->getQuestion('A command exited with a non-zero status. Do you want to continue', 'y'),
-                        'error'
-                    ),
-                    'y'
-                ),
-                array(
-                    'y',
-                    'yes'
+            return $dialogHelper->askConfirmation(
+                $output,
+                $formatterHelper->formatSection(
+                    'Prompt',
+                    $that->getQuestion('A command exited with a non-zero status. Do you want to continue', 'yes'),
+                    'error'
                 )
             );
         };
@@ -516,25 +527,29 @@ abstract class BeamCommand extends Command
      * @param  OutputInterface $output
      * @param                  $dialogHelper
      * @param                  $formatterHelper
+     * @param string           $question
+     * @param string           $default
      * @return mixed
      */
-    protected function isOkay(OutputInterface $output, $dialogHelper, $formatterHelper)
-    {
+    protected function isOkay(
+        OutputInterface $output,
+        $dialogHelper,
+        $formatterHelper,
+        $question = 'Is this okay?',
+        $default = 'yes'
+    ) {
         //TODO: Respect no-interaction
-        return in_array(
-            $dialogHelper->askConfirmation(
-                $output,
-                $formatterHelper->formatSection(
-                    'prompt',
-                    $this->getQuestion('Is this okay?', 'y'),
-                    'comment'
+        return $dialogHelper->askConfirmation(
+            $output,
+            $formatterHelper->formatSection(
+                'prompt',
+                $this->getQuestion(
+                    $question,
+                    $default
                 ),
-                'y'
+                'comment'
             ),
-            array(
-                'y',
-                'yes'
-            )
+            $default[0] === 'y' ? true : false
         );
     }
 }

@@ -94,4 +94,11 @@ class DeploymentResultConfiguration extends Configuration implements Configurati
 
         return $treeBuilder;
     }
+    /**
+     * @return array
+     */
+    public function getUpdates()
+    {
+        return $this->updates;
+    }
 }
