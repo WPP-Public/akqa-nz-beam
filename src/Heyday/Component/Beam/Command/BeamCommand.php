@@ -448,39 +448,33 @@ abstract class BeamCommand extends Command
     {
         if ($beam->isUp()) {
             $fromMessage = sprintf(
-                'From: %s @ %s',
+                'SOURCE: %s %s',
                 $beam->getCombinedPath($beam->getLocalPath()),
-                $beam->getOption('ref')
+                $beam->getOption('workingcopy') ? '' : '@ <info>' . $beam->getOption('ref') . '</info>'
             );
             $toMessage = sprintf(
-                'To:   %s',
+                'TARGET: %s',
                 $beam->getTargetPath()
             );
         } else {
             $toMessage = sprintf(
-                'To: %s @ %s',
-                $beam->getCombinedPath($beam->getLocalPath()),
-                $beam->getOption('ref')
+                'TARGET: %s',
+                $beam->getCombinedPath($beam->getLocalPath())
             );
             $fromMessage = sprintf(
-                'From:   %s',
+                'SOURCE: %s',
                 $beam->getTargetPath()
             );
         }
 
         if ($beam->getOption('dryrun')) {
-            $action = 'You\'re about to do a <comment>dry run</comment> for a sync between';
+            $action = 'You\'re about do a <comment>dry run</comment> between';
         } else {
-            $action = 'You\'re about to sync files between';
+            $action = 'You\'re about sync files between:';
         }
 
         $output->writeln(
             array(
-                $formatterHelper->formatSection(
-                    'warn',
-                    'Starting...',
-                    'comment'
-                ),
                 $formatterHelper->formatSection(
                     'warn',
                     $action,

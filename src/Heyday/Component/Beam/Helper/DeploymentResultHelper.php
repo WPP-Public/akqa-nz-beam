@@ -36,16 +36,13 @@ class DeploymentResultHelper extends Helper
                 if ($change['reason'] != array('time')) {
                     $output->writeLn(
                         $formatter->formatSection(
-                            sprintf(
-                                '%s:%s',
-                                $change['update'],
-                                $change['filetype']
-                            ),
+                            $change['update'],
                             $formatter->formatSection(
                                 implode(',', $change['reason']),
                                 $change['filename'],
                                 'comment'
-                            )
+                            ),
+                            $change['update'] === 'deleted' ? 'comment' : 'info'
                         )
                     );
                 }
