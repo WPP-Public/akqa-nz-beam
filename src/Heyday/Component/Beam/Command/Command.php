@@ -44,7 +44,7 @@ abstract class Command extends BaseCommand
     protected function getConfig(InputInterface $input, $path)
     {
         return $this->getJsonConfigLoader($path)->load(
-            $input->getOption('configfile')
+            $input->getOption('config-file')
         );
     }
     /**
@@ -53,7 +53,7 @@ abstract class Command extends BaseCommand
     protected function addConfigOption()
     {
         $this->addOption(
-            'configfile',
+            'config-file',
             '',
             InputOption::VALUE_REQUIRED,
             'The config file name',

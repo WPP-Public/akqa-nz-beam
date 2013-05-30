@@ -60,7 +60,7 @@ Servers are individual, named deployment targets. When using `beam up` or `beam 
 
 **Optional properties:**
 
- * `branch` *(string)* - Branch to lock this server to. When specified, a `beam up` to this server will always send this branch, regardless of the currently checked out branch and the `--branch` and `--workingcopy` flags. This is useful for ensuring that only one branch can be deployed to, for example, your production server. Any git branch is valid here, including remote branches like `remotes/origin/master`.
+ * `branch` *(string)* - Branch to lock this server to. When specified, a `beam up` to this server will always send this branch, regardless of the currently checked out branch and the `--ref` and `--working-copy` flags. This is useful for ensuring that only one branch can be deployed to, for example, your production server. Any git branch is valid here, including remote branches like `remotes/origin/master`.
 
  * `password` *(string)* - Password to use for (S)FTP deployments. This is not used by the default (`rsync`) deployment method.
 

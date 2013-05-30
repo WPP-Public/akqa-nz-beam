@@ -128,7 +128,7 @@ class BeamCompletionCommand extends CompletionCommand {
         array_shift($words);
         $input = new ArrayInput($words);
         return $jsonConfigLoader->load(
-            $input->hasOption('configfile') ? $input->getOption('configfile') : 'beam.json'
+            $input->hasOption('config-file') ? $input->getOption('config-file') : 'beam.json'
         );
     }
 

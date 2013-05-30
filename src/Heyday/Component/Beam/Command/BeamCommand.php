@@ -77,19 +77,19 @@ abstract class BeamCommand extends Command
                 'The path to be beamed up or down'
             )
             ->addOption(
-                'dryrun',
+                'dry-run',
                 'd',
                 InputOption::VALUE_NONE,
                 'If set, no files will be transferred'
             )
             ->addOption(
-                'noprompt',
+                'no-prompt',
                 '',
                 InputOption::VALUE_NONE,
                 'Skips the dry-run and prompt'
             )
             ->addOption(
-                'workingcopy',
+                'working-copy',
                 '',
                 InputOption::VALUE_NONE,
                 'When uploading, syncs files from the working copy rather than exported git copy'
@@ -181,7 +181,7 @@ abstract class BeamCommand extends Command
             );
 
             // Prompt the user with the affected files and a confirmation dialog
-            if (!$input->getOption('noprompt')) {
+            if (!$input->getOption('no-prompt')) {
                 // Get the affected files
                 $deploymentResult = $beam->doDryrun();
                 // If there are any show them
@@ -192,7 +192,7 @@ abstract class BeamCommand extends Command
                     $deploymentResultHelper->outputChanges($formatterHelper, $output, $deploymentResult);
                     // Output a summary of the changes
                     $deploymentResultHelper->outputChangesSummary($formatterHelper, $output, $deploymentResult);
-                    if (!$input->getOption('dryrun')) {
+                    if (!$input->getOption('dry-run')) {
                         // If we have confirmation do the beam
                         if ($this->isOkay($output, $dialogHelper, $formatterHelper)) {
                             // Set the output handler for displaying the progress bar etc
@@ -230,7 +230,7 @@ abstract class BeamCommand extends Command
                 }
             } else {
 
-                if ($input->getOption('dryrun')) {
+                if ($input->getOption('dry-run')) {
                     $changedFiles = $beam->doDryrun();
                 } else {
                     $changedFiles = $beam->doRun();
@@ -340,11 +340,11 @@ abstract class BeamCommand extends Command
         if ($input->getOption('path')) {
             $options['path'] = $input->getOption('path');
         }
-        if ($input->getOption('dryrun')) {
-            $options['dryrun'] = true;
+        if ($input->getOption('dry-run')) {
+            $options['dry-run'] = true;
         }
-        if ($input->getOption('workingcopy')) {
-            $options['workingcopy'] = true;
+        if ($input->getOption('working-copy')) {
+            $options['working-copy'] = true;
         }
         if ($input->getOption('command-prompt')) {
             $options['commandprompthandler'] = function ($command) use (
@@ -416,7 +416,7 @@ abstract class BeamCommand extends Command
 
         $options['srcdir'] = dirname(
             $this->getJsonConfigLoader(getcwd())->locate(
-                $input->getOption('configfile')
+                $input->getOption('config-file')
             )
         );
 
@@ -453,7 +453,7 @@ abstract class BeamCommand extends Command
             $fromMessage = sprintf(
                 'SOURCE: %s %s',
                 $beam->getCombinedPath($beam->getLocalPath()),
-                $beam->getOption('workingcopy') ? '' : '@ <info>' . $beam->getOption('ref') . '</info>'
+                $beam->getOption('working-copy') ? '' : '@ <info>' . $beam->getOption('ref') . '</info>'
             );
             $toMessage = sprintf(
                 'TARGET: %s',
@@ -470,7 +470,7 @@ abstract class BeamCommand extends Command
             );
         }
 
-        if ($beam->getOption('dryrun')) {
+        if ($beam->getOption('dry-run')) {
             $action = 'You\'re about do a <comment>dry run</comment> between';
         } else {
             $action = 'You\'re about sync files between:';

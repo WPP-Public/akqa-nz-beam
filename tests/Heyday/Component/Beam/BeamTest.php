@@ -195,7 +195,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             ),
             $this->getCombinedOptions(
                 array(
-                    'workingcopy' => true,
+                    'working-copy' => true,
                     'vcsprovider' => $vcsProvider
                 )
             )
@@ -278,7 +278,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             ),
             $this->getCombinedOptions(
                 array(
-                    'workingcopy' => true
+                    'working-copy' => true
                 )
             )
         );
@@ -289,7 +289,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             ),
             $this->getCombinedOptions(
                 array(
-                    'workingcopy' => true,
+                    'working-copy' => true,
                     'path' => 'test/'
                 )
             )
@@ -331,7 +331,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             ),
             $this->getCombinedOptions(
                 array(
-                    'workingcopy' => true
+                    'working-copy' => true
                 )
             )
         );
