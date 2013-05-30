@@ -42,7 +42,7 @@ class DeploymentResultHelper extends Helper
                                 $change['filename'],
                                 'comment'
                             ),
-                            $change['update'] === 'deleted' ? 'comment' : 'info'
+                            $change['update'] === 'deleted' ? 'error' : 'info'
                         )
                     );
                 }
