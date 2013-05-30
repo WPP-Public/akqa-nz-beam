@@ -24,37 +24,28 @@ class DeploymentResultHelper extends Helper
      * @param FormatterHelper  $formatter
      * @param OutputInterface  $output
      * @param DeploymentResult $deploymentResult
+     * @param bool             $type
      */
     public function outputChanges(
         FormatterHelper $formatter,
         OutputInterface $output,
-        DeploymentResult $deploymentResult
+        DeploymentResult $deploymentResult,
+        $type = false
     ) {
-        $count = count($deploymentResult);
-        if (OutputInterface::VERBOSITY_VERBOSE === $output->getVerbosity() || $count <= 200) {
-            foreach ($deploymentResult as $change) {
-                if ($change['reason'] != array('time')) {
-                    $output->writeLn(
+        foreach ($deploymentResult as $change) {
+            if ($change['reason'] != array('time') && (!$type || $change['update'] === $type)) {
+                $output->writeLn(
+                    $formatter->formatSection(
+                        $change['update'],
                         $formatter->formatSection(
-                            $change['update'],
-                            $formatter->formatSection(
-                                implode(',', $change['reason']),
-                                $change['filename'],
-                                'comment'
-                            ),
-                            $change['update'] === 'deleted' ? 'error' : 'info'
-                        )
-                    );
-                }
+                            implode(',', $change['reason']),
+                            $change['filename'],
+                            'comment'
+                        ),
+                        $change['update'] === 'deleted' ? 'error' : 'info'
+                    )
+                );
             }
-        } else {
-            $output->writeln(
-                $formatter->formatSection(
-                    'warn',
-                    '<comment>There are more than 200 changes. Use -v to see a list</comment>',
-                    'comment'
-                )
-            );
         }
     }
     /**
