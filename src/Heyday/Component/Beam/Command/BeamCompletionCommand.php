@@ -7,17 +7,16 @@ use Stecman\Component\Symfony\Console\BashCompletion\Completion;
 use Stecman\Component\Symfony\Console\BashCompletion\CompletionCommand;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Input\InputOption;
 
-class BeamCompletionCommand extends CompletionCommand {
-
+class BeamCompletionCommand extends CompletionCommand
+{
     protected function runCompletion()
     {
         $handler = $this->handler;
         $app = $this->getApplication();
 
         // Manipulate input values so beam's single command mode works
-        $handler->configureWithArray( $this->getHandlerConfiguration() );
+        $handler->configureWithArray($this->getHandlerConfiguration());
 
         try {
             $config = $this->getConfig();
@@ -29,79 +28,85 @@ class BeamCompletionCommand extends CompletionCommand {
         $realCommandName = $this->getInputCommandName();
 
         // Add argument handlers
-        $handler->addHandlers(array(
+        $handler->addHandlers(
+            array(
+                Completion::makeGlobalHandler(
+                    'direction',
+                    Completion::TYPE_ARGUMENT,
+                    function () use ($app, $realCommandName) {
+                        $values = array('up', 'down');
 
-            Completion::makeGlobalHandler(
-                'direction', Completion::TYPE_ARGUMENT,
-                function() use ($app, $realCommandName) {
-                    $values = array('up', 'down');
+                        // Fix for single command mode
+                        foreach ($app->all() as $cmd) {
+                            $name = $cmd->getName();
 
-                    // Fix for single command mode
-                    foreach ($app->all() as $cmd) {
-                        $name = $cmd->getName();
+                            if ($realCommandName == $name) {
+                                return array('up', 'down');
+                            }
 
-                        if ($realCommandName == $name) {
-                            return array('up', 'down');
+                            if ($name == '_completion') {
+                                continue;
+                            }
+
+                            $values[] = $name;
                         }
 
-                        if ($name == '_completion') {
-                            continue;
+                        return $values;
+                    }
+                ),
+                Completion::makeGlobalHandler(
+                    'target',
+                    Completion::TYPE_ARGUMENT,
+                    function () use ($config) {
+                        if (!$config) {
+                            return;
                         }
-
-                        $values[] = $name;
+                        if (is_array($config['servers'])) {
+                            return array_keys($config['servers']);
+                        }
                     }
+                )
 
-                    return $values;
-                }
-            ),
-
-            Completion::makeGlobalHandler(
-                'target', Completion::TYPE_ARGUMENT,
-                function() use ($config) {
-                    if (!$config) {
-                        return;
-                    }
-                    if (is_array($config['servers'])) {
-                        return array_keys($config['servers']);
-                    }
-                }
             )
-
-        ));
+        );
 
         // Add option handlers
-        $handler->addHandlers(array(
-            Completion::makeGlobalHandler(
-                'ref', Completion::TYPE_OPTION,
-                function(){
-                    $raw = shell_exec('git show-ref --abbr');
-                    if (preg_match_all('/refs\/(?:heads|tags)?\/?(.*)/', $raw, $matches)) {
-                        return $matches[1];
+        $handler->addHandlers(
+            array(
+                Completion::makeGlobalHandler(
+                    'ref',
+                    Completion::TYPE_OPTION,
+                    function () {
+                        $raw = shell_exec('git show-ref --abbr');
+                        if (preg_match_all('/refs\/(?:heads|tags)?\/?(.*)/', $raw, $matches)) {
+                            return $matches[1];
+                        }
                     }
-                }
-            ),
-            Completion::makeGlobalHandler(
-                'tags', Completion::TYPE_OPTION,
-                function() use ($config) {
-                    if (!$config) {
-                        return;
-                    }
-
-                    if (isset($config['commands']) && is_array($config['commands'])) {
-
-                        $tags = array();
-                        foreach ($config['commands'] as $command) {
-                            if (isset($command['tag'])) {
-                                $tags[] = $command['tag'];
-                            }
+                ),
+                Completion::makeGlobalHandler(
+                    'tags',
+                    Completion::TYPE_OPTION,
+                    function () use ($config) {
+                        if (!$config) {
+                            return;
                         }
 
-                        return $tags;
-                    }
-                }
-            )
+                        if (isset($config['commands']) && is_array($config['commands'])) {
 
-        ));
+                            $tags = array();
+                            foreach ($config['commands'] as $command) {
+                                if (isset($command['tag'])) {
+                                    $tags[] = $command['tag'];
+                                }
+                            }
+
+                            return $tags;
+                        }
+                    }
+                )
+
+            )
+        );
 
         return $handler->runCompletion();
     }
@@ -127,6 +132,7 @@ class BeamCompletionCommand extends CompletionCommand {
         $words = $this->handler->getWords();
         array_shift($words);
         $input = new ArrayInput($words);
+
         return $jsonConfigLoader->load(
             $input->hasOption('config-file') ? $input->getOption('config-file') : 'beam.json'
         );
@@ -148,33 +154,32 @@ class BeamCompletionCommand extends CompletionCommand {
             throw new \RuntimeException('Failed to configure from environment; Environment var COMP_LINE not set');
         }
 
-
         // Inject rsync as the command if another command is not specified
         $cmdNames = '';
         foreach ($this->getApplication()->all() as $cmd) {
-            $cmdNames .= $cmd->getName().'|';
+            $cmdNames .= $cmd->getName() . '|';
         }
-        $cmdNames = trim($cmdNames,'|');
+        $cmdNames = trim($cmdNames, '|');
 
         if ($commandLine = preg_replace("/^([a-zA-Z\-_0-9]+) (?!$cmdNames)/", '${1} rsync ', $commandLine, 1, $count)) {
             if ($count == 1) {
                 $charIndex += 6;
-                $wordIndex ++;
+                $wordIndex++;
             }
         }
 
         $words = array_filter(
-            preg_split( "/[$breaks]+/", $commandLine),
-            function($val){
+            preg_split("/[$breaks]+/", $commandLine),
+            function ($val) {
                 return $val != ' ';
             }
         );
 
         return array(
             'commandLine' => $commandLine,
-            'wordIndex' => $wordIndex,
-            'charIndex' => $charIndex,
-            'words' => $words
+            'wordIndex'   => $wordIndex,
+            'charIndex'   => $charIndex,
+            'words'       => $words
         );
     }
 
@@ -185,5 +190,4 @@ class BeamCompletionCommand extends CompletionCommand {
             return $matches[1];
         }
     }
-
 }

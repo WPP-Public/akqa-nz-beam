@@ -106,7 +106,7 @@ class Utils
                 );
             }
 
-            foreach ((array) $pattern as $subpattern) {
+            foreach ((array)$pattern as $subpattern) {
                 if (fnmatch($subpattern, $path)) {
                     return true;
                 }
@@ -156,7 +156,7 @@ class Utils
         return json_decode(bzdecompress($data), true);
     }
     /**
-     * @param  array  $checksums
+     * @param  array $checksums
      * @return string
      */
     public static function checksumsToGz(array $checksums)

@@ -150,9 +150,9 @@ abstract class ManualChecksum extends Deployment
     }
 
     /**
-     * @param  callable          $output
-     * @param  bool              $dryrun
-     * @param  DeploymentResult  $deploymentResult
+     * @param  callable         $output
+     * @param  bool             $dryrun
+     * @param  DeploymentResult $deploymentResult
      * @throws \RuntimeException
      * @return mixed
      */

@@ -57,6 +57,7 @@ class Ftp extends ManualChecksum implements DeploymentProvider
                 throw new \InvalidArgumentException('FTP Password is required');
             }
         }
+
         return $this->server[$key];
     }
     /**
@@ -67,11 +68,13 @@ class Ftp extends ManualChecksum implements DeploymentProvider
     {
         if (null === $this->connection) {
             $this->connection = ftp_connect($this->getConfig('host'));
-            if (!@ftp_login( // Suppress warning
-                $this->connection,
-                $this->getConfig('user'),
-                $this->getConfig('password')
-            )) {
+            if (
+                !@ftp_login( // Suppress warning
+                    $this->connection,
+                    $this->getConfig('user'),
+                    $this->getConfig('password')
+                )
+            ) {
                 throw new \RuntimeException('FTP login failed');
             }
         }
@@ -120,8 +123,10 @@ class Ftp extends ManualChecksum implements DeploymentProvider
             )
         ) {
             rewind($handle);
+
             return stream_get_contents($handle);
         }
+
         return false;
     }
     /**
@@ -192,6 +197,7 @@ class Ftp extends ManualChecksum implements DeploymentProvider
                 $this->getConfig('webroot')
             );
         }
+
         return $this->protocolString;
     }
     /**

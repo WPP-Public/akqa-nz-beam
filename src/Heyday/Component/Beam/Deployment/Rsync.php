@@ -115,7 +115,7 @@ class Rsync extends Deployment implements DeploymentProvider
                 $fromPath,
                 $toPath
             ),
-            '-'.$flags,
+            '-' . $flags,
             '--itemize-changes',
             array(
                 '--exclude-from="%s"',

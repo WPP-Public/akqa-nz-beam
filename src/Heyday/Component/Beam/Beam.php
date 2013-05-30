@@ -6,9 +6,6 @@ use Heyday\Component\Beam\Config\BeamConfiguration;
 use Heyday\Component\Beam\Deployment\DeploymentProvider;
 use Heyday\Component\Beam\Deployment\DeploymentResult;
 use Heyday\Component\Beam\Vcs\Git;
-use Heyday\Component\Beam\Vcs\VcsProvider;
-use Ssh\Session;
-use Ssh\SshConfigFileConfiguration;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\OptionsResolver\Options;
@@ -467,8 +464,8 @@ class Beam
     }
     /**
      * A helper method that runs a process and checks its success, erroring if it failed
-     * @param  Process           $process
-     * @param  callable          $output
+     * @param  Process  $process
+     * @param  callable $output
      * @throws \RuntimeException
      */
     protected function runProcess(Process $process, \Closure $output = null)
@@ -603,7 +600,7 @@ class Beam
 
         $server = $this->getServer();
 
-        $userComponent = $server['user'] <> '' ? $server['user'].'@' : '';
+        $userComponent = $server['user'] <> '' ? $server['user'] . '@' : '';
 
         $remoteCmd = sprintf(
             'cd \'%s\' && %s',
@@ -614,7 +611,7 @@ class Beam
         $args = array(
             'ssh',
             $command['tty'] ? '-t' : '',
-            $userComponent.$server['host'],
+            $userComponent . $server['host'],
             escapeshellcmd($remoteCmd)
         );
 
@@ -639,7 +636,7 @@ class Beam
     }
     /**
      * @param array $command
-     * @param $outputHandler
+     * @param       $outputHandler
      */
     protected function doExecCommand($command, $outputHandler)
     {
@@ -669,7 +666,6 @@ class Beam
         }
     }
 
-
     /**
      * @param $command
      * @param $exception
@@ -678,7 +674,7 @@ class Beam
      */
     protected function promptCommandFailureContinue($command, $exception)
     {
-        if(!is_callable($this->options['commandfailurehandler'])){
+        if (!is_callable($this->options['commandfailurehandler'])) {
             throw $exception;
         }
 
@@ -737,8 +733,8 @@ class Beam
             )->setDefaults(
                 array(
                     'path'                       => false,
-                    'dry-run'                     => false,
-                    'working-copy'                => false,
+                    'dry-run'                    => false,
+                    'working-copy'               => false,
                     'command-tags'               => array(),
                     'vcsprovider'                => function (Options $options) {
                         return new Git($options['srcdir']);
@@ -754,8 +750,8 @@ class Beam
                 array(
                     'ref'                => 'string',
                     'srcdir'             => 'string',
-                    'dry-run'             => 'bool',
-                    'working-copy'        => 'bool',
+                    'dry-run'            => 'bool',
+                    'working-copy'       => 'bool',
                     'command-tags'       => 'array',
                     'vcsprovider'        => __NAMESPACE__ . '\Vcs\VcsProvider',
                     'deploymentprovider' => __NAMESPACE__ . '\Deployment\DeploymentProvider',

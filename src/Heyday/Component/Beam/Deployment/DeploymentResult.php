@@ -50,6 +50,7 @@ class DeploymentResult extends \ArrayObject
                 $this->updateCounts[$result['update']]++;
             }
         }
+
         return $this->updateCounts[$type];
     }
 }

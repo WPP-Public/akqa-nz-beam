@@ -530,8 +530,8 @@ abstract class BeamCommand extends Command
      * @param  OutputInterface $output
      * @param                  $dialogHelper
      * @param                  $formatterHelper
-     * @param string           $question
-     * @param string           $default
+     * @param  string          $question
+     * @param  string          $default
      * @return mixed
      */
     protected function isOkay(

@@ -109,7 +109,7 @@ class ContentProgressHelper extends ProgressHelper
     }
 
     /**
-     * @param  bool            $finish
+     * @param  bool $finish
      * @throws \LogicException
      */
     public function display($finish = false)

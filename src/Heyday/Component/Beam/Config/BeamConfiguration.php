@@ -209,7 +209,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
         if (!$value) {
             $value = array(
                 'applications' => array(),
-                'patterns' => array()
+                'patterns'     => array()
             );
         }
 
