@@ -338,7 +338,7 @@ class Beam
      */
     public function isWorkingCopy()
     {
-        return $this->options['workingcopy'];
+        return $this->options['working-copy'];
     }
     /**
      * Returns whether or not the server is locked to a branch
@@ -716,8 +716,8 @@ class Beam
                 array(
                     'ref',
                     'path',
-                    'dryrun',
-                    'workingcopy',
+                    'dry-run',
+                    'working-copy',
                     'command-tags',
                     'vcsprovider',
                     'deploymentprovider',
@@ -737,8 +737,8 @@ class Beam
             )->setDefaults(
                 array(
                     'path'                       => false,
-                    'dryrun'                     => false,
-                    'workingcopy'                => false,
+                    'dry-run'                     => false,
+                    'working-copy'                => false,
                     'command-tags'               => array(),
                     'vcsprovider'                => function (Options $options) {
                         return new Git($options['srcdir']);
@@ -754,8 +754,8 @@ class Beam
                 array(
                     'ref'                => 'string',
                     'srcdir'             => 'string',
-                    'dryrun'             => 'bool',
-                    'workingcopy'        => 'bool',
+                    'dry-run'             => 'bool',
+                    'working-copy'        => 'bool',
                     'command-tags'       => 'array',
                     'vcsprovider'        => __NAMESPACE__ . '\Vcs\VcsProvider',
                     'deploymentprovider' => __NAMESPACE__ . '\Deployment\DeploymentProvider',
