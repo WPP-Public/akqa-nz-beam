@@ -80,7 +80,7 @@ class ContentProgressHelper extends ProgressHelper
     public function start(OutputInterface $output, $max = null, $prefix = '')
     {
         $this->prefix = $prefix;
-        $output->write(str_repeat("\x20", $this->cols)); //next line and end line
+        $output->write(str_repeat("\x20", $this->cols * 2)); //next line and end line
         parent::start($output, $max);
     }
     /**
