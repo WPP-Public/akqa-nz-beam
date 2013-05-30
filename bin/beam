@@ -1,0 +1,66 @@
+#!/usr/bin/env php
+<?php
+
+use Composer\Autoload\ClassLoader;
+
+error_reporting(-1);
+
+/**
+ * Try to allow 512M
+ * Credit https://github.com/composer/composer/blob/c1ff6ea62bb2c196e777bcd51ac6da287ad44b5a/bin/composer
+ */
+if (function_exists('ini_set')) {
+    @ini_set('display_errors', 1);
+
+    $memoryInBytes = function ($value) {
+        $unit = strtolower(substr($value, -1, 1));
+        $value = (int) $value;
+        switch($unit) {
+            case 'g':
+                $value *= 1024;
+            // no break (cumulative multiplier)
+            case 'm':
+                $value *= 1024;
+            // no break (cumulative multiplier)
+            case 'k':
+                $value *= 1024;
+        }
+
+        return $value;
+    };
+
+    $memoryLimit = trim(ini_get('memory_limit'));
+    // Increase memory_limit if it is lower than 512M
+    if ($memoryLimit != -1 && $memoryInBytes($memoryLimit) < 512 * 1024 * 1024) {
+        @ini_set('memory_limit', '512M');
+    }
+    unset($memoryInBytes, $memoryLimit);
+}
+
+$files = array(
+    __DIR__ . '/../vendor/autoload.php',
+    __DIR__ . '/../../../autoload.php'
+);
+
+$loader = null;
+
+/**
+ * Loop through the potential autoload locations
+ */
+foreach ($files as $file) {
+    if (file_exists($file)) {
+        $loader = require_once $file;
+        break;
+    }
+}
+
+/**
+ * If the autoloader isn't returning a autoload then error
+ */
+if (is_null($loader) || !$loader instanceof ClassLoader) {
+    echo 'You must first install the vendors using composer.' . PHP_EOL;
+    exit(1);
+}
+
+$application = new \Heyday\Component\Beam\Application();
+$application->run();
