@@ -7,14 +7,14 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class GenerateConfigCommand extends SymfonyCommand
+class InitCommand extends SymfonyCommand
 {
 
     protected function configure()
     {
         $this
-            ->setName('genconfig')
-            ->setDescription('Generate beam.json file')
+            ->setName('init')
+            ->setDescription('Generate a beam.json file')
             ->addOption(
                 'replace',
                 'r',

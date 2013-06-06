@@ -5,7 +5,7 @@ namespace Heyday\Component\Beam;
 use Heyday\Component\Beam\Command\BeamCompletionCommand;
 use Heyday\Component\Beam\Command\CompileCommand;
 use Heyday\Component\Beam\Command\FtpCommand;
-use Heyday\Component\Beam\Command\GenerateConfigCommand;
+use Heyday\Component\Beam\Command\InitCommand;
 use Heyday\Component\Beam\Command\MakeChecksumsCommand;
 use Heyday\Component\Beam\Command\RsyncCommand;
 use Heyday\Component\Beam\Command\SelfUpdateCommand;
@@ -63,7 +63,7 @@ class Application extends BaseApplication
         $commands[] = new RsyncCommand();
         $commands[] = new SftpCommand();
         $commands[] = new FtpCommand();
-        $commands[] = new GenerateConfigCommand();
+        $commands[] = new InitCommand();
         $commands[] = new SelfUpdateCommand();
         $commands[] = new MakeChecksumsCommand();
         $commands[] = new CompileCommand();

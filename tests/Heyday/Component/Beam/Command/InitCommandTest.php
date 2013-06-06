@@ -1,10 +1,10 @@
 <?php
 namespace Heyday\Component\Beam\Command;
 
-class GenerateDeployCommandTest extends \PHPUnit_Framework_TestCase
+class InitCommandTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * @var GenerateConfigCommand
+     * @var InitCommand
      */
     protected $object;
 
@@ -14,7 +14,7 @@ class GenerateDeployCommandTest extends \PHPUnit_Framework_TestCase
      */
     protected function setUp()
     {
-//        $this->object = new GenerateConfigCommand;
+//        $this->object = new InitCommand;
     }
 
     /**
