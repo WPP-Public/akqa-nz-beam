@@ -18,7 +18,7 @@ Beam has the following workflow assumptions:
  * You may want to run custom commands at different stages of deployment, locally and on the target server.
  * You want to do all of this with a command as simple as `beam up live`
 
-As well as 'beaming' up, `beam` can also 'beam' down; synchronizing your working copy with what's on a server. You can also do a working copy `beam up`, send a specific branch, and do a dry-run to simulate a sync. For a full list of options run `beam --help`.
+As well as 'beaming' up, `beam` can also 'beam' down; synchronising your working copy with what's on a server. You can also do a working copy `beam up`, send a specific branch, and do a dry-run to simulate a sync. For a full list of options run `beam --help`.
 
 ### Order of operations
 

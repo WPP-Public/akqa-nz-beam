@@ -125,7 +125,7 @@ class RsyncCommand extends BeamCommand
                     $output->writeln(
                         $formatterHelper->formatSection(
                             'info',
-                            'Finalizing deployment'
+                            'Finalising deployment'
                         )
                     );
                 }
