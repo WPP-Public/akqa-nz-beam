@@ -141,13 +141,12 @@ class Beam
             }
         }
 
-        $hasRemoteCommands = $this->hasRemoteCommands();
         $limitations = $this->options['deploymentprovider']->getLimitations();
 
         if (is_array($limitations)) {
 
             // Check if remote commands defined when not available
-            if ($hasRemoteCommands && in_array(DeploymentProvider::LIMITATION_REMOTECOMMAND, $limitations)) {
+            if ($this->hasRemoteCommands() && in_array(DeploymentProvider::LIMITATION_REMOTECOMMAND, $limitations)) {
                 throw new InvalidConfigurationException(
                     'Commands are defined for the location "target" but the selected deployment provider cannot execute remote commands.'
                 );
@@ -297,7 +296,7 @@ class Beam
      */
     public function setOption($key, $value)
     {
-        $this->options = $this->options = $this->getOptionsResolver()->resolve(
+        $this->options = $this->getOptionsResolver()->resolve(
             array_merge(
                 $this->options,
                 array(
@@ -476,7 +475,7 @@ class Beam
         }
     }
     /**
-     *
+     * Runs commands specified in config in the pre phase on the local
      */
     protected function runPreLocalCommands()
     {
@@ -487,7 +486,7 @@ class Beam
         );
     }
     /**
-     *
+     * Runs commands specified in config in the pre phase on the target
      */
     protected function runPreTargetCommands()
     {
@@ -498,7 +497,7 @@ class Beam
         );
     }
     /**
-     *
+     * Runs commands specified in config in the post phase on the local
      */
     protected function runPostLocalCommands()
     {
@@ -509,7 +508,7 @@ class Beam
         );
     }
     /**
-     *
+     * Runs commands specified in config in the post phase on the target
      */
     protected function runPostTargetCommands()
     {
