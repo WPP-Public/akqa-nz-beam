@@ -2,7 +2,7 @@
 
 This file is a complete documentation of the file `beam.json` used to configure `beam`. Beam cannot operate without a valid `beam.json` file in the working directory, so creating one is a good place to start if you want to use `beam`.
 
-If you are looking for an example configuration to get you started, look in `README.md` or run `beam genconfig` to create a minimal config file in your working directory.
+If you are looking for an example configuration to get you started, look in `README.md` or run `beam init` to create a minimal config file in your working directory.
 
 ## Brief overview
 

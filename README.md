@@ -46,7 +46,7 @@ Each project you intend to use `beam` with requires a `beam.json` configuration 
 #### Config generation
 
 ```bash
-$ beam genconfig
+$ beam init
 ```
 
 ### Examples
