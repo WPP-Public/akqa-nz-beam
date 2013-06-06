@@ -130,25 +130,13 @@ class ContentProgressHelper extends ProgressHelper
      */
     private function overwrite(OutputInterface $output, $messages)
     {
-        $content = '';
-        $content .= "\033[?25l"; //make cursor invisible as we are moving it
-        $content .= "\033[A"; //up line
-        $content .= "\x0D"; //start line
-        $content .= "\033[K"; //next line and end line
-        $content .= "\x0D"; //start line
-        $content .= $this->content;
-
-        if (strlen($this->content) !== $this->cols) {
-            $content .= "\033[B"; // next line if content wasn't long enough
-        }
-
-        $content .= "\x0D"; //start line
-        $content .= "\033[K"; //next line and end line
-        $content .= "\x0D"; //start line
-        $content .= $messages;
-        $content .= "\033[?12l\033[?25h"; // make cursor normal
-
-        $output->write($content);
+        $output->write(
+            "\033[?25l\033[A\x0D" .
+            $this->content .
+            "\n\033[K" .
+            $messages .
+            "\033[?12l\033[?25h"
+        );
     }
 
     /**
