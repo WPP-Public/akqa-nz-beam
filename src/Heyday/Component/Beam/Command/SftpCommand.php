@@ -28,7 +28,7 @@ class SftpCommand extends BeamCommand
                 InputOption::VALUE_NONE,
                 'Does a more full check on the target, relying less on the checksums file'
             )->addOption(
-                'nodelete',
+                'no-delete',
                 '',
                 InputOption::VALUE_NONE,
                 'Don\'t delete extraneous files on the target'
@@ -43,7 +43,7 @@ class SftpCommand extends BeamCommand
         $options = parent::getOptions($input, $output);
         $options['deploymentprovider'] = new Sftp(
             $input->getOption('full'),
-            !$input->getOption('nodelete')
+            !$input->getOption('no-delete')
         );
 
         return $options;
