@@ -87,6 +87,8 @@ class Compiler
 
         file_put_contents('beam.phar.version', trim($this->version));
 
+        chmod($pharFile, 0755);
+
         return 'Success';
     }
 
