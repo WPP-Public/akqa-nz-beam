@@ -14,6 +14,7 @@ ini_set('phar.readonly', 0);
 try {
     $compiler = new Compiler();
     $compiler->compile();
+    echo 'Done', PHP_EOL;
 } catch (\Exception $e) {
     echo 'Failed to compile phar: ['.get_class($e).'] '.$e->getMessage().' at '.$e->getFile().':'.$e->getLine();
     exit(1);
