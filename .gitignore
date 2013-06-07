@@ -2,4 +2,5 @@ vendor
 .idea
 beam.phar
 beam.phar.version
-makefile
+/makefile
+/Makefile
