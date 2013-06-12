@@ -116,12 +116,24 @@ class Rsync extends Deployment implements DeploymentProvider
                 $toPath
             ),
             '-' . $flags,
-            '--itemize-changes',
-            array(
-                '--exclude-from="%s"',
-                $this->getExcludesPath()
-            )
+            '--itemize-changes'
         );
+
+        if ($this->beam->hasPath()) {
+            $folders = explode('/', $this->beam->getOption('path'));
+            $allFolders = '';
+            foreach ($folders as $folder) {
+                if (!empty($folder)) {
+                    $allFolders .= '/' . $folder;
+                    $exclude = substr($allFolders, 0, strrpos($allFolders, '/'));
+                    $command[] = array(
+                        '--include="%s/" --exclude="%s/*"',
+                        $allFolders,
+                        $exclude
+                    );
+                }
+            }
+        }
 
         if ($dryrun) {
             $command[] = '--dry-run';
@@ -139,21 +151,10 @@ class Rsync extends Deployment implements DeploymentProvider
             $command[] = '--delay-updates';
         }
 
-        if ($this->beam->hasPath()) {
-            $folders = explode('/', $this->beam->getOption('path'));
-            $allFolders = '';
-            foreach ($folders as $folder) {
-                if (!empty($folder)) {
-                    $allFolders .= '/' . $folder;
-                    $exclude = substr($allFolders, 0, strrpos($allFolders, '/'));
-                    $command[] = array(
-                        '--include="%s/" --exclude="%s/*"',
-                        $allFolders,
-                        $exclude
-                    );
-                }
-            }
-        }
+        $command[] = array(
+            '--exclude-from="%s"',
+            $this->getExcludesPath()
+        );
 
         foreach ($command as $key => $part) {
             if (is_array($part)) {
