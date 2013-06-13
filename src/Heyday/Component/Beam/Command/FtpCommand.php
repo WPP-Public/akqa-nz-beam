@@ -2,7 +2,7 @@
 
 namespace Heyday\Component\Beam\Command;
 
-use Heyday\Component\Beam\Deployment\Ftp;
+use Heyday\Component\Beam\DeploymentProvider\Ftp;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;

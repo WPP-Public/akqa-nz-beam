@@ -1,12 +1,12 @@
 <?php
 
-namespace Heyday\Component\Beam\Deployment;
+namespace Heyday\Component\Beam\DeploymentProvider;
 
-use Heyday\Component\Beam\Deployment\DeploymentProvider;
+use Heyday\Component\Beam\DeploymentProvider\DeploymentProvider;
 
 /**
  * Class Ftp
- * @package Heyday\Component\Beam\Deployment
+ * @package Heyday\Component\Beam\DeploymentProvider
  */
 class Ftp extends ManualChecksum implements DeploymentProvider
 {

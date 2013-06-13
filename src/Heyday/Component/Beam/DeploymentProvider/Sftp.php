@@ -1,8 +1,8 @@
 <?php
 
-namespace Heyday\Component\Beam\Deployment;
+namespace Heyday\Component\Beam\DeploymentProvider;
 
-use Heyday\Component\Beam\Deployment\DeploymentProvider;
+use Heyday\Component\Beam\DeploymentProvider\DeploymentProvider;
 use Ssh\Authentication\Password;
 use Ssh\Configuration;
 use Ssh\Session;
@@ -10,7 +10,7 @@ use Ssh\SshConfigFileConfiguration;
 
 /**
  * Class Sftp
- * @package Heyday\Component\Beam\Deployment
+ * @package Heyday\Component\Beam\DeploymentProvider
  */
 class Sftp extends ManualChecksum implements DeploymentProvider
 {

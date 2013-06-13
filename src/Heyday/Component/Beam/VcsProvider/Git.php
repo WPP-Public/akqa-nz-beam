@@ -1,10 +1,14 @@
 <?php
 
-namespace Heyday\Component\Beam\Vcs;
+namespace Heyday\Component\Beam\VcsProvider;
 
 use Heyday\Component\Beam\Utils;
 use Symfony\Component\Process\Process;
 
+/**
+ * Class Git
+ * @package Heyday\Component\Beam\VcsProvider
+ */
 class Git implements VcsProvider
 {
     /**

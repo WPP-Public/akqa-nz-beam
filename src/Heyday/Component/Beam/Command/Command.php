@@ -15,12 +15,12 @@ abstract class Command extends BaseCommand
      */
     protected $jsonConfigLoader;
     /**
-     * @return JsonLoader
+     * @return JsonConfigLoader
      */
-    protected function getJsonConfigLoader($path)
+    protected function getJsonConfigLoader()
     {
         if (null === $this->jsonConfigLoader) {
-
+            $path = getcwd();
             $paths = array();
 
             while ($path !== end($paths)) {
@@ -41,10 +41,22 @@ abstract class Command extends BaseCommand
      * @param  InputInterface $input
      * @return mixed
      */
-    protected function getConfig(InputInterface $input, $path)
+    protected function getConfig(InputInterface $input)
     {
-        return $this->getJsonConfigLoader($path)->load(
+        return $this->getJsonConfigLoader()->load(
             $input->getOption('config-file')
+        );
+    }
+    /**
+     * @param $configFile
+     * @return string
+     */
+    protected function getSrcDir(InputInterface $input)
+    {
+        return dirname(
+            $this->getJsonConfigLoader()->locate(
+                $input->getOption('config-file')
+            )
         );
     }
     /**

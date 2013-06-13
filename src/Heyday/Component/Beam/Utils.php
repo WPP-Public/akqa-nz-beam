@@ -201,4 +201,24 @@ class Utils
             rmdir($location);
         }
     }
+    /**
+     * @param         $question
+     * @param  null   $default
+     * @return string
+     */
+    public static function getQuestion($question, $default = null)
+    {
+        if ($default !== null) {
+            return sprintf(
+                '<question>%s</question> [<comment>%s</comment>]: ',
+                $question,
+                $default
+            );
+        } else {
+            return sprintf(
+                '<question>%s</question>: ',
+                $question
+            );
+        }
+    }
 }

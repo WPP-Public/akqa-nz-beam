@@ -12,6 +12,10 @@ use Symfony\Component\Process\Process;
 class Compiler
 {
     /**
+     * The relative path to the project root
+     */
+    const ROOT_DIR = '/../../../..';
+    /**
      * @var
      */
     protected $version;
@@ -53,7 +57,7 @@ class Compiler
             $this->addFile($phar, $file);
         }
 
-        $vendorDir = realpath(__DIR__ . '/../../../../vendor');
+        $vendorDir = realpath(__DIR__ . self::ROOT_DIR . '/vendor');
 
         $finder = new Finder();
         $finder->files()
@@ -98,7 +102,7 @@ class Compiler
      */
     private function addFile($phar, $file)
     {
-        $path = str_replace(realpath(__DIR__ . '/../../../../') . DIRECTORY_SEPARATOR, '', $file->getRealPath());
+        $path = str_replace(realpath(__DIR__ . self::ROOT_DIR) . DIRECTORY_SEPARATOR, '', $file->getRealPath());
 
         $content = php_strip_whitespace($file);
 
@@ -115,7 +119,7 @@ class Compiler
      */
     private function addBin($phar)
     {
-        $content = file_get_contents(__DIR__ . '/../../../../bin/beam');
+        $content = file_get_contents(__DIR__ . self::ROOT_DIR . '/bin/beam');
         $phar->addFromString('bin/beam', preg_replace('{^#!/usr/bin/env php\s*}', '', $content));
     }
 

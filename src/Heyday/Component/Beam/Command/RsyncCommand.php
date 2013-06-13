@@ -2,8 +2,8 @@
 
 namespace Heyday\Component\Beam\Command;
 
-use Heyday\Component\Beam\Deployment\DeploymentResult;
-use Heyday\Component\Beam\Deployment\Rsync;
+use Heyday\Component\Beam\DeploymentProvider\DeploymentResult;
+use Heyday\Component\Beam\DeploymentProvider\Rsync;
 use Symfony\Component\Console\Helper\FormatterHelper;
 use Symfony\Component\Console\Helper\ProgressHelper;
 use Symfony\Component\Console\Input\InputInterface;

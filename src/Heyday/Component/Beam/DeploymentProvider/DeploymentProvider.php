@@ -1,12 +1,12 @@
 <?php
 
-namespace Heyday\Component\Beam\Deployment;
+namespace Heyday\Component\Beam\DeploymentProvider;
 
 use Heyday\Component\Beam\Beam;
 
 /**
  * Class DeploymentProvider
- * @package Heyday\Component\Beam\Deployment
+ * @package Heyday\Component\Beam\DeploymentProvider
  */
 interface DeploymentProvider
 {

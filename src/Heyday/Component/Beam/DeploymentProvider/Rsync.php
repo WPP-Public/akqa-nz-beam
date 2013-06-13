@@ -1,14 +1,14 @@
 <?php
 
-namespace Heyday\Component\Beam\Deployment;
+namespace Heyday\Component\Beam\DeploymentProvider;
 
-use Heyday\Component\Beam\Deployment\DeploymentResult;
+use Heyday\Component\Beam\DeploymentProvider\DeploymentResult;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Process\Process;
 
 /**
  * Class Rsync
- * @package Heyday\Component\Beam\Deployment
+ * @package Heyday\Component\Beam\DeploymentProvider
  */
 class Rsync extends Deployment implements DeploymentProvider
 {

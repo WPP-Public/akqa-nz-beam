@@ -3,9 +3,9 @@
 namespace Heyday\Component\Beam;
 
 use Heyday\Component\Beam\Config\BeamConfiguration;
-use Heyday\Component\Beam\Deployment\DeploymentProvider;
-use Heyday\Component\Beam\Deployment\DeploymentResult;
-use Heyday\Component\Beam\Vcs\Git;
+use Heyday\Component\Beam\DeploymentProvider\DeploymentProvider;
+use Heyday\Component\Beam\DeploymentProvider\DeploymentResult;
+use Heyday\Component\Beam\VcsProvider\Git;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\OptionsResolver\Options;
@@ -752,8 +752,8 @@ class Beam
                     'dry-run'            => 'bool',
                     'working-copy'       => 'bool',
                     'command-tags'       => 'array',
-                    'vcsprovider'        => __NAMESPACE__ . '\Vcs\VcsProvider',
-                    'deploymentprovider' => __NAMESPACE__ . '\Deployment\DeploymentProvider',
+                    'vcsprovider'        => __NAMESPACE__ . '\VcsProvider\VcsProvider',
+                    'deploymentprovider' => __NAMESPACE__ . '\DeploymentProvider\DeploymentProvider',
                 )
             )->setNormalizers(
                 array(

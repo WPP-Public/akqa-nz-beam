@@ -1,13 +1,13 @@
 <?php
 
-namespace Heyday\Component\Beam\Deployment;
+namespace Heyday\Component\Beam\DeploymentProvider;
 
 use Heyday\Component\Beam\Config\DeploymentResultConfiguration;
 use Symfony\Component\Config\Definition\Processor;
 
 /**
  * Class DeploymentResult
- * @package Heyday\Component\Beam\Deployment
+ * @package Heyday\Component\Beam\DeploymentProvider
  */
 class DeploymentResult extends \ArrayObject
 {

@@ -2,11 +2,15 @@
 
 namespace Heyday\Component\Beam\Helper;
 
-use Heyday\Component\Beam\Deployment\DeploymentResult;
+use Heyday\Component\Beam\DeploymentProvider\DeploymentResult;
 use Symfony\Component\Console\Helper\FormatterHelper;
 use Symfony\Component\Console\Helper\Helper;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * Class DeploymentResultHelper
+ * @package Heyday\Component\Beam\Helper
+ */
 class DeploymentResultHelper extends Helper
 {
     /**

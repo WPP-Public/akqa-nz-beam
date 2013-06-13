@@ -1,12 +1,12 @@
 <?php
 
-namespace Heyday\Component\Beam\Deployment;
+namespace Heyday\Component\Beam\DeploymentProvider;
 
 use Heyday\Component\Beam\Utils;
 
 /**
  * Class ManualChecksum
- * @package Heyday\Component\Beam\Deployment
+ * @package Heyday\Component\Beam\DeploymentProvider
  */
 abstract class ManualChecksum extends Deployment
 {
@@ -30,8 +30,8 @@ abstract class ManualChecksum extends Deployment
     /**
      * @param  callable                                           $output
      * @param  bool                                               $dryrun
-     * @param  \Heyday\Component\Beam\Deployment\DeploymentResult $deploymentResult
-     * @return \Heyday\Component\Beam\Deployment\DeploymentResult
+     * @param  \Heyday\Component\Beam\DeploymentProvider\DeploymentResult $deploymentResult
+     * @return \Heyday\Component\Beam\DeploymentProvider\DeploymentResult
      */
     public function up(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
     {

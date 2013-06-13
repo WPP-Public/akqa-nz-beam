@@ -2,7 +2,7 @@
 
 namespace Heyday\Component\Beam\Command;
 
-use Heyday\Component\Beam\Deployment\Sftp;
+use Heyday\Component\Beam\DeploymentProvider\Sftp;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
