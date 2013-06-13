@@ -1,6 +1,6 @@
 <?php
 
-namespace Heyday\Component\Beam\Vcs;
+namespace Heyday\Component\Beam\VcsProvider;
 
 use org\bovigo\vfs\vfsStream;
 

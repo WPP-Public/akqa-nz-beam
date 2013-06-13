@@ -1,6 +1,6 @@
 <?php
 
-namespace Heyday\Component\Beam\Deployment;
+namespace Heyday\Component\Beam\DeploymentProvider;
 
 use org\bovigo\vfs\vfsStream;
 
@@ -43,7 +43,7 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
     protected function getDeploymentResultMock($result = array())
     {
         return $this->getMock(
-            'Heyday\Component\Beam\Deployment\DeploymentResult',
+            'Heyday\Component\Beam\DeploymentProvider\DeploymentResult',
             array(),
             array(
                 $result
@@ -62,7 +62,7 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
     public function testConstruct()
     {
         $rsync = new Rsync(array());
-        $this->assertInstanceOf('Heyday\Component\Beam\Deployment\Rsync', $rsync);
+        $this->assertInstanceOf('Heyday\Component\Beam\DeploymentProvider\Rsync', $rsync);
     }
 
     public function testUp()
