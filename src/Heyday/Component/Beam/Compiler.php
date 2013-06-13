@@ -43,7 +43,6 @@ class Compiler
 
         $phar = new \Phar($pharFile, 0, $pharFile);
         $phar->setSignatureAlgorithm(\Phar::SHA1);
-
         $phar->startBuffering();
 
         $finder = new Finder();
@@ -84,7 +83,6 @@ class Compiler
 
         // Stubs
         $phar->setStub($this->getStub());
-
         $phar->stopBuffering();
 
         unset($phar);
@@ -119,7 +117,7 @@ class Compiler
      */
     private function addBin($phar)
     {
-        $content = file_get_contents(__DIR__ . self::ROOT_DIR . '/bin/beam');
+        $content = php_strip_whitespace(__DIR__ . self::ROOT_DIR . '/bin/beam');
         $phar->addFromString('bin/beam', preg_replace('{^#!/usr/bin/env php\s*}', '', $content));
     }
 
@@ -129,7 +127,7 @@ class Compiler
     private function getStub()
     {
         return <<<'EOF'
-#!/usr/bin/env php
+#!/usr/bin/env php -d detect_unicode=0
 <?php
 Phar::mapPhar('beam.phar');
 require 'phar://beam.phar/bin/beam';
