@@ -32,7 +32,8 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
             '/cgi-bin/',
             '/.idea/',
             '.svn/',
-            '.git/'
+            '.git/',
+            '/maintenance/on'
         ),
         'gear'         => array(
             '/images/repository/'
