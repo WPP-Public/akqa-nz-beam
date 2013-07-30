@@ -170,7 +170,7 @@ abstract class BeamCommand extends Command
                     if (!$input->getOption('dry-run')) {
                         // If we have confirmation do the beam
                         if (!$this->isOkay($output, $dialogHelper, $formatterHelper)) {
-                            throw new \RuntimeException('User canceled');
+                            throw new \RuntimeException('User cancelled');
                         }
 
                         $deleteCount = $deploymentResult->getUpdateCount('deleted');
@@ -189,7 +189,7 @@ abstract class BeamCommand extends Command
                                 'no'
                             )
                         ) {
-                            throw new \RuntimeException('User canceled');
+                            throw new \RuntimeException('User cancelled');
                         }
 
                         // Set the output handler for displaying the progress bar etc
