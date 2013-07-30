@@ -127,7 +127,7 @@ class Compiler
     private function getStub()
     {
         return <<<'EOF'
-#!/usr/bin/env php -d detect_unicode=0
+#!/usr/bin/env php
 <?php
 Phar::mapPhar('beam.phar');
 require 'phar://beam.phar/bin/beam';
