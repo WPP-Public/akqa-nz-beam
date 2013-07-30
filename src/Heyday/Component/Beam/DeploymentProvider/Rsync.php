@@ -120,18 +120,38 @@ class Rsync extends Deployment implements DeploymentProvider
         );
 
         if ($this->beam->hasPath()) {
-            $folders = explode('/', $this->beam->getOption('path'));
-            $allFolders = '';
-            foreach ($folders as $folder) {
-                if (!empty($folder)) {
-                    $allFolders .= '/' . $folder;
-                    $exclude = substr($allFolders, 0, strrpos($allFolders, '/'));
-                    $command[] = array(
-                        '--include="%s/" --exclude="%s/*"',
-                        $allFolders,
-                        $exclude
-                    );
+            $paths = $this->beam->getOption('path');
+            $excludes = array();
+            $includes = array();
+
+            foreach ($paths as $path) {
+                $steps = $this->parsePathSteps($path);
+                $last = count($steps) - 1;
+
+                foreach ($steps as $index => $step) {
+                    $includes[] = $step;
+
+                    if ($index != $last) {
+                        $excludes[] = "$step/*";
+                    }
                 }
+            }
+
+            // Exclude everything else
+            $excludes[] = '/*';
+
+            foreach ($includes as $include) {
+                $command[] = array(
+                    '--include="%s"',
+                    $include
+                );
+            }
+
+            foreach ($excludes as $exclude) {
+                $command[] = array(
+                    '--exclude="%s"',
+                    $exclude
+                );
             }
         }
 
@@ -162,7 +182,30 @@ class Rsync extends Deployment implements DeploymentProvider
             }
         }
 
+        echo implode(' ', $command)."\n";
+
         return implode(' ', $command);
+    }
+
+    /**
+     * @param $path
+     * @return array|string
+     */
+    protected function parsePathSteps($path)
+    {
+        $steps = array();
+        $folders = explode('/', $path);
+        $lastIndex = count($folders) - 1;
+
+        $partialPath = '';
+        foreach ($folders as $index => $component) {
+            if (!empty($component)) {
+                $partialPath .= '/' . $component;
+                $steps[] = $partialPath;
+            }
+        }
+
+        return $steps;
     }
     /**
      * @param $line

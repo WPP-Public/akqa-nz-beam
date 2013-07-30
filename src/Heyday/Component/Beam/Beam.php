@@ -280,7 +280,7 @@ class Beam
      */
     public function getTargetPath()
     {
-        return $this->getCombinedPath($this->options['deploymentprovider']->getTargetPath());
+        return $this->options['deploymentprovider']->getTargetPath();
     }
     /**
      * @param boolean $prepared
@@ -365,12 +365,12 @@ class Beam
         return $this->options['vcsprovider']->isRemote($this->options['ref']);
     }
     /**
-     * A helper method for determining if beam is operating with an extra path
+     * A helper method for determining if beam is operating with a list of paths
      * @return bool
      */
     public function hasPath()
     {
-        return $this->options['path'] && $this->options['path'] !== '';
+        return is_array($this->options['path']) && count($this->options['path']) > 0;
     }
     /**
      * Get the server config we are deploying to.
@@ -398,15 +398,6 @@ class Beam
     protected function getLocalPathFolder()
     {
         return dirname($this->options['srcdir']);
-    }
-    /**
-     * A helper method for combining a path with the optional extra path
-     * @param $path
-     * @return string
-     */
-    public function getCombinedPath($path)
-    {
-        return $this->hasPath() ? $path . DIRECTORY_SEPARATOR . $this->options['path'] : $path;
     }
     /**
      * A helper method that returns a process with some defaults
@@ -731,7 +722,7 @@ class Beam
                 )
             )->setDefaults(
                 array(
-                    'path'                       => false,
+                    'path'                       => array(),
                     'dry-run'                    => false,
                     'working-copy'               => false,
                     'command-tags'               => array(),
@@ -761,7 +752,9 @@ class Beam
                         return trim($value);
                     },
                     'path'                       => function (Options $options, $value) {
-                        return is_string($value) ? trim($value, '/') : false;
+                        return is_array($value) ? array_map(function($value){
+                            return trim($value, '/');
+                        }, $value) : false;
                     },
                     'deploymentprovider'         => function (Options $options, $value) use ($that) {
                         if (is_callable($value)) {

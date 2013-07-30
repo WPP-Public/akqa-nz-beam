@@ -213,10 +213,24 @@ abstract class ManualChecksum extends Deployment
      */
     protected function getAllowedFiles($dir)
     {
-        $files = Utils::getAllowedFilesFromDirectory(
-            $this->beam->getConfig('exclude'),
-            $dir . ($this->beam->hasPath() ? '/' . $this->beam->getOption('path') : '')
-        );
+        if ($this->beam->hasPath()) {
+            $files = array();
+            foreach ($this->beam->getOption('path') as $path) {
+                $matchedFiles = Utils::getAllowedFilesFromDirectory(
+                    $this->beam->getConfig('exclude'),
+                    $dir . '/' . $path
+                );
+
+                $files = array_merge($files, $matchedFiles);
+            }
+
+        } else {
+
+            $files = Utils::getAllowedFilesFromDirectory(
+                $this->beam->getConfig('exclude'),
+                $dir
+            );
+        }
 
         return $files;
     }

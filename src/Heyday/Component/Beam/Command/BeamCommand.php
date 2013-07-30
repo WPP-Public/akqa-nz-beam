@@ -75,7 +75,7 @@ abstract class BeamCommand extends Command
             ->addOption(
                 'path',
                 'p',
-                InputOption::VALUE_REQUIRED,
+                InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY,
                 'The path to be beamed up or down'
             )
             ->addOption(
@@ -488,7 +488,7 @@ abstract class BeamCommand extends Command
         if ($beam->isUp()) {
             $fromMessage = sprintf(
                 'SOURCE: %s %s',
-                $beam->getCombinedPath($beam->getLocalPath()),
+                $beam->getLocalPath(),
                 $beam->getOption('working-copy') ? '' : '@ <info>' . $beam->getOption('ref') . '</info>'
             );
             $toMessage = sprintf(
@@ -498,7 +498,7 @@ abstract class BeamCommand extends Command
         } else {
             $toMessage = sprintf(
                 'TARGET: %s',
-                $beam->getCombinedPath($beam->getLocalPath())
+                $beam->getLocalPath()
             );
             $fromMessage = sprintf(
                 'SOURCE: %s',
@@ -531,6 +531,22 @@ abstract class BeamCommand extends Command
                 )
             )
         );
+
+        if ($beam->hasPath()) {
+            $pathsMessage = 'PATHS: ';
+
+            foreach ($beam->getOption('path') as $path) {
+                $pathsMessage .= "$path\n" . str_repeat(' ', 14);
+            }
+
+            $output->writeln(
+                $formatterHelper->formatSection(
+                    'warn',
+                    trim($pathsMessage),
+                    'comment'
+                )
+            );
+        }
 
     }
     /**

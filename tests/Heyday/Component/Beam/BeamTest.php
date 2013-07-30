@@ -438,7 +438,9 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             ),
             $this->getCombinedOptions(
                 array(
-                    'path' => 'test'
+                    'path' => array(
+                        'test'
+                    )
                 )
             )
         );
