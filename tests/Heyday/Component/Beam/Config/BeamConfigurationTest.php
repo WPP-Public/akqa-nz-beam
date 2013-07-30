@@ -86,6 +86,7 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                     '/.idea/',
                     '.svn/',
                     '.git/',
+                    '/maintenance/on',
                     '/images/repository/',
                     '/assets/',
                     '/silverstripe-cache/',
@@ -165,7 +166,8 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                     '/cgi-bin/',
                     '/.idea/',
                     '.svn/',
-                    '.git/'
+                    '.git/',
+                    '/maintenance/on'
                 )
             ),
             $processedConfig
