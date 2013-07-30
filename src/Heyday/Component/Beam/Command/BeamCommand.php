@@ -138,16 +138,16 @@ abstract class BeamCommand extends Command
                 $beam
             );
 
-            $output->writeln(
-                $formatterHelper->formatSection(
-                    'warn',
-                    'Determining list of files that will be modified...',
-                    'comment'
-                )
-            );
-
             // Prompt the user with the affected files and a confirmation dialog
             if (!$input->getOption('no-prompt')) {
+                $output->writeln(
+                    $formatterHelper->formatSection(
+                        'warn',
+                        'Determining list of files that will be modified...',
+                        'comment'
+                    )
+                );
+                
                 // Get the affected files
                 $deploymentResult = $beam->doDryrun();
                 // If there are any show them
