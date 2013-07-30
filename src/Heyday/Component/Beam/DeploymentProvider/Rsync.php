@@ -182,8 +182,6 @@ class Rsync extends Deployment implements DeploymentProvider
             }
         }
 
-        echo implode(' ', $command)."\n";
-
         return implode(' ', $command);
     }
 
