@@ -87,7 +87,7 @@ class Utils
      *   any portion of a path.
      *
      * @param $patterns
-     * @param $path A relative path
+     * @param $path string A relative path
      * @return bool
      */
     public static function isFileExcluded(array $patterns, $path)

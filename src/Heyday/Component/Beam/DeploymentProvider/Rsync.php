@@ -193,10 +193,9 @@ class Rsync extends Deployment implements DeploymentProvider
     {
         $steps = array();
         $folders = explode('/', $path);
-        $lastIndex = count($folders) - 1;
 
         $partialPath = '';
-        foreach ($folders as $index => $component) {
+        foreach ($folders as $component) {
             if (!empty($component)) {
                 $partialPath .= '/' . $component;
                 $steps[] = $partialPath;

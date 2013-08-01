@@ -2,6 +2,7 @@
 <?php
 
 use Composer\Autoload\ClassLoader;
+use Heyday\Component\Beam\Application;
 
 error_reporting(-1);
 
@@ -62,5 +63,5 @@ if (is_null($loader) || !$loader instanceof ClassLoader) {
     exit(1);
 }
 
-$application = new \Heyday\Component\Beam\Application();
+$application = new Application();
 $application->run();

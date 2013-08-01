@@ -155,7 +155,7 @@ class Beam
         }
     }
     /**
-     * @param  Deployment\DeploymentResult $deploymentResult
+     * @param  \Heyday\Component\Beam\DeploymentProvider\DeploymentResult $deploymentResult
      * @return mixed
      */
     public function doRun(DeploymentResult $deploymentResult = null)

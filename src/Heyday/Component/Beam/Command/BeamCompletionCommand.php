@@ -8,8 +8,15 @@ use Stecman\Component\Symfony\Console\BashCompletion\CompletionCommand;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Console\Input\ArrayInput;
 
+/**
+ * Class BeamCompletionCommand
+ * @package Heyday\Component\Beam\Command
+ */
 class BeamCompletionCommand extends CompletionCommand
 {
+    /**
+     * @return string
+     */
     protected function runCompletion()
     {
         $handler = $this->handler;
@@ -59,9 +66,8 @@ class BeamCompletionCommand extends CompletionCommand
                     Completion::TYPE_ARGUMENT,
                     function () use ($config) {
                         if (!$config) {
-                            return;
-                        }
-                        if (is_array($config['servers'])) {
+                            return null;
+                        } elseif (is_array($config['servers'])) {
                             return array_keys($config['servers']);
                         }
                     }
@@ -183,6 +189,9 @@ class BeamCompletionCommand extends CompletionCommand
         );
     }
 
+    /**
+     * @return mixed
+     */
     protected function getInputCommandName()
     {
         $commandLine = getenv('COMP_LINE');

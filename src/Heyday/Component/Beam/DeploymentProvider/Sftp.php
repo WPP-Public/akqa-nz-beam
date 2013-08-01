@@ -155,13 +155,13 @@ class Sftp extends ManualChecksum implements DeploymentProvider
         return $this->targetPath;
     }
     /**
-     * @throws InvalidConfigurationException
+     * @throws \InvalidArgumentException
      * @return array
      */
     public function getLimitations()
     {
         if (!extension_loaded('ssh2')) {
-            throw new \InvalidConfigurationException(
+            throw new \InvalidArgumentException(
                 'The PHP ssh2 extension is required to use SFTP deployment, but it is not loaded. (You may need to install it).'
             );
         }
