@@ -214,7 +214,27 @@ class Rsync extends Deployment implements DeploymentProvider
         $change = array();
         $matches = array();
         if (1 !== preg_match(
-            '/(?:(^\*[\w]+)|([<>.ch])([fdLDS])([.?+c][.?+s][.?+tT][.?+p][.?+o][.?+g][.?+]?[.?+a]?[.?+x]?)) (.*)/',
+            '/
+                (?:
+                    (^\*\w+) # capture anything with a "*" then words e.g. "*deleting"
+                    | # or
+                    ([<>.ch]) # capture update mode
+                    ([fdLDS]) # capture filetype
+                    (
+                        [.?+c]  # checksum
+                        [.?+s]  # size
+                        [.?+tT] # time
+                        [.?+p]  # permissions
+                        [.?+o]  # owner
+                        [.?+g]  # group
+                        [.?+]?  # no meaning 
+                        [.?+a]? # optional aclextended
+                        [.?+x]? # optional extended
+                    )
+                )
+                [ ] # a space
+                (.*) # filename
+            /x',
             $line,
             $matches
         )) {
