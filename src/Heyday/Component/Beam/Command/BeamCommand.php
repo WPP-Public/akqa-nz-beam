@@ -380,7 +380,13 @@ abstract class BeamCommand extends Command
         ) {
             // Ensure the output of the failed command is shown
             if (OutputInterface::VERBOSITY_VERBOSE !== $output->getVerbosity()) {
-                $this->outputMultiline($output, $exception->getMessage(), 'Error', 'error');
+                $output->writeln(
+                    $formatterHelper->formatSection(
+                        'Error',
+                        "\n".trim($exception->getMessage()),
+                        'error'
+                    )
+                );
             }
 
             $output->write(
