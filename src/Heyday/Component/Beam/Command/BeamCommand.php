@@ -23,10 +23,6 @@ use Symfony\Component\Process\Process;
 abstract class BeamCommand extends Command
 {
     /**
-     * @var \Symfony\Component\Console\Helper\FormatterHelper
-     */
-    protected $formatterHelper;
-    /**
      * @var \Heyday\Component\Beam\Helper\ContentProgressHelper
      */
     protected $progressHelper;
@@ -43,11 +39,10 @@ abstract class BeamCommand extends Command
      */
     public function __construct($name = null)
     {
-        $this->formatterHelper = new FormatterHelper();
+        parent::__construct($name);
         $this->progressHelper = new ContentProgressHelper();
         $this->deploymentResultHelper = new DeploymentResultHelper($this->formatterHelper);
         $this->dialogHelper = new DialogHelper();
-        parent::__construct($name);
     }
     /**
      * Configure the command
@@ -484,41 +479,6 @@ abstract class BeamCommand extends Command
             );
         }
 
-    }
-    /**
-     * @param OutputInterface $output
-     * @param                 $error
-     */
-    public function outputError(OutputInterface $output, $error)
-    {
-        $output->writeln(
-            $this->formatterHelper->formatSection(
-                'error',
-                sprintf(
-                    '<error>%s</error>',
-                    $error
-                ),
-                'error'
-            )
-        );
-    }
-    /**
-     * @param OutputInterface $output
-     * @param                 $message
-     * @param                 $section
-     * @param                 $style
-     */
-    protected function outputMultiline(OutputInterface $output, $message, $section, $style)
-    {
-        foreach (explode(PHP_EOL, $message) as $line) {
-            $output->writeln(
-                $this->formatterHelper->formatSection(
-                    $section,
-                    $line,
-                    $style
-                )
-            );
-        }
     }
     /**
      * @param  OutputInterface $output
