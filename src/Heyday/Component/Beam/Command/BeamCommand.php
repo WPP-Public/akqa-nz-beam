@@ -4,8 +4,9 @@ namespace Heyday\Component\Beam\Command;
 
 use Heyday\Component\Beam\Beam;
 use Heyday\Component\Beam\DeploymentProvider\DeploymentResult;
+use Heyday\Component\Beam\Helper\ContentProgressHelper;
+use Heyday\Component\Beam\Helper\DeploymentResultHelper;
 use Heyday\Component\Beam\Utils;
-use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Helper\DialogHelper;
 use Symfony\Component\Console\Helper\FormatterHelper;
 use Symfony\Component\Console\Helper\ProgressHelper;
@@ -22,37 +23,34 @@ use Symfony\Component\Process\Process;
 abstract class BeamCommand extends Command
 {
     /**
-     * @var \Symfony\Component\Console\Helper\HelperInterface
+     * @var \Symfony\Component\Console\Helper\FormatterHelper
      */
     protected $formatterHelper;
     /**
-     * @var \Symfony\Component\Console\Helper\HelperInterface
+     * @var \Heyday\Component\Beam\Helper\ContentProgressHelper
      */
     protected $progressHelper;
     /**
-     * @var \Symfony\Component\Console\Helper\HelperInterface
+     * @var \Heyday\Component\Beam\Helper\DeploymentResultHelper
      */
     protected $deploymentResultHelper;
     /**
-     * @var \Symfony\Component\Console\Helper\HelperInterface
+     * @var \Symfony\Component\Console\Helper\DialogHelper
      */
     protected $dialogHelper;
     /**
-     * @param Application $application
+     * @param null $name
      */
-    public function setApplication(Application $application = null)
+    public function __construct($name = null)
     {
-        parent::setApplication($application);
-        if ($application) {
-            $helperSet = $this->getHelperSet();
-            $this->formatterHelper = $helperSet->get('formatter');
-            $this->progressHelper = $helperSet->get('contentprogress');
-            $this->deploymentResultHelper = $helperSet->get('deploymentresult');
-            $this->dialogHelper = $helperSet->get('dialog');
-        }
+        $this->formatterHelper = new FormatterHelper();
+        $this->progressHelper = new ContentProgressHelper();
+        $this->deploymentResultHelper = new DeploymentResultHelper($this->formatterHelper);
+        $this->dialogHelper = new DialogHelper();
+        parent::__construct($name);
     }
     /**
-     *
+     * Configure the command
      */
     protected function configure()
     {
@@ -118,12 +116,6 @@ abstract class BeamCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        //Set for use in local closures
-        $formatterHelper = $this->formatterHelper;
-        $progressHelper = $this->progressHelper;
-        $deploymentResultHelper = $this->deploymentResultHelper;
-        $dialogHelper = $this->dialogHelper;
-
         try {
 
             $beam = new Beam(
@@ -133,16 +125,12 @@ abstract class BeamCommand extends Command
                 $this->getOptions($input, $output)
             );
 
-            $this->outputSummary(
-                $output,
-                $formatterHelper,
-                $beam
-            );
+            $this->outputSummary($output, $beam);
 
             // Prompt the user with the affected files and a confirmation dialog
             if (!$input->getOption('no-prompt')) {
                 $output->writeln(
-                    $formatterHelper->formatSection(
+                    $this->formatterHelper->formatSection(
                         'info',
                         'Determining list of files that will be modified...'
                     )
@@ -150,26 +138,22 @@ abstract class BeamCommand extends Command
 
                 // Get the affected files
                 $deploymentResult = $beam->doDryrun();
+                
                 // If there are any show them
                 $count = count($deploymentResult);
+                
                 // If there is more that 1 item there are updates
                 if ($count > 0) {
                     // Output the actual changed files and folders
-                    $deploymentResultHelper->outputChanges(
-                        $formatterHelper,
-                        $output,
-                        $deploymentResult
-                    );
+                    $this->deploymentResultHelper->outputChanges($output, $deploymentResult);
+                    
                     // Output a summary of the changes
-                    $deploymentResultHelper->outputChangesSummary(
-                        $formatterHelper,
-                        $output,
-                        $deploymentResult
-                    );
+                    $this->deploymentResultHelper->outputChangesSummary($output, $deploymentResult);
+                    
                     // If it is a dry run we are complete
                     if (!$input->getOption('dry-run')) {
                         // If we have confirmation do the beam
-                        if (!$this->isOkay($output, $dialogHelper, $formatterHelper)) {
+                        if (!$this->isOkay($output)) {
                             throw new \RuntimeException('User cancelled');
                         }
 
@@ -179,8 +163,6 @@ abstract class BeamCommand extends Command
                             $deleteCount > 0
                             && !$this->isOkay(
                                 $output,
-                                $dialogHelper,
-                                $formatterHelper,
                                 sprintf(
                                     '%d file%s going to be deleted in this deployment, are you sure this is okay?',
                                     $deleteCount,
@@ -195,23 +177,13 @@ abstract class BeamCommand extends Command
                         // Set the output handler for displaying the progress bar etc
                         $beam->setOption(
                             'deploymentoutputhandler',
-                            $this->getDeploymentOutputHandler(
-                                $output,
-                                $progressHelper,
-                                $formatterHelper,
-                                $deploymentResult
-                            )
+                            $this->getDeploymentOutputHandler($output, $deploymentResult)
                         );
 
                         // Run the deployment
                         try {
                             $deploymentResult = $beam->doRun($deploymentResult);
-
-                            $deploymentResultHelper->outputChangesSummary(
-                                $formatterHelper,
-                                $output,
-                                $deploymentResult
-                            );
+                            $this->deploymentResultHelper->outputChangesSummary($output, $deploymentResult);
                         } catch (\Exception $exception) {
                             if (!$this->handleDeploymentProviderFailure($exception, $output)) {
                                 exit(1);
@@ -230,23 +202,15 @@ abstract class BeamCommand extends Command
                 }
 
                 // Output all changes
-                $deploymentResultHelper->outputChanges(
-                    $formatterHelper,
-                    $output,
-                    $changedFiles
-                );
+                $this->deploymentResultHelper->outputChanges($output, $changedFiles);
+                
                 // Output a summary
-                $deploymentResultHelper->outputChangesSummary(
-                    $formatterHelper,
-                    $output,
-                    $changedFiles
-                );
+                $this->deploymentResultHelper->outputChangesSummary($output, $changedFiles);
             }
 
         } catch (\Exception $e) {
             $this->outputError(
                 $output,
-                $formatterHelper,
                 $e->getMessage()
             );
         }
@@ -279,13 +243,10 @@ abstract class BeamCommand extends Command
     }
     /**
      * @param OutputInterface $output
-     * @param FormatterHelper $formatterHelper
      * @return callable
      */
-    protected function getOutputHandler(
-        OutputInterface $output,
-        FormatterHelper $formatterHelper
-    ) {
+    protected function getOutputHandler(OutputInterface $output) {
+        $formatterHelper = $this->formatterHelper;
         return function ($content, $section = 'info') use ($output, $formatterHelper) {
             $output->writeln(
                 $formatterHelper->formatSection(
@@ -297,24 +258,17 @@ abstract class BeamCommand extends Command
     }
     /**
      * @param OutputInterface  $output
-     * @param ProgressHelper   $progressHelper
-     * @param FormatterHelper  $formatterHelper
      * @param DeploymentResult $deploymentResult
      * @return callable
      */
-    protected function getDeploymentOutputHandler(
-        OutputInterface $output,
-        ProgressHelper $progressHelper,
-        FormatterHelper $formatterHelper,
-        DeploymentResult $deploymentResult
-    ) {
+    protected function getDeploymentOutputHandler(OutputInterface $output, DeploymentResult $deploymentResult) {
         $count = count($deploymentResult);
+        $progressHelper = $this->progressHelper;
 
         return function () use (
             $output,
-            $progressHelper,
-            $formatterHelper,
             $deploymentResult,
+            $progressHelper,
             $count
         ) {
             static $steps = 0;
@@ -332,20 +286,12 @@ abstract class BeamCommand extends Command
     }
     /**
      * @param OutputInterface $output
-     * @param DialogHelper    $dialogHelper
-     * @param FormatterHelper $formatterHelper
      * @return callable
      */
-    protected function getCommandPromptHandler(
-        OutputInterface $output,
-        DialogHelper $dialogHelper,
-        FormatterHelper $formatterHelper
-    ) {
-        return function ($command) use (
-            $output,
-            $dialogHelper,
-            $formatterHelper
-        ) {
+    protected function getCommandPromptHandler(OutputInterface $output) {
+        $dialogHelper = $this->dialogHelper;
+        $formatterHelper = $this->formatterHelper;
+        return function ($command) use ($output, $dialogHelper, $formatterHelper) {
             return in_array(
                 $dialogHelper->askConfirmation(
                     $output,
@@ -365,20 +311,12 @@ abstract class BeamCommand extends Command
     }
     /**
      * @param OutputInterface $output
-     * @param DialogHelper    $dialogHelper
-     * @param FormatterHelper $formatterHelper
      * @return callable
      */
-    protected function getCommandFailureHandler(
-        OutputInterface $output,
-        DialogHelper $dialogHelper,
-        FormatterHelper $formatterHelper
-    ) {
-        return function ($command, $exception, Process $process = null) use (
-            $output,
-            $dialogHelper,
-            $formatterHelper
-        ) {
+    protected function getCommandFailureHandler(OutputInterface $output) {
+        $dialogHelper = $this->dialogHelper;
+        $formatterHelper = $this->formatterHelper;
+        return function ($command, \Exception $exception, Process $process = null) use ($output, $dialogHelper, $formatterHelper) {
             // Ensure the output of the failed command is shown
             if (OutputInterface::VERBOSITY_VERBOSE !== $output->getVerbosity()) {
                 $message = trim($exception->getMessage());
@@ -417,13 +355,12 @@ abstract class BeamCommand extends Command
      */
     protected function getOptions(InputInterface $input, OutputInterface $output)
     {
-        $formatterHelper = $this->formatterHelper;
-
         $options = array(
             'direction' => $input->getArgument('direction'),
             'target'    => $input->getArgument('target'),
             'srcdir'    => $this->getSrcDir($input)
         );
+        
         if ($input->getOption('ref')) {
             $options['ref'] = $input->getOption('ref');
         }
@@ -437,29 +374,20 @@ abstract class BeamCommand extends Command
             $options['working-copy'] = true;
         }
         if ($input->getOption('command-prompt')) {
-            $options['commandprompthandler'] = $this->getCommandPromptHandler(
-                $output,
-                $this->dialogHelper,
-                $this->formatterHelper
-            );
+            $options['commandprompthandler'] = $this->getCommandPromptHandler($output);
         }
 
-        $options['commandfailurehandler'] = $this->getCommandFailureHandler(
-            $output,
-            $this->dialogHelper,
-            $this->formatterHelper
-        );
+        $options['commandfailurehandler'] = $this->getCommandFailureHandler($output);
 
-        $options['outputhandler'] = $this->getOutputHandler(
-            $output,
-            $this->formatterHelper
-        );
+        $options['outputhandler'] = $this->getOutputHandler($output);
 
         if ($input->getOption('tags')) {
             $options['command-tags'] = $input->getOption('tags');
         }
 
         if (OutputInterface::VERBOSITY_VERBOSE === $output->getVerbosity()) {
+            
+            $formatterHelper = $this->formatterHelper;
 
             $options['targetcommandoutputhandler'] = $options['localcommandoutputhandler'] = function ($type, $data) use (
                 $output,
@@ -489,10 +417,9 @@ abstract class BeamCommand extends Command
     }
     /**
      * @param OutputInterface $output
-     * @param                 $formatterHelper
      * @param Beam            $beam
      */
-    protected function outputSummary(OutputInterface $output, $formatterHelper, Beam $beam)
+    protected function outputSummary(OutputInterface $output, Beam $beam)
     {
         if ($beam->isUp()) {
             $fromMessage = sprintf(
@@ -523,17 +450,17 @@ abstract class BeamCommand extends Command
 
         $output->writeln(
             array(
-                $formatterHelper->formatSection(
+                $this->formatterHelper->formatSection(
                     'warn',
                     $action,
                     'comment'
                 ),
-                $formatterHelper->formatSection(
+                $this->formatterHelper->formatSection(
                     'warn',
                     $fromMessage,
                     'comment'
                 ),
-                $formatterHelper->formatSection(
+                $this->formatterHelper->formatSection(
                     'warn',
                     $toMessage,
                     'comment'
@@ -549,7 +476,7 @@ abstract class BeamCommand extends Command
             }
 
             $output->writeln(
-                $formatterHelper->formatSection(
+                $this->formatterHelper->formatSection(
                     'warn',
                     trim($pathsMessage),
                     'comment'
@@ -560,13 +487,12 @@ abstract class BeamCommand extends Command
     }
     /**
      * @param OutputInterface $output
-     * @param                 $formatterHelper
      * @param                 $error
      */
-    public function outputError(OutputInterface $output, $formatterHelper, $error)
+    public function outputError(OutputInterface $output, $error)
     {
         $output->writeln(
-            $formatterHelper->formatSection(
+            $this->formatterHelper->formatSection(
                 'error',
                 sprintf(
                     '<error>%s</error>',
@@ -596,23 +522,19 @@ abstract class BeamCommand extends Command
     }
     /**
      * @param  OutputInterface $output
-     * @param                  $dialogHelper
-     * @param                  $formatterHelper
      * @param  string          $question
      * @param  string          $default
      * @return mixed
      */
     protected function isOkay(
         OutputInterface $output,
-        $dialogHelper,
-        $formatterHelper,
         $question = 'Is this okay?',
         $default = 'yes'
     ) {
         //TODO: Respect no-interaction
-        return $dialogHelper->askConfirmation(
+        return $this->dialogHelper->askConfirmation(
             $output,
-            $formatterHelper->formatSection(
+            $this->formatterHelper->formatSection(
                 'prompt',
                 Utils::getQuestion(
                     $question,

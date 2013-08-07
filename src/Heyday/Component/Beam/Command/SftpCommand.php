@@ -35,7 +35,8 @@ class SftpCommand extends BeamCommand
             );
     }
     /**
-     * @param  InputInterface $input
+     * @param InputInterface  $input
+     * @param OutputInterface $output
      * @return array
      */
     protected function getOptions(InputInterface $input, OutputInterface $output)

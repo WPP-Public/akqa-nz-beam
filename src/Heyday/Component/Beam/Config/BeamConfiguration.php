@@ -4,6 +4,8 @@ namespace Heyday\Component\Beam\Config;
 
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
+use Symfony\Component\Config\Definition\Processor;
 
 /**
  * Class BeamConfiguration
@@ -88,7 +90,6 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
     {
         $treeBuilder = new TreeBuilder();
         $rootNode = $treeBuilder->root('beam');
-
         $self = $this;
 
         $rootNode
@@ -97,22 +98,21 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
                     ->isRequired()
                     ->requiresAtLeastOneElement()
                     ->prototype('array')
-                        ->children()
-                            ->scalarNode('user')->isRequired()->end()
-                            ->scalarNode('host')->isRequired()->end()
-                            ->scalarNode('webroot')
-                                ->isRequired()
-                                ->validate()
-                                    ->always(
-                                        function ($v) {
-                                            return rtrim($v, '/');
-                                        }
-                                    )
-                                ->end()
-                            ->end()
-                            ->scalarNode('branch')->end()
-                            ->scalarNode('password')->end()
-                        ->end()
+                        ->prototype('scalar')->end()
+                    ->end()
+                    ->validate()
+                    ->always(
+                        function ($v) use ($self) {
+                            foreach ($v as $name => $config) {
+                                if (empty($config['type'])) {
+                                    $config['type'] = 'rsync';
+                                }
+                                $configTree = $self->getServerTypeTree($name, $config['type']);
+                                $v[$name] = $configTree->finalize($configTree->normalize($config));
+                            }
+                            return $v;
+                        }
+                    )
                     ->end()
                 ->end()
                 ->arrayNode('commands')
@@ -180,7 +180,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
                         foreach ($v['commands'] as $commandName => $command) {
                             foreach ($command['servers'] as $server) {
                                 if (!isset($v['servers'][$server])) {
-                                    throw new \InvalidArgumentException(
+                                    throw new InvalidConfigurationException(
                                         "Command \"{$commandName}\" references an invalid server, options are: " .
                                             $self->getFormattedOptions(array_keys($v['servers']))
                                     );
@@ -223,5 +223,70 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
         }
 
         return array_merge($excludes, $value['patterns']);
+    }
+    /**
+     * @param $name
+     * @param $type
+     * @return \Symfony\Component\Config\Definition\NodeInterface
+     */
+    public function getServerTypeTree($name, $type)
+    {
+        $typeTreeBuilder = new TreeBuilder();
+        $typeTreeBuilder->root($name)
+            ->children()
+                ->enumNode('type')
+                ->values(array('rsync', 'sftp', 'ftp'))->isRequired()
+                ->end()
+            ->end();
+        
+        $typeTree = $typeTreeBuilder->buildTree();
+        $typeTree->finalize($typeTree->normalize(array('type' => $type)));
+        
+        $treeBuilder = new TreeBuilder();
+        $node = $treeBuilder->root($name)
+            ->children()
+                ->scalarNode('type')->isRequired()->end()
+                ->scalarNode('host')->isRequired()->end()
+                ->scalarNode('user')->isRequired()->end()
+                ->scalarNode('branch')->end();
+
+        switch ($type) {
+            case 'sftp':
+            case 'ftp':
+                $node->scalarNode('webroot')->isRequired()
+                    ->validate()
+                    ->always(
+                        function ($v) use ($type) {
+                            if ($v[0] !== '/') {
+                                throw new InvalidConfigurationException(
+                                    sprintf(
+                                        'Webroot must be a absolute path when using "%s"',
+                                        $type
+                                    )
+                                );
+                            }
+                            return rtrim($v, '/');
+                        }
+                    )->end()
+                    ->end()
+                    ->scalarNode('password')->isRequired()->end();
+                break;
+            case 'rsync':
+                $node->scalarNode('webroot')
+                    ->isRequired()
+                        ->validate()
+                        ->always(
+                            function ($v) {
+                                return rtrim($v, '/');
+                            }
+                        )
+                        ->end();
+                break;
+        }
+        
+        // end children
+        $node->end();
+        
+        return $treeBuilder->buildTree();
     }
 }

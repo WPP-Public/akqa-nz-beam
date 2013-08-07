@@ -55,7 +55,8 @@ class RsyncCommand extends BeamCommand
             );
     }
     /**
-     * @param  InputInterface $input
+     * @param InputInterface  $input
+     * @param OutputInterface $output
      * @return array
      */
     protected function getOptions(InputInterface $input, OutputInterface $output)
@@ -75,14 +76,11 @@ class RsyncCommand extends BeamCommand
     /**
      * @{inheritDoc}
      */
-    protected function getDeploymentOutputHandler(
-        OutputInterface $output,
-        ProgressHelper $progressHelper,
-        FormatterHelper $formatterHelper,
-        DeploymentResult $deploymentResult
-    ) {
+    protected function getDeploymentOutputHandler(OutputInterface $output, DeploymentResult $deploymentResult) {
         $count = count($deploymentResult);
         $deploymentProvider = $this->deploymentProvider;
+        $progressHelper = $this->progressHelper;
+        $formatterHelper = $this->formatterHelper;
 
         return function (
             $type,

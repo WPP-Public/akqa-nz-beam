@@ -14,6 +14,18 @@ use Symfony\Component\Console\Output\OutputInterface;
 class DeploymentResultHelper extends Helper
 {
     /**
+     * @var \Symfony\Component\Console\Helper\FormatterHelper
+     */
+    protected $formatterHelper;
+
+    /**
+     * @param FormatterHelper $formatterHelper
+     */
+    public function __construct(FormatterHelper $formatterHelper)
+    {
+        $this->formatterHelper = $formatterHelper;
+    }
+    /**
      * Returns the canonical name of this helper.
      *
      * @return string The canonical name
@@ -25,13 +37,11 @@ class DeploymentResultHelper extends Helper
         return 'deploymentresult';
     }
     /**
-     * @param FormatterHelper  $formatter
      * @param OutputInterface  $output
      * @param DeploymentResult $deploymentResult
      * @param bool             $type
      */
     public function outputChanges(
-        FormatterHelper $formatter,
         OutputInterface $output,
         DeploymentResult $deploymentResult,
         $type = false
@@ -39,9 +49,9 @@ class DeploymentResultHelper extends Helper
         foreach ($deploymentResult as $change) {
             if ($change['reason'] != array('time') && (!$type || $change['update'] === $type)) {
                 $output->writeLn(
-                    $formatter->formatSection(
+                    $this->formatterHelper->formatSection(
                         $change['update'],
-                        $formatter->formatSection(
+                        $this->formatterHelper->formatSection(
                             implode(',', $change['reason']),
                             $change['filename'],
                             'comment'
@@ -53,15 +63,10 @@ class DeploymentResultHelper extends Helper
         }
     }
     /**
-     * @param FormatterHelper  $formatter
      * @param OutputInterface  $output
      * @param DeploymentResult $deploymentResult
      */
-    public function outputChangesSummary(
-        FormatterHelper $formatter,
-        OutputInterface $output,
-        DeploymentResult $deploymentResult
-    ) {
+    public function outputChangesSummary(OutputInterface $output, DeploymentResult $deploymentResult) {
         $totals = array(
             'sent'       => 0,
             'received'   => 0,
@@ -78,7 +83,7 @@ class DeploymentResultHelper extends Helper
 
         foreach ($totals as $key => $total) {
             $output->writeLn(
-                $formatter->formatSection(
+                $this->formatterHelper->formatSection(
                     'summary',
                     sprintf(
                         '%s%s',
