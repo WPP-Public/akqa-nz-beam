@@ -373,24 +373,29 @@ abstract class BeamCommand extends Command
         DialogHelper $dialogHelper,
         FormatterHelper $formatterHelper
     ) {
-        return function ($command, $exception) use (
+        return function ($command, $exception, \Symfony\Component\Process\Process $process = null) use (
             $output,
             $dialogHelper,
             $formatterHelper
         ) {
             // Ensure the output of the failed command is shown
             if (OutputInterface::VERBOSITY_VERBOSE !== $output->getVerbosity()) {
-                $output->writeln(
-                    $formatterHelper->formatSection(
-                        'Error',
-                        "\n".trim($exception->getMessage()),
-                        'error'
-                    )
-                );
+
+                if ($message = trim($exception->getMessage())) {
+                    // Use exception message
+                } else if ($message = trim($process->getErrorOutput())){
+                    // Use stderr
+                } else if ($message = trim($process->getOutput())) {
+                    // Use stdout
+                }
+
+                if ($message) {
+                    $output->writeln($message);
+                }
             }
 
-            $output->write(
-                $formatterHelper->formatSection('Error', 'Error running: ' . $command['command'] . "\n", 'error')
+            $output->writeln(
+                $formatterHelper->formatSection('Error', 'Error running: ' . $command['command'], 'error')
             );
 
             if ($command['required']) {

@@ -633,23 +633,26 @@ class Beam
         try {
 
             if ($command['tty']) {
+                $process = null;
                 passthru($command['command'], $exit);
                 if ($exit !== 0) {
                     throw new \RuntimeException('Command running through passthru() returned non-zero exit status');
                 }
             } else {
+                $process = $this->getProcess(
+                    $command['command'],
+                    $this->getLocalPath()
+                );
+
                 $this->runProcess(
-                    $this->getProcess(
-                        $command['command'],
-                        $this->getLocalPath()
-                    ),
+                    $process,
                     $outputHandler
                 );
             }
 
         } catch (\RuntimeException $exception) {
 
-            if (!$this->promptCommandFailureContinue($command, $exception)) {
+            if (!$this->promptCommandFailureContinue($command, $exception, $process)) {
                 exit(1);
             }
 
@@ -662,13 +665,13 @@ class Beam
      * @return mixed
      * @throws $exception
      */
-    protected function promptCommandFailureContinue($command, $exception)
+    protected function promptCommandFailureContinue($command, $exception, Process $process = null)
     {
         if (!is_callable($this->options['commandfailurehandler'])) {
             throw $exception;
         }
 
-        return $this->options['commandfailurehandler']($command, $exception);
+        return $this->options['commandfailurehandler']($command, $exception, $process);
     }
     /**
      * @param $handler
