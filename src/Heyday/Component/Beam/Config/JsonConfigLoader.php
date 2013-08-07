@@ -19,14 +19,19 @@ class JsonConfigLoader extends FileLoader
      */
     public function load($resource, $type = null)
     {
-        return json_decode(
-            file_get_contents(
-                $this->locate(
-                    $resource
-                )
-            ),
+        $path =  $this->locate($resource);
+        $config = json_decode(
+            file_get_contents($path),
             true
         );
+
+        if (json_last_error() != JSON_ERROR_NONE) {
+            throw new \RuntimeException(
+                "Failed to parse config $path. Check for syntax errors."
+            );
+        }
+
+        return $config;
     }
     /**
      * @param $resource
