@@ -2,17 +2,11 @@
 
 namespace Heyday\Component\Beam;
 
-use Heyday\Component\Beam\Command\BeamCompletionCommand;
-use Heyday\Component\Beam\Command\FtpCommand;
-use Heyday\Component\Beam\Command\InitCommand;
-use Heyday\Component\Beam\Command\MakeChecksumsCommand;
-use Heyday\Component\Beam\Command\RsyncCommand;
-use Heyday\Component\Beam\Command\SelfUpdateCommand;
-use Heyday\Component\Beam\Command\SftpCommand;
-use Heyday\Component\Beam\Helper\ContentProgressHelper;
-use Heyday\Component\Beam\Helper\DeploymentResultHelper;
+use Heyday\Component\Beam\Command;
+use Heyday\Component\Beam\Helper;
 use Symfony\Component\Console\Application as BaseApplication;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Helper\HelperSet;
 
 /**
  * Class Application
@@ -59,13 +53,14 @@ class Application extends BaseApplication
     protected function getDefaultCommands()
     {
         $commands = parent::getDefaultCommands();
-        $commands[] = new RsyncCommand();
-        $commands[] = new SftpCommand();
-        $commands[] = new FtpCommand();
-        $commands[] = new InitCommand();
-        $commands[] = new SelfUpdateCommand();
-        $commands[] = new MakeChecksumsCommand();
-        $commands[] = new BeamCompletionCommand();
+        
+        $commands[] = new Command\RsyncCommand();
+        $commands[] = new Command\SftpCommand();
+        $commands[] = new Command\FtpCommand();
+        $commands[] = new Command\InitCommand();
+        $commands[] = new Command\SelfUpdateCommand();
+        $commands[] = new Command\MakeChecksumsCommand();
+        $commands[] = new Command\BeamCompletionCommand();
 
         return $commands;
     }
@@ -75,11 +70,7 @@ class Application extends BaseApplication
      */
     protected function getDefaultHelperSet()
     {
-        $helperset = parent::getDefaultHelperSet();
-        $helperset->set(new DeploymentResultHelper());
-        $helperset->set(new ContentProgressHelper());
-
-        return $helperset;
+        return new HelperSet();
     }
     /**
      * When operating as a single command app, ensure the app doesn't error due to the first argument
