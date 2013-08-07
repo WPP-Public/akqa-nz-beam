@@ -636,7 +636,7 @@ class Beam
                 $process = null;
                 passthru($command['command'], $exit);
                 if ($exit !== 0) {
-                    throw new \RuntimeException('Command running through passthru() returned non-zero exit status');
+                    throw new \RuntimeException("Command returned a non-zero exit status ($exit)");
                 }
             } else {
                 $process = $this->getProcess(

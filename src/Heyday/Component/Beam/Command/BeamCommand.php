@@ -13,6 +13,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Process\Process;
 
 /**
  * Class BeamCommand
@@ -373,20 +374,17 @@ abstract class BeamCommand extends Command
         DialogHelper $dialogHelper,
         FormatterHelper $formatterHelper
     ) {
-        return function ($command, $exception, \Symfony\Component\Process\Process $process = null) use (
+        return function ($command, $exception, Process $process = null) use (
             $output,
             $dialogHelper,
             $formatterHelper
         ) {
             // Ensure the output of the failed command is shown
             if (OutputInterface::VERBOSITY_VERBOSE !== $output->getVerbosity()) {
+                $message = trim($exception->getMessage());
 
-                if ($message = trim($exception->getMessage())) {
-                    // Use exception message
-                } else if ($message = trim($process->getErrorOutput())){
-                    // Use stderr
-                } else if ($message = trim($process->getOutput())) {
-                    // Use stdout
+                if (!$message && $process) {
+                    $message = trim($process->getErrorOutput()) || trim($process->getOutput());
                 }
 
                 if ($message) {
