@@ -13,7 +13,7 @@ abstract class Configuration
      * @param  string $enclosure
      * @return string
      */
-    public function getFormattedOptions($options, $enclosure = '\'')
+    public function getFormattedOptions($options, $enclosure = "'")
     {
         return $enclosure . implode("$enclosure, $enclosure", $options) . $enclosure;
     }
