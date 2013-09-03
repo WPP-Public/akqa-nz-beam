@@ -93,7 +93,7 @@ Valid values for `applications` are: `gear`, `silverstripe`, `symfony`, `wordpre
 
     "commands": [
         {
-            "command": "composer install",
+            "command": "composer install --prefer-dist --no-dev",
             "location": "local",
             "phase": "pre",
             "required": true
