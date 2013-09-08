@@ -1,6 +1,6 @@
 # Beam
 
-Beam is a command line utility for deploying websites to servers. Its basic function is the synchronization of files between a version control system and a server. It can also be configured to run shell commands to further automate the deployment process. Beam works best using `rsync` over `ssh`, though it also has support for intelligent deployment through SFTP and FTP.
+Beam is a command line utility for deploying websites to servers. It allows you to sync files between a version control system and a remote host, and run shell commands at fixed stages to further automate the deployment process. Beam works best (and by default) using `rsync` over `ssh`, though it also has support for intelligent deployment through SFTP and FTP.
 
 ## Installation
 
@@ -29,15 +29,19 @@ then:
 
     $ beam self-update
 
-## Usage
+## Configuration
 
-Beam uses a config file to know where to sync your files. Which `beam.json` config file it uses depends on what directory beam is run from. Beam will look for a config file in the current directory and all directories above preferring the first that it finds.  
+Beam requires a config file named `beam.json` to know where to sync your files. Typically, each project you use Beam with will have its own `beam.json` file, as each project will have it's own deployment location(s). When a config file is not found in the current directory, Beam will backtrack through parent directories and use the first config it finds.
 
-### [Configuration](CONFIG.md)
+To generate a blank config with a valid schema run:
 
-Each project you intend to use `beam` with requires a `beam.json` configuration file.
+```bash
+$ beam init
+```
 
-#### Basic `beam.json`
+For further configuration, see the [documentation for the `beam.json` file](CONFIG.md).
+
+### Basic `beam.json`
 
 At a minimum to use, one or more server needs to be defined.
 
@@ -53,15 +57,9 @@ At a minimum to use, one or more server needs to be defined.
 }
 ```
 
-#### Config generation
+## Usage examples
 
-To generate a blank config with a valid schema run:
-
-```bash
-$ beam init
-```
-
-### Examples
+Given a valid [configuration file](CONFIG.md):
 
 ```bash
 $ beam up live                   # regular sync from git
@@ -82,7 +80,7 @@ $ beam down live                 # dowload from live to working copy
 
 ## FAQs
 
-### When I run `beam` is see something like "?? ???"
+### When I run `beam` I see something like "?? ???"
 
 This means what you have the `detect_unicode=On`in your `php.ini`. To fix, open your `php.ini` (ensure it is your cli one) and make sure `detect_unicode=Off` is present.
 
