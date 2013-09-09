@@ -35,7 +35,7 @@ then:
 ## Configuration
 
 Beam requires a config file named `beam.json` to know where to sync your files. Typically, each project you use Beam
-with will have its own `beam.json` file, as each project will have it's own deployment location(s). When a config file
+with will have its own `beam.json` file, as each project will have its own deployment location(s). When a config file
 is not found in the current directory, Beam will backtrack through parent directories and use the first config it finds.
 
 To generate a blank config with a valid schema run:
@@ -48,7 +48,7 @@ For further configuration, see the [documentation for the `beam.json` file](CONF
 
 ### Basic `beam.json`
 
-At a minimum to use, one or more server needs to be defined.
+At a minimum, to use Beam at least one server needs to be defined.
 
 ```json
 {
@@ -82,20 +82,33 @@ $ beam down live                 # dowload to working copy
 $ beam down staging -p assets    # dowload a specific folder to working copy
 ```
 
-# Help
+## Help
 
-## FAQs
+### FAQs
 
-### When I run `beam` I see something like "?? ???"
+#### When I run `beam` I see something like "?? ???"
 
 This means that you have `detect_unicode=On` in your `php.ini`. To fix this, open your `php.ini` (ensure it is your
 cli one) and make sure `detect_unicode=Off` is present.
 
-## IRC
+### IRC
 
 Help is available at `#beam` on freenode.
+
+## Contributing
+
+This project follows the standards defined in:
+
+* [PSR-0](http://www.php-fig.org/psr/0/)
+* [PSR-1](http://www.php-fig.org/psr/1/)
+* [PSR-2](http://www.php-fig.org/psr/2/)
+
 
 ## Unit testing
 
     $ composer install --dev
     $ phpunit
+    
+# License
+
+MIT, see LICENSE.
