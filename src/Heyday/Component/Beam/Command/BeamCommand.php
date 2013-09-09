@@ -8,7 +8,6 @@ use Heyday\Component\Beam\Helper\ContentProgressHelper;
 use Heyday\Component\Beam\Helper\DeploymentResultHelper;
 use Heyday\Component\Beam\Utils;
 use Symfony\Component\Console\Helper\DialogHelper;
-use Symfony\Component\Console\Helper\FormatterHelper;
 use Symfony\Component\Console\Helper\ProgressHelper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;

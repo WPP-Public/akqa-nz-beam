@@ -660,10 +660,11 @@ class Beam
     }
 
     /**
-     * @param $command
-     * @param $exception
+     * @param                                    $command
+     * @param                                    $exception
+     * @param \Symfony\Component\Process\Process $process
+     * @throws \RuntimeException
      * @return mixed
-     * @throws $exception
      */
     protected function promptCommandFailureContinue($command, $exception, Process $process = null)
     {

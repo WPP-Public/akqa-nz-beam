@@ -7,6 +7,10 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * Class SelfUpdateCommand
+ * @package Heyday\Component\Beam\Command
+ */
 class SelfUpdateCommand extends SymfonyCommand
 {
     /**
@@ -30,6 +34,7 @@ class SelfUpdateCommand extends SymfonyCommand
      * @param  InputInterface    $input
      * @param  OutputInterface   $output
      * @throws \RuntimeException
+     * @return void
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {

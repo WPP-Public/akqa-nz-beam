@@ -7,6 +7,10 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * Class InitCommand
+ * @package Heyday\Component\Beam\Command
+ */
 class InitCommand extends SymfonyCommand
 {
 
@@ -23,6 +27,11 @@ class InitCommand extends SymfonyCommand
             );
     }
 
+    /**
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     * @return int|null|void
+     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
 
@@ -67,6 +76,10 @@ class InitCommand extends SymfonyCommand
 
     }
 
+    /**
+     * @param $json
+     * @return bool|string
+     */
     private function jSONFormat($json)
     {
         $tab = "\t";

@@ -2,6 +2,10 @@
 
 namespace Heyday\Component\Beam\VcsProvider;
 
+/**
+ * Class VcsProvider
+ * @package Heyday\Component\Beam\VcsProvider
+ */
 interface VcsProvider
 {
     /**

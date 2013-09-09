@@ -4,17 +4,23 @@ namespace Heyday\Component\Beam\Config;
 
 use Symfony\Component\Config\Loader\FileLoader;
 
+/**
+ * Class JsonConfigLoader
+ * @package Heyday\Component\Beam\Config
+ */
 class JsonConfigLoader extends FileLoader
 {
     /**
      * @var array
      */
     protected $locateCache = array();
+
     /**
      * Loads a resource.
      *
      * @param  mixed  $resource The resource
      * @param  string $type     The resource type
+     * @throws \RuntimeException
      * @return array
      */
     public function load($resource, $type = null)

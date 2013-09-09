@@ -10,7 +10,6 @@ use Heyday\Component\Beam\Beam;
  */
 interface DeploymentProvider
 {
-
     const LIMITATION_REMOTECOMMAND = 'remote-command';
 
     /**
@@ -19,14 +18,16 @@ interface DeploymentProvider
      */
     public function setBeam(Beam $beam);
     /**
-     * @param  callable $output
-     * @param  bool     $dryrun
+     * @param  callable        $output
+     * @param  bool            $dryrun
+     * @param DeploymentResult $deploymentResult
      * @return mixed
      */
     public function up(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null);
     /**
      * @param  callable $output
      * @param  bool     $dryrun
+     * @param DeploymentResult $deploymentResult
      * @return mixed
      */
     public function down(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null);
@@ -39,5 +40,4 @@ interface DeploymentProvider
      * @return array
      */
     public function getLimitations();
-
 }

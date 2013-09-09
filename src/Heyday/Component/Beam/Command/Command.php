@@ -10,6 +10,10 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * Class Command
+ * @package Heyday\Component\Beam\Command
+ */
 abstract class Command extends BaseCommand
 {
     /**
@@ -62,7 +66,8 @@ abstract class Command extends BaseCommand
         );
     }
     /**
-     * @param $configFile
+     * @param \Symfony\Component\Console\Input\InputInterface $input
+     * @internal param $configFile
      * @return string
      */
     protected function getSrcDir(InputInterface $input)
@@ -91,6 +96,7 @@ abstract class Command extends BaseCommand
     /**
      * @param OutputInterface $output
      * @param                 $error
+     * @return void
      */
     public function outputError(OutputInterface $output, $error)
     {
@@ -110,6 +116,7 @@ abstract class Command extends BaseCommand
      * @param                 $message
      * @param                 $section
      * @param                 $style
+     * @return void
      */
     protected function outputMultiline(OutputInterface $output, $message, $section, $style)
     {
