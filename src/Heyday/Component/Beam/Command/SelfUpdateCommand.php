@@ -27,8 +27,8 @@ class SelfUpdateCommand extends SymfonyCommand
             );
     }
     /**
-     * @param  InputInterface  $input
-     * @param  OutputInterface $output
+     * @param  InputInterface    $input
+     * @param  OutputInterface   $output
      * @throws \RuntimeException
      */
     protected function execute(InputInterface $input, OutputInterface $output)

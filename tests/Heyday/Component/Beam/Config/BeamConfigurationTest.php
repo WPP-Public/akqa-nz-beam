@@ -53,9 +53,9 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                 )
             )
         );
-        
+
         $this->assertTrue(isset($processedConfig['commands']));
-        
+
         $this->assertEquals(
             array(
                 array(
@@ -72,14 +72,14 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
             ),
             $processedConfig['commands']
         );
-        
+
         $this->assertTrue(isset($processedConfig['exclude']));
         $this->assertTrue(count($processedConfig['exclude']) > 0);
         $this->assertTrue(in_array('test', $processedConfig['exclude']));
         $this->assertTrue(in_array('hello', $processedConfig['exclude']));
-        
+
         $this->assertTrue(isset($processedConfig['servers']));
-        
+
         $this->assertEquals(
             array(
                 'live' => array(

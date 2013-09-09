@@ -45,7 +45,7 @@ class ValidateCommand extends Command
                     )
                 )
             );
-            
+
         } catch (\Exception $e) {
             $this->outputError($output, $e->getMessage());
         }

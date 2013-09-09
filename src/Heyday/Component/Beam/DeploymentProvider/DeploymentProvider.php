@@ -14,7 +14,7 @@ interface DeploymentProvider
     const LIMITATION_REMOTECOMMAND = 'remote-command';
 
     /**
-     * @param  Beam $beam
+     * @param  Beam  $beam
      * @return mixed
      */
     public function setBeam(Beam $beam);

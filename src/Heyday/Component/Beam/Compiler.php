@@ -20,7 +20,7 @@ class Compiler
      */
     protected $version;
     /**
-     * @param  string $pharFile
+     * @param  string            $pharFile
      * @return string
      * @throws \RuntimeException
      */

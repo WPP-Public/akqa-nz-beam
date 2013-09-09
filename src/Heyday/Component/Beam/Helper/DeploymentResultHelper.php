@@ -66,7 +66,8 @@ class DeploymentResultHelper extends Helper
      * @param OutputInterface  $output
      * @param DeploymentResult $deploymentResult
      */
-    public function outputChangesSummary(OutputInterface $output, DeploymentResult $deploymentResult) {
+    public function outputChangesSummary(OutputInterface $output, DeploymentResult $deploymentResult)
+    {
         $totals = array(
             'sent'       => 0,
             'received'   => 0,

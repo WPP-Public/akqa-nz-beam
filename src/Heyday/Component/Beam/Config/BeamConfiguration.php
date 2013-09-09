@@ -5,7 +5,6 @@ namespace Heyday\Component\Beam\Config;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
-use Symfony\Component\Config\Definition\Processor;
 
 /**
  * Class BeamConfiguration
@@ -110,6 +109,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
                                 $configTree = $self->getServerTypeTree($name, $config['type']);
                                 $v[$name] = $configTree->finalize($configTree->normalize($config));
                             }
+
                             return $v;
                         }
                     )
@@ -238,10 +238,10 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
                 ->values(array('rsync', 'sftp', 'ftp'))->isRequired()
                 ->end()
             ->end();
-        
+
         $typeTree = $typeTreeBuilder->buildTree();
         $typeTree->finalize($typeTree->normalize(array('type' => $type)));
-        
+
         $treeBuilder = new TreeBuilder();
         $node = $treeBuilder->root($name)
             ->children()
@@ -265,6 +265,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
                                     )
                                 );
                             }
+
                             return rtrim($v, '/');
                         }
                     )->end()
@@ -283,10 +284,10 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
                         ->end();
                 break;
         }
-        
+
         // end children
         $node->end();
-        
+
         return $treeBuilder->buildTree();
     }
 }

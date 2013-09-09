@@ -226,7 +226,7 @@ class Rsync extends Deployment implements DeploymentProvider
                         [.?+p]  # permissions
                         [.?+o]  # owner
                         [.?+g]  # group
-                        [.?+]?  # no meaning 
+                        [.?+]?  # no meaning
                         [.?+a]? # optional aclextended
                         [.?+x]? # optional extended
                     )

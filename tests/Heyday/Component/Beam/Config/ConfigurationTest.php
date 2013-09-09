@@ -13,7 +13,7 @@ class ConfigurationTest extends \PHPUnit_Framework_TestCase
     {
         $this->object = $this->getMockForAbstractClass('Heyday\Component\Beam\Config\Configuration');
     }
-    
+
     public function testGetFormattedOptions()
     {
         $this->assertEquals(

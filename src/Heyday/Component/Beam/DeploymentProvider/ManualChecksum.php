@@ -28,8 +28,8 @@ abstract class ManualChecksum extends Deployment
         $this->delete = $delete;
     }
     /**
-     * @param  callable                                           $output
-     * @param  bool                                               $dryrun
+     * @param  callable                                                   $output
+     * @param  bool                                                       $dryrun
      * @param  \Heyday\Component\Beam\DeploymentProvider\DeploymentResult $deploymentResult
      * @return \Heyday\Component\Beam\DeploymentProvider\DeploymentResult
      */
@@ -150,9 +150,9 @@ abstract class ManualChecksum extends Deployment
     }
 
     /**
-     * @param  callable         $output
-     * @param  bool             $dryrun
-     * @param  DeploymentResult $deploymentResult
+     * @param  callable          $output
+     * @param  bool              $dryrun
+     * @param  DeploymentResult  $deploymentResult
      * @throws \RuntimeException
      * @return mixed
      */

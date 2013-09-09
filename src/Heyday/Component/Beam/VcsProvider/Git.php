@@ -131,7 +131,7 @@ class Git implements VcsProvider
      */
     public function isRemote($branch)
     {
-        return (bool)$this->getRemoteName($branch);
+        return (bool) $this->getRemoteName($branch);
     }
     /**
      * @param $branch

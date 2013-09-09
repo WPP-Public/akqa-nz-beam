@@ -454,8 +454,8 @@ class Beam
     }
     /**
      * A helper method that runs a process and checks its success, erroring if it failed
-     * @param  Process  $process
-     * @param  callable $output
+     * @param  Process           $process
+     * @param  callable          $output
      * @throws \RuntimeException
      */
     protected function runProcess(Process $process, \Closure $output = null)

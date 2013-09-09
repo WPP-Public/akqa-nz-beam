@@ -53,7 +53,7 @@ class Application extends BaseApplication
     protected function getDefaultCommands()
     {
         $commands = parent::getDefaultCommands();
-        
+
         $commands[] = new Command\RsyncCommand();
         $commands[] = new Command\SftpCommand();
         $commands[] = new Command\FtpCommand();
