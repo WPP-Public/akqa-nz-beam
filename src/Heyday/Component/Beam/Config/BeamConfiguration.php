@@ -231,6 +231,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
      */
     public function getServerTypeTree($name, $type)
     {
+        $name = str_replace('.', '_', $name);
         $typeTreeBuilder = new TreeBuilder();
         $typeTreeBuilder->root($name)
             ->children()
