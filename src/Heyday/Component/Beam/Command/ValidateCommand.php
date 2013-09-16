@@ -19,7 +19,8 @@ class ValidateCommand extends Command
     protected function configure()
     {
         $this->setName('validate')
-            ->addConfigOption();
+            ->addConfigOption()
+            ->setDescription('Validate the nearest beam.json file');
     }
     /**
      * @param  InputInterface  $input
@@ -36,11 +37,12 @@ class ValidateCommand extends Command
                     $this->getConfig($input)
                 )
             );
+            $configPath = $this->getConfigPath($input);
             $output->writeln(
                 array(
                     $this->formatterHelper->formatSection(
                         'info',
-                        'Schema valid',
+                        "Schema valid in <comment>$configPath</comment>",
                         'info'
                     )
                 )
@@ -49,6 +51,13 @@ class ValidateCommand extends Command
         } catch (\Exception $e) {
             $this->outputError($output, $e->getMessage());
         }
+    }
+
+    protected function getConfigPath(InputInterface $input)
+    {
+        return $this->getJsonConfigLoader()->locate(
+            $input->getOption('config-file')
+        );
     }
 
 }
