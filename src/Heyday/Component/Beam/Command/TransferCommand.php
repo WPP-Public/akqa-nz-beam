@@ -3,24 +3,35 @@
 namespace Heyday\Component\Beam\Command;
 
 use Heyday\Component\Beam\Beam;
+use Heyday\Component\Beam\Config\BeamConfiguration;
 use Heyday\Component\Beam\DeploymentProvider\DeploymentResult;
 use Heyday\Component\Beam\Helper\ContentProgressHelper;
 use Heyday\Component\Beam\Helper\DeploymentResultHelper;
+use Heyday\Component\Beam\TransferMethod\TransferMethod;
 use Heyday\Component\Beam\Utils;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Console\Helper\DialogHelper;
-use Symfony\Component\Console\Helper\ProgressHelper;
+use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Process\Process;
 
-/**
- * Class BeamCommand
- * @package Heyday\Component\Beam\Command
- */
-abstract class BeamCommand extends Command
+abstract class TransferCommand extends Command
 {
+
+    const DIRECTION = null;
+
+    /**
+     * @var TransferMethod
+     */
+    protected $transferMethod;
+    /**
+     * @var array
+     */
+    protected $config;
     /**
      * @var \Heyday\Component\Beam\Helper\ContentProgressHelper
      */
@@ -33,9 +44,7 @@ abstract class BeamCommand extends Command
      * @var \Symfony\Component\Console\Helper\DialogHelper
      */
     protected $dialogHelper;
-    /**
-     * @param null $name
-     */
+
     public function __construct($name = null)
     {
         parent::__construct($name);
@@ -43,17 +52,17 @@ abstract class BeamCommand extends Command
         $this->deploymentResultHelper = new DeploymentResultHelper($this->formatterHelper);
         $this->dialogHelper = new DialogHelper();
     }
+
     /**
      * Configure the command
      */
     protected function configure()
     {
+        // Bypass input validation as this happens before additional options have
+        // been added from a TransferMethod. Validation occurs in initialize().
+        $this->ignoreValidationErrors();
+
         $this
-            ->addArgument(
-                'direction',
-                InputArgument::REQUIRED,
-                'Valid values are \'up\' or \'down\''
-            )
             ->addArgument(
                 'target',
                 InputArgument::REQUIRED,
@@ -103,20 +112,52 @@ abstract class BeamCommand extends Command
             )
             ->addConfigOption();
     }
+
     /**
-     * @param  InputInterface  $input
-     * @param  OutputInterface $output
-     * @return int|null|void
+     * @inheritdoc
      */
+    protected function initialize(InputInterface $input, OutputInterface $output)
+    {
+        $this->config = $this->getConfig($input);
+        BeamConfiguration::validateArguments($input, $this->config);
+
+        // Set transfer method from config
+        if ($target = $input->getArgument('target')) {
+            $method = isset($this->config['servers'][$target]['type']) ? $this->config['servers'][$target]['type'] : 'rsync';
+            $this->setTransferMethodByKey($method);
+        }
+
+        $input->bind($this->getDefinition());
+    }
+
+    /**
+     * @param string $key - key from BeamConfiguration::$transferMethods
+     */
+    protected function setTransferMethodByKey($key)
+    {
+        $this->transferMethod = $this->instantiateTransferMethod($key);
+        $this->transferMethod->setDirection(static::DIRECTION);
+
+        // Extend definition
+        $this->getDefinition()->addOptions(
+            $this->transferMethod->getInputDefinition()->getOptions()
+        );
+    }
+
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+
+        if (!$this->transferMethod) {
+            throw new \RuntimeException('Transfer method must be set. Run initialize before execute.');
+        }
+
         try {
 
             $beam = new Beam(
                 array(
-                    $this->getConfig($input)
+                    $this->config
                 ),
-                $this->getOptions($input, $output)
+                $this->transferMethod->getOptions($input, $output, $this->getSrcDir($input))
             );
 
             $this->outputSummary($output, $beam);
@@ -210,212 +251,7 @@ abstract class BeamCommand extends Command
         }
 
     }
-    /**
-     * @param  \Exception      $exception
-     * @param  OutputInterface $output
-     * @return bool
-     */
-    protected function handleDeploymentProviderFailure(\Exception $exception, OutputInterface $output)
-    {
-        $this->outputMultiline($output, $exception->getMessage(), 'Error', 'error');
 
-        return in_array(
-            $this->dialogHelper->askConfirmation(
-                $output,
-                $this->formatterHelper->formatSection(
-                    'Prompt',
-                    Utils::getQuestion('The deployment provider threw an exception. Do you want to continue?', 'n'),
-                    'error'
-                ),
-                false
-            ),
-            array(
-                'y',
-                'yes'
-            )
-        );
-    }
-    /**
-     * @param  OutputInterface $output
-     * @return callable
-     */
-    protected function getOutputHandler(OutputInterface $output)
-    {
-        $formatterHelper = $this->formatterHelper;
-
-        return function ($content, $section = 'info') use ($output, $formatterHelper) {
-            $output->writeln(
-                $formatterHelper->formatSection(
-                    $section,
-                    $content
-                )
-            );
-        };
-    }
-    /**
-     * @param  OutputInterface  $output
-     * @param  DeploymentResult $deploymentResult
-     * @return callable
-     */
-    protected function getDeploymentOutputHandler(OutputInterface $output, DeploymentResult $deploymentResult)
-    {
-        $count = count($deploymentResult);
-        $progressHelper = $this->progressHelper;
-
-        return function () use (
-            $output,
-            $deploymentResult,
-            $progressHelper,
-            $count
-        ) {
-            static $steps = 0;
-            if ($steps === 0) {
-                $progressHelper->setAutoWidth($count);
-                // Start the progress bar
-                $progressHelper->start($output, $count, 'File: ');
-            }
-            $progressHelper->advance(1, false, $deploymentResult[$steps]['filename']);
-            $steps++;
-            if ($steps >= $count) {
-                $progressHelper->finish();
-            }
-        };
-    }
-    /**
-     * @param  OutputInterface $output
-     * @return callable
-     */
-    protected function getCommandPromptHandler(OutputInterface $output)
-    {
-        $dialogHelper = $this->dialogHelper;
-        $formatterHelper = $this->formatterHelper;
-
-        return function ($command) use ($output, $dialogHelper, $formatterHelper) {
-            return in_array(
-                $dialogHelper->askConfirmation(
-                    $output,
-                    $formatterHelper->formatSection(
-                        $command['command'],
-                        Utils::getQuestion('Do you want to run this command?', 'y'),
-                        'comment'
-                    ),
-                    'y'
-                ),
-                array(
-                    'y',
-                    'yes'
-                )
-            );
-        };
-    }
-    /**
-     * @param  OutputInterface $output
-     * @return callable
-     */
-    protected function getCommandFailureHandler(OutputInterface $output)
-    {
-        $dialogHelper = $this->dialogHelper;
-        $formatterHelper = $this->formatterHelper;
-
-        return function ($command, \Exception $exception, Process $process = null) use ($output, $dialogHelper, $formatterHelper) {
-            // Ensure the output of the failed command is shown
-            if (OutputInterface::VERBOSITY_VERBOSE !== $output->getVerbosity()) {
-                $message = trim($exception->getMessage());
-
-                if (!$message && $process) {
-                    $message = trim($process->getErrorOutput()) || trim($process->getOutput());
-                }
-
-                if ($message) {
-                    $output->writeln($message);
-                }
-            }
-
-            $output->writeln(
-                $formatterHelper->formatSection('Error', 'Error running: ' . $command['command'], 'error')
-            );
-
-            if ($command['required']) {
-                throw new \RuntimeException('A command marked as required exited with a non-zero status');
-            }
-
-            return $dialogHelper->askConfirmation(
-                $output,
-                $formatterHelper->formatSection(
-                    'Prompt',
-                    Utils::getQuestion('A command exited with a non-zero status. Do you want to continue', 'yes'),
-                    'error'
-                )
-            );
-        };
-    }
-    /**
-     * @param  InputInterface  $input
-     * @param  OutputInterface $output
-     * @return array
-     */
-    protected function getOptions(InputInterface $input, OutputInterface $output)
-    {
-        $options = array(
-            'direction' => $input->getArgument('direction'),
-            'target'    => $input->getArgument('target'),
-            'srcdir'    => $this->getSrcDir($input)
-        );
-
-        if ($input->getOption('ref')) {
-            $options['ref'] = $input->getOption('ref');
-        }
-        if ($input->getOption('path')) {
-            $options['path'] = $input->getOption('path');
-        }
-        if ($input->getOption('dry-run')) {
-            $options['dry-run'] = true;
-        }
-        if ($input->getOption('working-copy')) {
-            $options['working-copy'] = true;
-        }
-        if ($input->getOption('command-prompt')) {
-            $options['commandprompthandler'] = $this->getCommandPromptHandler($output);
-        }
-
-        $options['commandfailurehandler'] = $this->getCommandFailureHandler($output);
-
-        $options['outputhandler'] = $this->getOutputHandler($output);
-
-        if ($input->getOption('tags')) {
-            $options['command-tags'] = $input->getOption('tags');
-        }
-
-        if (OutputInterface::VERBOSITY_VERBOSE === $output->getVerbosity()) {
-
-            $formatterHelper = $this->formatterHelper;
-
-            $options['targetcommandoutputhandler'] = $options['localcommandoutputhandler'] = function ($type, $data) use (
-                $output,
-                $formatterHelper
-            ) {
-                if ($type == 'out') {
-                    $output->write(
-                        $formatterHelper->formatSection(
-                            'command',
-                            $data
-                        )
-                    );
-                } elseif ($type == 'err') {
-                    $output->write(
-                        $formatterHelper->formatSection(
-                            'error',
-                            $data,
-                            'error'
-                        )
-                    );
-                }
-            };
-
-        }
-
-        return $options;
-    }
     /**
      * @param OutputInterface $output
      * @param Beam            $beam
@@ -484,8 +320,68 @@ abstract class BeamCommand extends Command
                 )
             );
         }
-
     }
+
+    /**
+     * @param  \Exception      $exception
+     * @param  OutputInterface $output
+     * @return bool
+     */
+    protected function handleDeploymentProviderFailure(\Exception $exception, OutputInterface $output)
+    {
+        $this->outputMultiline($output, $exception->getMessage(), 'Error', 'error');
+
+        return in_array(
+            $this->dialogHelper->askConfirmation(
+                $output,
+                $this->formatterHelper->formatSection(
+                    'Prompt',
+                    Utils::getQuestion('The deployment provider threw an exception. Do you want to continue?', 'n'),
+                    'error'
+                ),
+                false
+            ),
+            array(
+                'y',
+                'yes'
+            )
+        );
+    }
+
+    /**
+     * @param  OutputInterface  $output
+     * @param  DeploymentResult $deploymentResult
+     * @return callable
+     */
+    protected function getDeploymentOutputHandler(OutputInterface $output, DeploymentResult $deploymentResult)
+    {
+        $count = count($deploymentResult);
+        $progressHelper = $this->progressHelper;
+
+        return function () use (
+            $output,
+            $deploymentResult,
+            $progressHelper,
+            $count
+        ) {
+            static $steps = 0;
+            if ($steps === 0) {
+                $progressHelper->setAutoWidth($count);
+                // Start the progress bar
+                $progressHelper->start($output, $count, 'File: ');
+            }
+
+            if ($steps < $count) {
+                $filename = isset($deploymentResult[$steps]['filename']) ? $deploymentResult[$steps]['filename'] : '';
+                $progressHelper->advance(1, false, $filename);
+                $steps++;
+
+            } else if ($steps == $count) {
+                $progressHelper->finish();
+            }
+        };
+    }
+
     /**
      * @param  OutputInterface $output
      * @param  string          $question
@@ -511,4 +407,153 @@ abstract class BeamCommand extends Command
             $default[0] === 'y' ? true : false
         );
     }
+
+    protected function instantiateTransferMethod($methodName)
+    {
+        if (isset(BeamConfiguration::$transferMethods[$methodName])) {
+            return new BeamConfiguration::$transferMethods[$methodName]();
+        } else {
+            $methods = implode("', '", BeamConfiguration::$transferMethods);
+            throw new InvalidConfigurationException("No transfer method '$methodName'. Must be one of '$methods'");
+        }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function asText()
+    {
+        $this->guessTarget();
+
+        $text = parent::asText();
+
+        $definitions = array();
+        foreach (BeamConfiguration::$transferMethods as $class) {
+            $class = new $class();
+            $definitions[$class->getName()] = $class->getInputDefinition();
+        }
+
+        $text .= $this->inputDefinitionsAsText($definitions);
+
+        return $text;
+    }
+
+    /**
+     * Try to establish the transfer method to use.
+     * This is used when the help command has taken over, since our initialize() method isn't called.
+     * Where no input definition is available, see if $argv matches the definition for this command.
+     * @param InputInterface $input - if null, an input will be created using argv
+     */
+    public function guessTarget(InputInterface $input = null)
+    {
+        if (!$this->transferMethod) {
+            try {
+                if (!$input) {
+                    $args = array_diff($_SERVER['argv'], array('--help', '-h'));
+                    array_shift($args);
+
+                    $input = new ArgvInput($args, $this->getDefinition());
+                }
+
+                $this->initialize($input, new NullOutput());
+            } catch (\Exception $e) {
+                // Guessing failed
+            }
+        }
+    }
+
+    /**
+     * Lifted from InputDefinition->asText
+     * @param array|InputDefinition $inputs
+     * @return string
+     */
+    protected function inputDefinitionsAsText($inputs)
+    {
+        // find the largest option or argument name
+        $max = 0;
+        $text = array('');
+
+        foreach ($inputs as $input) {
+
+            foreach ($input->getOptions() as $option) {
+                $nameLength = strlen($option->getName()) + 2;
+                if ($option->getShortcut()) {
+                    $nameLength += strlen($option->getShortcut()) + 3;
+                }
+
+                $max = max($max, $nameLength);
+            }
+            foreach ($input->getArguments() as $argument) {
+                $max = max($max, strlen($argument->getName()));
+            }
+            ++$max;
+
+        }
+
+        foreach ($inputs as $name => $input) {
+
+            if ($input->getArguments()) {
+                $text[] = '<comment>Arguments:</comment>';
+                foreach ($input->getArguments() as $argument) {
+                    if (null !== $argument->getDefault() && (!is_array($argument->getDefault()) || count($argument->getDefault()))) {
+                        $default = sprintf('<comment> (default: %s)</comment>', $this->formatDefaultValue($argument->getDefault()));
+                    } else {
+                        $default = '';
+                    }
+
+                    $description = str_replace("\n", "\n".str_repeat(' ', $max + 2), $argument->getDescription());
+
+                    $text[] = sprintf(" <info>%-${max}s</info> %s%s", $argument->getName(), $description, $default);
+                }
+
+                $text[] = '';
+            }
+
+            if ($input->getOptions()) {
+                if (is_string($name)) {
+                    $text[] = "<comment>$name Options:</comment>";
+                } else {
+                    $text[] = '<comment>Options:</comment>';
+                }
+
+                foreach ($input->getOptions() as $option) {
+                    if ($option->acceptValue() && null !== $option->getDefault() && (!is_array($option->getDefault()) || count($option->getDefault()))) {
+                        $default = sprintf('<comment> (default: %s)</comment>', $this->formatDefaultValue($option->getDefault()));
+                    } else {
+                        $default = '';
+                    }
+
+                    $multiple = $option->isArray() ? '<comment> (multiple values allowed)</comment>' : '';
+                    $description = str_replace("\n", "\n".str_repeat(' ', $max + 2), $option->getDescription());
+
+                    $optionMax = $max - strlen($option->getName()) - 2;
+                    $text[] = sprintf(" <info>%s</info> %-${optionMax}s%s%s%s",
+                        '--'.$option->getName(),
+                        $option->getShortcut() ? sprintf('(-%s) ', $option->getShortcut()) : '',
+                        $description,
+                        $default,
+                        $multiple
+                    );
+                }
+
+                $text[] = '';
+            }
+
+        }
+
+        return implode("\n", $text);
+    }
+
+    /**
+     * Copy of InputDefinition->formatDefaultValue
+     */
+    protected function formatDefaultValue($default)
+    {
+        if (version_compare(PHP_VERSION, '5.4', '<')) {
+            return str_replace('\/', '/', json_encode($default));
+        }
+
+        return json_encode($default, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    }
+
 }

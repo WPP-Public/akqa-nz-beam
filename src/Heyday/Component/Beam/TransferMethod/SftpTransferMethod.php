@@ -1,47 +1,47 @@
 <?php
 
-namespace Heyday\Component\Beam\Command;
+namespace Heyday\Component\Beam\TransferMethod;
 
 use Heyday\Component\Beam\DeploymentProvider\Sftp;
+use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * Class SftpCommand
- * @package Heyday\Component\Beam\Command
+ * Class SftpTransferMethod
+ * @package Heyday\Component\Beam\TransferMethod
  */
-class SftpCommand extends BeamCommand
+class SftpTransferMethod extends TransferMethod
 {
-    /**
-     *
-     */
-    protected function configure()
+    public function getName()
     {
-        parent::configure();
-        $this
-            ->setName('sftp')
-            ->setDescription('A file upload/download tool that utilises sftp and git')
-            ->addOption(
+        return 'SFTP';
+    }
+
+    public function getInputDefinition()
+    {
+        return new InputDefinition(array(
+            new InputOption(
                 'full',
                 'f',
                 InputOption::VALUE_NONE,
                 'Does a more full check on the target, relying less on the checksums file'
-            )->addOption(
+            ),
+            new InputOption(
                 'no-delete',
                 '',
                 InputOption::VALUE_NONE,
                 'Don\'t delete extraneous files on the target'
-            );
+            )
+        ));
     }
     /**
-     * @param  InputInterface  $input
-     * @param  OutputInterface $output
-     * @return array
+     * @inheritdoc
      */
-    protected function getOptions(InputInterface $input, OutputInterface $output)
+    public function getOptions(InputInterface $input, OutputInterface $output, $srcDir)
     {
-        $options = parent::getOptions($input, $output);
+        $options = parent::getOptions($input, $output, $srcDir);
         $options['deploymentprovider'] = new Sftp(
             $input->getOption('full'),
             !$input->getOption('no-delete')

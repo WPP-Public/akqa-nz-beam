@@ -5,6 +5,9 @@ namespace Heyday\Component\Beam\Config;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
+use Symfony\Component\Console\Input\InputDefinition;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * Class BeamConfiguration
@@ -12,6 +15,11 @@ use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
  */
 class BeamConfiguration extends Configuration implements ConfigurationInterface
 {
+    public static $transferMethods = array(
+        'rsync' => '\Heyday\Component\Beam\TransferMethod\RsyncTransferMethod',
+        'ftp' => '\Heyday\Component\Beam\TransferMethod\FtpTransferMethod',
+        'sftp' => '\Heyday\Component\Beam\TransferMethod\SftpTransferMethod',
+    );
     /**
      * @var array
      */
@@ -80,6 +88,29 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
         'local',
         'target'
     );
+
+    /**
+     * Validate user input against a config
+     * @param InputInterface $input
+     * @param array $config
+     */
+    public static function validateArguments(InputInterface $input, $config)
+    {
+        $resolver = new OptionsResolver();
+        $resolver->setRequired(
+            array(
+                'target'
+            )
+        )->setAllowedValues(
+            array(
+                'target' => array_keys($config['servers'])
+            )
+        );
+
+        $resolver->resolve(array(
+            'target' => $input->getArgument('target')
+        ));
+    }
     /**
      * Generates the configuration tree builder.
      *
@@ -236,7 +267,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
         $typeTreeBuilder->root($name)
             ->children()
                 ->enumNode('type')
-                ->values(array('rsync', 'sftp', 'ftp'))->isRequired()
+                ->values(array_keys(static::$transferMethods))->isRequired()
                 ->end()
             ->end();
 

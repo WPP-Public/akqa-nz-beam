@@ -1,52 +1,53 @@
 <?php
 
-namespace Heyday\Component\Beam\Command;
+namespace Heyday\Component\Beam\TransferMethod;
 
 use Heyday\Component\Beam\DeploymentProvider\Ftp;
+use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * Class FtpCommand
- * @package Heyday\Component\Beam\Command
+ * Class FtpTransferMethod
+ * @package Heyday\Component\Beam\TransferMethod
  */
-class FtpCommand extends BeamCommand
+class FtpTransferMethod extends TransferMethod
 {
-    /**
-     *
-     */
-    protected function configure()
+    public function getName()
     {
-        parent::configure();
-        $this
-            ->setName('ftp')
-            ->setDescription('A file upload/download tool that utilises ftp and git')
-            ->addOption(
+        return 'FTP';
+    }
+
+    public function getInputDefinition()
+    {
+        return new InputDefinition(array(
+            new InputOption(
                 'full',
                 'f',
                 InputOption::VALUE_NONE,
                 'Does a more full check on the target, relying less on the checksums file'
-            )->addOption(
+            ),
+            new InputOption(
                 'no-delete',
                 '',
                 InputOption::VALUE_NONE,
                 'Don\'t delete extraneous files on the target'
-            )->addOption(
+            ),
+            new InputOption(
                 'ssl',
                 's',
                 InputOption::VALUE_NONE,
                 'Use ssl (ftps)'
-            );
+            )
+        ));
     }
     /**
-     * @param \Symfony\Component\Console\Input\InputInterface   $input
-     * @param \Symfony\Component\Console\Output\OutputInterface $output
-     * @return array
+     * @inheritdoc
      */
-    protected function getOptions(InputInterface $input, OutputInterface $output)
+    public function getOptions(InputInterface $input, OutputInterface $output, $srcDir)
     {
-        $options = parent::getOptions($input, $output);
+        $options = parent::getOptions($input, $output, $srcDir);
         $options['deploymentprovider'] = new Ftp(
             $input->getOption('full'),
             !$input->getOption('no-delete'),
