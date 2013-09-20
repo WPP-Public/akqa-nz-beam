@@ -183,6 +183,15 @@ class Ftp extends ManualChecksum implements DeploymentProvider
         return $this->targetPath;
     }
     /**
+     * Return a string representation of the target
+     * @return string
+     */
+    public function getTargetAsText()
+    {
+        return $this->getConfig('user') . '@' . $this->getConfig('host') . ':' . $this->getTargetPath();
+    }
+
+    /**
      * @return string
      */
     protected function getProtocol()
@@ -212,4 +221,5 @@ class Ftp extends ManualChecksum implements DeploymentProvider
             $path
         );
     }
+
 }

@@ -36,6 +36,11 @@ interface DeploymentProvider
      */
     public function getTargetPath();
     /**
+     * Return a string representation of the target
+     * @return string
+     */
+    public function getTargetAsText();
+    /**
      * Return any limitations of the provider
      * @return array
      */

@@ -280,7 +280,7 @@ class Beam
      */
     public function getTargetPath()
     {
-        return $this->options['deploymentprovider']->getTargetPath();
+        return $this->options['deploymentprovider']->getTargetAsText();
     }
     /**
      * @param boolean $prepared

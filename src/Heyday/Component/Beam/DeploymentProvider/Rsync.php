@@ -385,6 +385,14 @@ class Rsync extends Deployment implements DeploymentProvider
         );
     }
     /**
+     * Return a string representation of the target
+     * @return string
+     */
+    public function getTargetAsText()
+    {
+        return $this->getTargetPath();
+    }
+    /**
      * @return mixed|null
      */
     public function getLimitations()
