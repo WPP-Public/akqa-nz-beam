@@ -36,6 +36,10 @@ class ContentProgressHelper extends ProgressHelper
      */
     protected $prefix = '';
     /**
+     * @var bool
+     */
+    protected $isActive = false;
+    /**
      *
      */
     public function __construct()
@@ -81,8 +85,21 @@ class ContentProgressHelper extends ProgressHelper
     {
         $this->prefix = $prefix;
         $output->write(str_repeat("\x20", $this->cols * 2)); //next line and end line
-        parent::start($output, $max);
+
+        if (!$this->isActive) {
+            parent::start($output, $max);
+            $this->isActive = true;
+        }
     }
+
+    public function finish()
+    {
+        if ($this->isActive) {
+            $this->isActive = false;
+            parent::finish();
+        }
+    }
+
     /**
      * @param int    $step
      * @param bool   $redraw
