@@ -120,7 +120,7 @@ class Git implements VcsProvider
 
         return sprintf(
             "Deployer: %s\nRef: %s\n%s\n",
-            get_current_user(),
+            $this->getUserIdentity(),
             $ref,
             $process->getOutput()
         );
@@ -155,10 +155,49 @@ class Git implements VcsProvider
         $process = $this->process(
             sprintf(
                 'git show %s',
-                $ref
+                escapeshellarg($ref)
             )
         );
 
         return $process->getExitCode() == 0;
+    }
+    /**
+     * Get the identity of a user as defined in the git config
+     * This is the name the git uses to identify a user in commits.
+     * Output is in the format:
+     *
+     *     John Doe <john.doe@example.com>
+     *
+     * @return string
+     */
+    public function getUserIdentity()
+    {
+        $identity = false;
+
+        try {
+
+            $process = $this->process('git config --get user.name');
+            $identity = trim($process->getOutput());
+
+            if (!$identity || $process->getExitCode() > 0) {
+                return false;
+            }
+
+            $process = $this->process('git config --get user.email');
+            $email = trim($process->getOutput());
+
+            if ($email && $process->getExitCode() === 0) {
+                $identity .= " <$email>";
+            }
+
+            return $identity;
+
+        } catch (\RuntimeException $e) {
+
+            // If no name/email is set in the user/project git config,
+            // `git config` will exit with a non-zero code. In that case,
+            // fall back to using the current username.
+            return $identity ? $identity : get_current_user();
+        }
     }
 }

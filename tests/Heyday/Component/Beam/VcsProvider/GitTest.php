@@ -13,7 +13,8 @@ class GitTest extends \PHPUnit_Framework_TestCase
         $this->gitMock = $this->getMock(
             __NAMESPACE__ . '\Git',
             array(
-                'process'
+                'process',
+                'getUserIdentity'
             ),
             array(),
             '',
@@ -170,7 +171,11 @@ OUTPUT
             ->with($this->equalTo('git log -1 --format=medium master'))
             ->will($this->returnValue($processMock));
 
-        $user = get_current_user();
+        $this->gitMock->expects($this->atLeastOnce())
+            ->method('getUserIdentity')
+            ->will($this->returnValue('Joe Bloggs <joe.bloggs@example.com>'));
+
+        $user = $this->gitMock->getUserIdentity();
         $this->assertEquals(
             <<<OUTPUT
 Deployer: $user
