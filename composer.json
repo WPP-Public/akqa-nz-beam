@@ -1,6 +1,6 @@
 {
     "name": "heyday/beam",
-    "description": "A set of tools for deploying sites",
+    "description": "A utility for deploying files to servers",
     "minimum-stability": "dev",
     "authors": [
         {
@@ -16,6 +16,9 @@
             "email": "stephen.holdaway@heyday.co.nz"
         }
     ],
+    "provide": {
+        "ext-ssh": "*"
+    },
     "require": {
         "symfony/console": "~2.2.0",
         "symfony/process": "~2.2.0",
