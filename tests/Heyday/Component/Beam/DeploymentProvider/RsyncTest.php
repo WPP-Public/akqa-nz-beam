@@ -297,6 +297,7 @@ OUTPUT
                         array (
                             'checksum',
                             'size',
+                            'time',
                         ),
                         'filename' => 'test3',
                     ),
@@ -307,6 +308,7 @@ OUTPUT
                         array (
                             'checksum',
                             'size',
+                            'time',
                         ),
                         'filename' => 'test4',
                     ),
@@ -335,6 +337,7 @@ OUTPUT
                         array (
                             'checksum',
                             'size',
+                            'time',
                             'permissions',
                             'owner',
                             'group',
