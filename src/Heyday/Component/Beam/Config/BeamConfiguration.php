@@ -301,11 +301,20 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
                                 );
                             }
 
-                            return rtrim($v, '/');
+                            if (strlen($v) > 1) {
+                                $v = rtrim($v, '/');
+                            }
+
+                            return $v;
                         }
                     )->end()
                     ->end()
                     ->scalarNode('password')->isRequired()->end();
+
+                if ($type == 'ftp') {
+                    $node->scalarNode('passive')->defaultFalse()->end()
+                        ->scalarNode('ssl')->defaultFalse()->end();
+                }
                 break;
             case 'rsync':
                 $node->scalarNode('webroot')

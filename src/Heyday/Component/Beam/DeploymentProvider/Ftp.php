@@ -37,11 +37,9 @@ class Ftp extends ManualChecksum implements DeploymentProvider
     /**
      * @param bool $fullmode
      * @param bool $delete
-     * @param bool $ssl
      */
-    public function __construct($fullmode = false, $delete = false, $ssl = false)
+    public function __construct($fullmode = false, $delete = false)
     {
-        $this->ssl = $ssl;
         parent::__construct($fullmode, $delete);
     }
     /**
@@ -67,16 +65,26 @@ class Ftp extends ManualChecksum implements DeploymentProvider
     protected function getConnection()
     {
         if (null === $this->connection) {
-            $this->connection = ftp_connect($this->getConfig('host'));
+            if ($this->getConfig('ssl')) {
+                $this->connection = ftp_ssl_connect($this->getConfig('host'));
+            } else {
+                $this->connection = ftp_connect($this->getConfig('host'));
+            }
+            if (!$this->connection) {
+                throw new \RuntimeException("FTP connection failed\n");
+            }
+
             if (
-                !@ftp_login( // Suppress warning
+                !ftp_login(
                     $this->connection,
                     $this->getConfig('user'),
                     $this->getConfig('password')
                 )
             ) {
-                throw new \RuntimeException('FTP login failed');
+                throw new \RuntimeException("FTP login failed");
             }
+
+            ftp_pasv($this->connection, $this->getConfig('passive'));
         }
 
         return $this->connection;
@@ -115,7 +123,7 @@ class Ftp extends ManualChecksum implements DeploymentProvider
     {
         $handle = fopen('php://temp', 'r+');
         if (
-            @ftp_fget(
+            ftp_fget(
                 $this->getConnection(),
                 $handle,
                 $this->getTargetFilePath($path),
@@ -134,21 +142,53 @@ class Ftp extends ManualChecksum implements DeploymentProvider
      */
     protected function exists($path)
     {
-        return file_exists($this->getProtocolPath($path));
+        $path = $this->getTargetFilePath($path);
+        $response = ftp_raw($this->getConnection(), "MLST $path");
+        return substr($response[0], 0, 3) === '250';
     }
     /**
+     * Create a directory, creating parent directories if required
      * @{inheritDoc}
      */
     protected function mkdir($path)
     {
-        mkdir($this->getProtocolPath($path), 0755, true);
+        $connection = $this->getConnection();
+        $parts = explode('/', $path);
+
+        // Step backwards through the path to see where to start making directories
+        $createDirs = array();
+        for ($i = count($parts); $i >= 0; $i--) {
+            $exists = $this->exists(
+                $path = implode('/', array_slice($parts, 0, $i))
+            );
+
+            if ($exists) {
+                break;
+            } else {
+                array_unshift($createDirs, $this->getTargetFilePath($path));
+            }
+        }
+
+        // Create each directory that didn't exist
+        foreach ($createDirs as $path) {
+            $response = ftp_raw($connection, "MKD $path");
+            if (substr($response[0], 0, 3) !== '257') {
+                throw new \RuntimeException("Failed to mkdir '$path':\n" .implode("\n", $response));
+            }
+        }
     }
     /**
      * @{inheritDoc}
      */
     protected function size($path)
     {
-        return filesize($this->getProtocolPath($path));
+        $size = ftp_size($this->getConnection(), $this->getTargetFilePath($path));
+
+        if ($size == -1) {
+            throw new \RuntimeException("Failed to get size for '$path'");
+        }
+
+        return $size;
     }
     /**
      * @param $path
@@ -156,7 +196,9 @@ class Ftp extends ManualChecksum implements DeploymentProvider
      */
     protected function delete($path)
     {
-        ftp_delete($this->getConnection(), $this->getTargetFilePath($path));
+        if (!ftp_delete($this->getConnection(), $this->getTargetFilePath($path))) {
+            throw new \RuntimeException("File '$path' failed to delete");
+        }
     }
     /**
      * @param $path
@@ -177,7 +219,7 @@ class Ftp extends ManualChecksum implements DeploymentProvider
             if ($webroot[0] !== '/') {
                 throw new \RuntimeException('Webroot must be a absolute path when using ftp');
             }
-            $this->targetPath = $webroot;
+            $this->targetPath = rtrim($webroot, '/');
         }
 
         return $this->targetPath;
@@ -190,36 +232,4 @@ class Ftp extends ManualChecksum implements DeploymentProvider
     {
         return $this->getConfig('user') . '@' . $this->getConfig('host') . ':' . $this->getTargetPath();
     }
-
-    /**
-     * @return string
-     */
-    protected function getProtocol()
-    {
-        if (null === $this->protocolString) {
-            $this->protocolString = sprintf(
-                'ftp%s://%s:%s@%s%s',
-                $this->ssl ? 's' : '',
-                $this->getConfig('user'),
-                $this->getConfig('password'),
-                $this->getConfig('host'),
-                $this->getConfig('webroot')
-            );
-        }
-
-        return $this->protocolString;
-    }
-    /**
-     * @param $path
-     * @return string
-     */
-    protected function getProtocolPath($path)
-    {
-        return sprintf(
-            '%s/%s',
-            $this->getProtocol(),
-            $path
-        );
-    }
-
 }
