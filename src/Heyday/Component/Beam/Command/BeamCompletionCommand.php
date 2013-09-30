@@ -6,7 +6,9 @@ use Heyday\Component\Beam\Config\JsonConfigLoader;
 use Stecman\Component\Symfony\Console\BashCompletion\Completion;
 use Stecman\Component\Symfony\Console\BashCompletion\CompletionCommand;
 use Symfony\Component\Config\FileLocator;
+use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Input\InputOption;
 
 /**
  * Class BeamCompletionCommand
@@ -14,16 +16,41 @@ use Symfony\Component\Console\Input\ArrayInput;
  */
 class BeamCompletionCommand extends CompletionCommand
 {
+    protected function configure()
+    {
+        parent::configure();
+    }
+
     /**
      * @return string
      */
     protected function runCompletion()
     {
+        $application = $this->getApplication();
         $handler = $this->handler;
-        $app = $this->getApplication();
+        $handler->configureFromEnvironment();
 
-        // Manipulate input values so beam's single command mode works
-        $handler->configureWithArray($this->getHandlerConfiguration());
+        // Trigger the merging of TransferMethod definition
+        $commandName = $handler->getInput()->getFirstArgument();
+        if($application->has($commandName)){
+            $command = $application->get($commandName);
+
+            if ($command instanceof TransferCommand) {
+
+                try {
+                    $words = $handler->getWords();
+                    unset($words[$handler->getWordIndex()]);
+                    array_shift($words);
+                    $input = new ArgvInput($words, $command->getDefinition());
+                } catch (\RuntimeException $e) {
+                    // Input isn't parsable
+                }
+
+                if (isset($input)) {
+                    $command->guessTarget($input);
+                }
+            }
+        }
 
         try {
             $config = $this->getConfig();
@@ -31,36 +58,9 @@ class BeamCompletionCommand extends CompletionCommand
             $config = null;
         }
 
-        // Get the real second word
-        $realCommandName = $this->getInputCommandName();
-
         // Add argument handlers
         $handler->addHandlers(
             array(
-                Completion::makeGlobalHandler(
-                    'direction',
-                    Completion::TYPE_ARGUMENT,
-                    function () use ($app, $realCommandName) {
-                        $values = array('up', 'down');
-
-                        // Fix for single command mode
-                        foreach ($app->all() as $cmd) {
-                            $name = $cmd->getName();
-
-                            if ($realCommandName == $name) {
-                                return array('up', 'down');
-                            }
-
-                            if ($name == '_completion') {
-                                continue;
-                            }
-
-                            $values[] = $name;
-                        }
-
-                        return $values;
-                    }
-                ),
                 Completion::makeGlobalHandler(
                     'target',
                     Completion::TYPE_ARGUMENT,
@@ -72,7 +72,6 @@ class BeamCompletionCommand extends CompletionCommand
                         }
                     }
                 )
-
             )
         );
 
@@ -141,51 +140,6 @@ class BeamCompletionCommand extends CompletionCommand
 
         return $jsonConfigLoader->load(
             $input->hasOption('config-file') ? $input->getOption('config-file') : 'beam.json'
-        );
-    }
-
-    /**
-     * Get a modified version of the bash completion variables to patch for beam's single command mode
-     * @return array
-     * @throws \RuntimeException
-     */
-    protected function getHandlerConfiguration()
-    {
-        $commandLine = getenv('COMP_LINE');
-        $wordIndex = intval(getenv('COMP_CWORD'));
-        $charIndex = intval(getenv('COMP_POINT'));
-        $breaks = preg_quote(getenv('COMP_WORDBREAKS'));
-
-        if ($commandLine === false) {
-            throw new \RuntimeException('Failed to configure from environment; Environment var COMP_LINE not set');
-        }
-
-        // Inject rsync as the command if another command is not specified
-        $cmdNames = '';
-        foreach ($this->getApplication()->all() as $cmd) {
-            $cmdNames .= $cmd->getName() . '|';
-        }
-        $cmdNames = trim($cmdNames, '|');
-
-        if ($commandLine = preg_replace("/^([a-zA-Z\-_0-9]+) (?!$cmdNames)/", '${1} rsync ', $commandLine, 1, $count)) {
-            if ($count == 1) {
-                $charIndex += 6;
-                $wordIndex++;
-            }
-        }
-
-        $words = array_filter(
-            preg_split("/[$breaks]+/", $commandLine),
-            function ($val) {
-                return $val != ' ';
-            }
-        );
-
-        return array(
-            'commandLine' => $commandLine,
-            'wordIndex'   => $wordIndex,
-            'charIndex'   => $charIndex,
-            'words'       => $words
         );
     }
 

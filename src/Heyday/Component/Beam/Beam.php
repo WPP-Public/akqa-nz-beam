@@ -32,7 +32,7 @@ class Beam
     protected $prepared = false;
 
     /**
-     * An array of configs, usually just one is expected. This config should be in the format defined in BeamConfigurtion
+     * An array of configs in the format defined in BeamConfiguration
      * @param array $configs
      * @param array $options
      */
@@ -43,10 +43,9 @@ class Beam
         $processor = new Processor();
 
         $this->config = $processor->processConfiguration(
-            $this->getConfigurationDefinition(),
+            new BeamConfiguration(),
             $configs
         );
-
         $this->setup($options);
     }
     /**
@@ -814,15 +813,6 @@ class Beam
             );
 
         return $resolver;
-    }
-
-    /**
-     * Returns the beam configuration definition for validating the config
-     * @return BeamConfiguration
-     */
-    protected function getConfigurationDefinition()
-    {
-        return new BeamConfiguration();
     }
 
     /**
