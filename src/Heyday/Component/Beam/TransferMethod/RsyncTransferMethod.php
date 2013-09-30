@@ -1,66 +1,67 @@
 <?php
 
-namespace Heyday\Component\Beam\Command;
+namespace Heyday\Component\Beam\TransferMethod;
 
 use Heyday\Component\Beam\DeploymentProvider\DeploymentResult;
 use Heyday\Component\Beam\DeploymentProvider\Rsync;
 use Symfony\Component\Console\Helper\ProgressHelper;
+use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * Class RsyncCommand
- * @package Heyday\Component\Beam\Command
+ * Class RsyncTransferMethod
+ * @package Heyday\Component\Beam\TransferMethod
  */
-class RsyncCommand extends BeamCommand
+class RsyncTransferMethod extends TransferMethod
 {
     /**
-     * @var
+     * @var Rsync
      */
     protected $deploymentProvider;
-    /**
-     *
-     */
-    protected function configure()
+
+    public function getName()
     {
-        parent::configure();
-        $this
-            ->setName('rsync')
-            ->setDescription('A deployment tool using rsync')
-            ->addOption(
+        return 'Rsync';
+    }
+
+    public function getInputDefinition()
+    {
+        return new InputDefinition(array(
+            new InputOption(
                 'no-checksum',
                 '',
                 InputOption::VALUE_NONE,
                 'Performs a faster file change check'
-            )
-            ->addOption(
+            ),
+            new InputOption(
                 'no-delete',
                 '',
                 InputOption::VALUE_NONE,
                 'Don\'t delete extraneous files on the target'
-            )
-            ->addOption(
+            ),
+            new InputOption(
                 'no-compress',
                 '',
                 InputOption::VALUE_NONE,
                 'Removes compression'
-            )
-            ->addOption(
+            ),
+            new InputOption(
                 'no-delay-updates',
                 '',
                 InputOption::VALUE_NONE,
                 'Transfers as it runs not all at the end'
-            );
+            )
+        ));
     }
+
     /**
-     * @param  InputInterface  $input
-     * @param  OutputInterface $output
-     * @return array
+     * @inheritdoc
      */
-    protected function getOptions(InputInterface $input, OutputInterface $output)
+    public function getOptions(InputInterface $input, OutputInterface $output, $srcDir)
     {
-        $options = parent::getOptions($input, $output);
+        $options = parent::getOptions($input, $output, $srcDir);
         $options['deploymentprovider'] = $this->deploymentProvider = new Rsync(
             array(
                 'checksum'      => !$input->getOption('no-checksum'),
