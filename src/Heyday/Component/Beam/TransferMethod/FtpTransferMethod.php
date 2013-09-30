@@ -50,8 +50,7 @@ class FtpTransferMethod extends TransferMethod
         $options = parent::getOptions($input, $output, $srcDir);
         $options['deploymentprovider'] = new Ftp(
             $input->getOption('full'),
-            !$input->getOption('no-delete'),
-            $input->getOption('ssl')
+            !$input->getOption('no-delete')
         );
 
         return $options;

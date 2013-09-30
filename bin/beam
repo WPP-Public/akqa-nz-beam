@@ -4,7 +4,19 @@
 use Composer\Autoload\ClassLoader;
 use Heyday\Component\Beam\Application;
 
-error_reporting(-1);
+// Handle PHP errors and warnings as exceptions
+error_reporting(E_ALL);
+
+set_error_handler(
+    function ($errno, $errstr, $errfile, $errline, $errcontext) {
+        // error was suppressed with the @-operator
+        if (0 === error_reporting()) {
+            return false;
+        }
+    
+        throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+    }
+);
 
 /**
  * Try to allow 512M
