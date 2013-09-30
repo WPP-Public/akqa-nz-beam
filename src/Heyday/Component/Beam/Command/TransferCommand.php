@@ -19,11 +19,12 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * Class TransferCommand
+ * @package Heyday\Component\Beam\Command
+ */
 abstract class TransferCommand extends Command
 {
-
-    const DIRECTION = null;
-
     /**
      * @var TransferMethod
      */
@@ -45,6 +46,9 @@ abstract class TransferCommand extends Command
      */
     protected $dialogHelper;
 
+    /**
+     * @param null $name
+     */
     public function __construct($name = null)
     {
         parent::__construct($name);
@@ -114,6 +118,12 @@ abstract class TransferCommand extends Command
     }
 
     /**
+     * The direction to beam
+     * @return mixed
+     */
+    abstract protected function getDirection();
+
+    /**
      * @inheritdoc
      */
     protected function initialize(InputInterface $input, OutputInterface $output)
@@ -136,7 +146,7 @@ abstract class TransferCommand extends Command
     protected function setTransferMethodByKey($key)
     {
         $this->transferMethod = $this->instantiateTransferMethod($key);
-        $this->transferMethod->setDirection(static::DIRECTION);
+        $this->transferMethod->setDirection($this->getDirection());
 
         // Extend definition
         $this->getDefinition()->addOptions(

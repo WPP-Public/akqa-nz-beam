@@ -15,6 +15,9 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  */
 class BeamConfiguration extends Configuration implements ConfigurationInterface
 {
+    /**
+     * @var array
+     */
     public static $transferMethods = array(
         'rsync' => '\Heyday\Component\Beam\TransferMethod\RsyncTransferMethod',
         'ftp' => '\Heyday\Component\Beam\TransferMethod\FtpTransferMethod',

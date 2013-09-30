@@ -2,15 +2,25 @@
 
 namespace Heyday\Component\Beam\Command;
 
+/**
+ * Class UpCommand
+ * @package Heyday\Component\Beam\Command
+ */
 class UpCommand extends TransferCommand
 {
-    const DIRECTION = 'up';
-
     protected function configure()
     {
         parent::configure();
         $this
             ->setName('up')
             ->setDescription('Transfer to a server');
+    }
+
+    /**
+     * @return string
+     */
+    protected function getDirection()
+    {
+        return 'up';
     }
 }
