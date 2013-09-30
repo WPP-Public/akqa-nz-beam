@@ -50,6 +50,7 @@ abstract class ManualChecksum extends Deployment
                     $path = $dir . '/' . $targetpath;
                     if ($this->exists($targetpath)) {
                         if (
+                            $targetchecksums &&
                             isset($targetchecksums[$targetpath]) &&
                             $targetchecksums[$targetpath] !== $localchecksums[$targetpath]
                         ) {
@@ -80,6 +81,11 @@ abstract class ManualChecksum extends Deployment
                     }
                 }
             } else {
+
+                if (!$targetchecksums) {
+                    throw new \RuntimeException('No checksums file found on target. Use --full mode to work without checksums.');
+                }
+
                 foreach (array_diff_assoc($localchecksums, $targetchecksums) as $path => $checksum) {
                     if (isset($targetchecksums[$path])) {
                         $result[] = array(
@@ -101,7 +107,7 @@ abstract class ManualChecksum extends Deployment
                 }
             }
 
-            if ($this->delete) {
+            if ($targetchecksums && $this->delete) {
                 foreach (array_diff_key($targetchecksums, $localchecksums) as $path => $checksum) {
                     $result[] = array(
                         'update'        => 'deleted',
@@ -239,8 +245,6 @@ abstract class ManualChecksum extends Deployment
      */
     protected function getTargetChecksums()
     {
-        $targetchecksums = array();
-
         if (function_exists('bzdecompress') && $this->exists('checksums.json.bz2')) {
             $targetchecksums = Utils::checksumsFromBz2($this->read('checksums.json.bz2'));
         } elseif (function_exists('gzinflate') && $this->exists('checksums.json.gz')) {
@@ -249,12 +253,14 @@ abstract class ManualChecksum extends Deployment
             $targetchecksums = Utils::checksumsFromString($this->read('checksums.json'));
         }
 
-        $targetchecksums = Utils::getFilteredChecksums(
-            $this->beam->getConfig('exclude'),
-            $targetchecksums
-        );
+        if (isset($targetchecksums)) {
+            $targetchecksums = Utils::getFilteredChecksums(
+                $this->beam->getConfig('exclude'),
+                $targetchecksums
+            );
 
-        return $targetchecksums;
+            return $targetchecksums;
+        }
     }
     /**
      * @param $files

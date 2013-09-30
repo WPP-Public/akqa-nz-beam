@@ -2,36 +2,36 @@
 
 This file is a complete documentation of the file `beam.json` used to configure `beam`. Beam cannot operate without a valid `beam.json` file in the working directory, so creating one is a good place to start if you want to use `beam`.
 
-If you are looking for an example configuration to get you started, look in `README.md` or run `beam init` to create a minimal config file in your working directory.
+If you are looking for an example configuration to get you started, look in [`README.md`](README.md) or run `beam init` to create a minimal config file in your working directory.
 
 ## Brief overview
-
-Beam is a command line utility for deploying websites to servers. Its basic function is the synchronization of files between a version control system and a host + location. It can also be configured to run commands to further automate the deployment process. Beam works best using `rsync` over `ssh`, though it also has support for intelligent deployment through SFTP and FTP.
 
 Beam has the following workflow assumptions:
 
  * You are using a version control system (Git is the only supported VCS at this time).
- * You want to sync the head of a branch to a server.
+ * You want to sync the head of a branch or a specific commit to a server.
  * You want to be very sure about what is going to happen when you sync
  * You may want to exclude files and folders from the deployment
  * You may have multiple servers with different purposes (ie. testing and live)
  * You may want to run custom commands at different stages of deployment, locally and on the target server.
  * You want to do all of this with a command as simple as `beam up live`
 
-As well as 'beaming' up, `beam` can also 'beam' down; synchronising your working copy with what's on a server. You can also do a working copy `beam up`, send a specific branch, and do a dry-run to simulate a sync. For a full list of options run `beam --help`.
+As well as 'beaming' up, `beam` can also 'beam' down; synchronising your working copy with what's on a server. You can also do a working copy `beam up`, send a specific branch, and do a dry-run to simulate a sync. For a full list of options run `beam up --help`.
 
 ### Order of operations
 
-To give a clear picture of what a `beam up` does with no command line options, here's a high-level list:
+To give a clear picture of what a `beam up my-target` does with no command line options, here's a high-level list:
 
 1. Export the head of a branch from your repository to a temporary directory
-2. Run commands defined as `phase: pre`, `location: local` in the temporary export location
-3. Do a dry-run and display a breakdown of exactly what will happen if you sync
-4. Prompt to continue (or exit when no changes to sync)
-5. Run commands defined as `phase: pre`, `location: target` in the deployment location on the target server
-6. Perform the actual sync
-7. Run commands defined as `phase: post`, `location: local` in the temporary export location
-8. Run commands defined as `phase: post`, `location: target` in the deployment location on the target server
+1. Run commands defined as `phase: pre`, `location: local` in the temporary export location
+1. Do a dry-run and display a breakdown of exactly what will happen if you sync
+1. Prompt to continue (or exit when no changes to sync)
+1. Prompt again if files will be deleted
+1. Run commands defined as `phase: pre`, `location: target` in the deployment location on the target server
+1. Perform the actual sync
+1. Run commands defined as `phase: post`, `location: local` in the temporary export location
+1. Run commands defined as `phase: post`, `location: target` in the deployment location on the target server
+1. Clean up the temporary export location
 
 
 ## Servers
@@ -58,11 +58,22 @@ Servers are individual, named deployment targets. When using `beam up` or `beam 
  * `host` - Host name or IP address of the server
  * `webroot` - Path to the deployment directory on the server. Relative paths are relative to the user's home directory. A trailing slash is optional.
 
-**Optional properties:**
-
+### Optional properties
+ * `type` *(string: rsync)* - Transfer method to use with the server. This must be one of `rsync`, `ftp`, and `sftp` (FTP over SSH).
  * `branch` *(string)* - Branch to lock this server to. When specified, a `beam up` to this server will always send this branch, regardless of the currently checked out branch and the `--ref` and `--working-copy` flags. This is useful for ensuring that only one branch can be deployed to, for example, your production server. Any git branch is valid here, including remote branches like `remotes/origin/master`.
 
- * `password` *(string)* - Password to use for (S)FTP deployments. This is not used by the default (`rsync`) deployment method.
+### (S)FTP properties
+
+When `type` is set to 'ftp' or 'sftp', a number of FTP specific properties are available:
+
+**FTP & SFTP:**
+
+ * `password` *(string)* - Password to connect with
+
+**FTP only:**
+
+ * `passive` *(boolean: false)* - Run the FTP session in passive mode.
+ * `ssl` *(boolean: false)* - Make the FTP connection over SSL (FTPS)
 
 
 ## Exclude
@@ -110,7 +121,7 @@ Valid values for `applications` are: `gear`, `silverstripe`, `symfony`, `wordpre
         }
     ]
 
-Beam allows arbitrary commands to be executed at certain points in the deployment process on both the local machine and the target. Commands are executed in order of location and phase, and defined order. Commands are always executed in the temporary git export for `local` commands, and in the defined `webroot` for `target` commands.
+Beam allows arbitrary shell commands to be executed at certain points in the deployment process on both the local machine and the target. Commands are executed in order of location, phase, and defined order. Commands are always executed with the working directory set to the temporary git export for `local` commands, and in the defined `webroot` for `target` commands.
 
 Command output is suppressed unless beam is run with the verbose (`-v`) flag, a command's `tty` option is true, or if a command exits with a non-zero status. In the case a command fails, beam will prompt to continue unless the failed command is marked as required.
 
