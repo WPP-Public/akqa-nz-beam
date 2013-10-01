@@ -23,6 +23,12 @@ class SelfUpdateCommand extends SymfonyCommand
             ->setName('self-update')
             ->setDescription('Update beam')
             ->addOption(
+                'force',
+                'f',
+                InputOption::VALUE_NONE,
+                'Download even if the version is the same'
+            )
+            ->addOption(
                 'host',
                 null,
                 InputOption::VALUE_REQUIRED,
@@ -52,7 +58,7 @@ class SelfUpdateCommand extends SymfonyCommand
             throw new \RuntimeException(sprintf('Could not fetch latest version. Please try again later.'));
         }
 
-        if ($version !== trim($latest)) {
+        if ($version !== trim($latest) || $input->getOption('force')) {
 
             $output->writeln(
                 sprintf(
