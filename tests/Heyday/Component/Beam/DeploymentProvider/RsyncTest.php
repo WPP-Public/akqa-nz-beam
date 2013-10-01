@@ -249,6 +249,8 @@ hf....... test12
 <L....... test13
 <D....... test14
 <S....... test15
+<f..T.... test16
+>f..T.... test17
 OUTPUT
                 )
             );
@@ -297,7 +299,6 @@ OUTPUT
                         array (
                             'checksum',
                             'size',
-                            'time',
                         ),
                         'filename' => 'test3',
                     ),
@@ -308,7 +309,6 @@ OUTPUT
                         array (
                             'checksum',
                             'size',
-                            'time',
                         ),
                         'filename' => 'test4',
                     ),
@@ -337,7 +337,6 @@ OUTPUT
                         array (
                             'checksum',
                             'size',
-                            'time',
                             'permissions',
                             'owner',
                             'group',

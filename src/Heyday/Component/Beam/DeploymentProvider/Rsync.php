@@ -161,7 +161,7 @@ class Rsync extends Deployment implements DeploymentProvider
         if ($this->options['checksum']) {
             $command[] = '--checksum';
         } else {
-            $command[] = '--times';
+            $command[] = '--size-only';
         }
         if ($this->options['delete']) {
             $command[] = '--delete';
@@ -290,7 +290,7 @@ class Rsync extends Deployment implements DeploymentProvider
             if ($matches[4][1] == 's') {
                 $reason[] = 'size';
             }
-            if ($matches[4][2] == 't' || $matches[4][2] == 'T') {
+            if ($matches[4][2] == 't') {
                 $reason[] = 'time';
             }
             if ($matches[4][3] == 'p') {
@@ -308,7 +308,7 @@ class Rsync extends Deployment implements DeploymentProvider
             if (isset($matches[4][8]) && $matches[4][8] == 'x') {
                 $reason[] = 'extended';
             }
-            if ($reason === array('time')) {
+            if ($reason === array('time') || (!count($reason) && $matches[4][2] == 'T')) {
                 return false;
             }
             $change['reason'] = $reason;
