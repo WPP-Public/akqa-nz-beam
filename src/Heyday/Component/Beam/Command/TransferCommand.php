@@ -78,7 +78,7 @@ abstract class TransferCommand extends Command
                 'ref',
                 'r',
                 InputOption::VALUE_REQUIRED,
-                'The object in your VCS to beam up (ie. HEAD~1, master, f147a16)'
+                'The object in your VCS to beam up <comment>(ie. HEAD~1, master, f147a16)</comment>'
             )
             ->addOption(
                 'path',
@@ -102,19 +102,19 @@ abstract class TransferCommand extends Command
                 'working-copy',
                 '',
                 InputOption::VALUE_NONE,
-                'When uploading, syncs files from the working copy rather than exported git copy'
+                'When uploading, syncs files from the working copy rather than exported VCS copy'
             )
             ->addOption(
                 'command-prompt',
                 '',
                 InputOption::VALUE_NONE,
-                'Prompts non-required commands'
+                "Prompts commands that aren't required"
             )
             ->addOption(
                 'tags',
                 't',
                 InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY,
-                'Run the specified tagged commands (wildcards supported).'
+                'Run the specified tagged commands <comment>(wildcards supported)</comment>'
             )
             ->addConfigOption();
     }

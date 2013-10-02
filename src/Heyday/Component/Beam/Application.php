@@ -38,6 +38,24 @@ class Application extends BaseApplication
 
         return $commands;
     }
+    
+    /**
+     * @return InputDefinition
+     */
+    protected function getDefaultInputDefinition()
+    {
+        $definition = parent::getDefaultInputDefinition();
+        
+        $options = $definition->getOptions();
+        
+        if (isset($options['no-interaction'])) {
+            unset($options['no-interaction']);
+            $definition->setOptions($options);
+        }
+        
+        return $definition;
+    }
+
     /**
      * Return the default helper set
      * @return \Symfony\Component\Console\Helper\HelperSet

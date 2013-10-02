@@ -51,7 +51,7 @@ class RsyncTransferMethod extends TransferMethod
                 'no-delay-updates',
                 '',
                 InputOption::VALUE_NONE,
-                'Transfers as it runs not all at the end'
+                'Updates files directly on target <comment>(use if disk space is limited)</comment>'
             )
         ));
     }
