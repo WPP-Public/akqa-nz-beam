@@ -27,8 +27,8 @@ class Compiler
      */
     public function compile($pharFile = 'beam.phar')
     {
-        if (file_exists($pharFile)) {
-            unlink($pharFile);
+        if (!file_exists(__DIR__ . self::ROOT_DIR . '/composer.lock')) {
+            throw new RuntimeException("Composer dependencies not installed");
         }
 
         $process = new Process('git log --pretty="%H" -n1 HEAD', __DIR__);
@@ -40,6 +40,10 @@ class Compiler
         $process = new Process('git describe --tags HEAD');
         if ($process->run() == 0) {
             $this->version = trim($process->getOutput());
+        }
+
+        if (file_exists($pharFile)) {
+            unlink($pharFile);
         }
 
         $phar = new \Phar($pharFile, 0, $pharFile);
@@ -65,7 +69,10 @@ class Compiler
             ->name('*.php')
             ->exclude('Tests')
             ->in("$vendorDir/herzult/php-ssh/src/")
-            ->in("$vendorDir/symfony/")
+            ->in("$vendorDir/symfony/console/")
+            ->in("$vendorDir/symfony/process/")
+            ->in("$vendorDir/symfony/options-resolver/")
+            ->in("$vendorDir/symfony/config/")
             ->in("$vendorDir/stecman/symfony-console-completion/src/");
 
         foreach ($finder as $file) {
