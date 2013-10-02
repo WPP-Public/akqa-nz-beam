@@ -344,7 +344,7 @@ abstract class TransferCommand extends Command
 
     /**
      * @param Exception       $exception
-     * @param  OutputInterface $output
+     * @param OutputInterface $output
      * @return bool
      */
     protected function handleDeploymentProviderFailure(Exception $exception, OutputInterface $output)
@@ -428,6 +428,11 @@ abstract class TransferCommand extends Command
         );
     }
 
+    /**
+     * @param $methodName
+     * @return mixed
+     * @throws InvalidConfigurationException
+     */
     protected function instantiateTransferMethod($methodName)
     {
         if (isset(BeamConfiguration::$transferMethods[$methodName])) {

@@ -50,8 +50,8 @@ abstract class ManualChecksum extends Deployment
         return $this->server[$key];
     }
     /**
-     * @param  callable                                                   $output
-     * @param  bool                                                       $dryrun
+     * @param callable         $output
+     * @param bool             $dryrun
      * @param DeploymentResult $deploymentResult
      * @return DeploymentResult
      * @throws RuntimeException
@@ -271,12 +271,12 @@ abstract class ManualChecksum extends Deployment
         if ($this->exists('checksums.json.bz2')) {
             $targetchecksums = Utils::checksumsFromBz2($this->read('checksums.json.bz2'));
 
-        if (isset($targetchecksums)) {
+            if (isset($targetchecksums)) {
                 return Utils::getFilteredChecksums(
-                $this->beam->getConfig('exclude'),
-                $targetchecksums
-            );
+                    $this->beam->getConfig('exclude'),
+                    $targetchecksums
+                );
+            }
         }
-    }
     }
 }

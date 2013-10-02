@@ -4,6 +4,7 @@ namespace Heyday\Component\Beam\DeploymentProvider;
 
 use Heyday\Component\Beam\DeploymentProvider\DeploymentProvider;
 use Heyday\Component\Beam\Exception\RuntimeException;
+use Heyday\Component\Beam\Utils;
 use Ssh\Authentication\Password;
 use Ssh\Configuration;
 use Ssh\Session;
@@ -164,17 +165,16 @@ class Sftp extends ManualChecksum implements DeploymentProvider
         return $this->getConfig('user') . '@' . $this->getConfig('host') . ':' . $this->getTargetPath();
     }
     /**
-     * @throws \InvalidArgumentException
+     * @throws \Heyday\Component\Beam\Exception\InvalidEnvironmentException
      * @return array
      */
     public function getLimitations()
     {
-        if (!extension_loaded('ssh2')) {
-            throw new \InvalidArgumentException(
-                'The PHP ssh2 extension is required to use SFTP deployment, but it is not loaded. (You may need to install it).'
-            );
-        }
-
+        Utils::checkExtension(
+            'ssh2',
+            "The PHP '%s' extension is required to use SFTP deployment, but it is not loaded. (You may need to install it)."
+        );
+        
         return array(
             DeploymentProvider::LIMITATION_REMOTECOMMAND
         );

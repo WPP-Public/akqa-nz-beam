@@ -56,10 +56,10 @@ class MakeChecksumsCommand extends Command
         $files = Utils::getAllowedFilesFromDirectory($config['exclude'], $path);
         $checksums = Utils::checksumsFromFiles($files, $path);
         $jsonfile = rtrim($path, '/') . '/' . $input->getOption('checksumfile');
-
-            file_put_contents(
-                $jsonfile . '.bz2',
-                Utils::checksumsToBz2($checksums)
-            );
-        }
+        
+        file_put_contents(
+            $jsonfile . '.bz2',
+            Utils::checksumsToBz2($checksums)
+        );
     }
+}

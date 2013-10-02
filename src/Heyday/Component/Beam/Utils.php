@@ -142,19 +142,25 @@ class Utils
         return $checksums;
     }
     /**
-     * @param  array $checksums
+     * @param array $checksums
      * @return mixed
+     * @throws InvalidEnvironmentException
      */
     public static function checksumsToBz2(array $checksums)
     {
+        self::checkExtension('bz2');
+
         return bzcompress(json_encode($checksums), 9);
     }
     /**
      * @param $data
-     * @return string
+     * @return mixed
+     * @throws InvalidEnvironmentException
      */
     public static function checksumsFromBz2($data)
     {
+        self::checkExtension('bz2');
+        
         return json_decode(bzdecompress($data), true);
     }
     /**
@@ -204,6 +210,22 @@ class Utils
             return sprintf(
                 '<question>%s</question>: ',
                 $question
+            );
+        }
+    }
+    /**
+     * @param        $extension
+     * @param string $message
+     * @throws InvalidEnvironmentException
+     */
+    public static function checkExtension($extension, $message = "Beam requires the '%s' extension")
+    {
+        if (!extension_loaded($extension)) {
+            throw new InvalidEnvironmentException(
+                sprintf(
+                    $message,
+                    $extension
+                )
             );
         }
     }
