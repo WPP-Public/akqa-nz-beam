@@ -34,6 +34,7 @@ class Ftp extends ManualChecksum implements DeploymentProvider
     /**
      * @var array
      */
+    protected $listCache = array();
     /**
      * @return resource
      * @throws RuntimeException
@@ -119,8 +120,18 @@ class Ftp extends ManualChecksum implements DeploymentProvider
     protected function exists($path)
     {
         $path = $this->getTargetFilePath($path);
-        $response = ftp_raw($this->getConnection(), "MLST $path");
-        return substr($response[0], 0, 3) === '250';
+        $dir = dirname($path);
+
+        if (!isset($this->listCache[$dir])) {
+            $this->listCache[$dir] = ftp_nlist($this->getConnection(), $dir);
+        }
+        
+        if (($key = array_search(basename($path), $this->listCache[$dir])) !== false) {
+            unset($this->listCache[$dir][$key]);
+            return true;
+        } else {
+            return false;
+        }
     }
     /**
      * Create a directory, creating parent directories if required
