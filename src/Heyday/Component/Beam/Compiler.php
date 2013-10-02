@@ -88,8 +88,6 @@ class Compiler
         
         echo $this->runCommand('phpunit', "Unit tests failed, check that phpunit is installed", true)->getOutput();
         
-        $this->runCommand('composer dump-autoload -o', "Composer failed to dump the autoloader");
-        
         $process = $this->runCommand(
             'git log --pretty="%H" -n1 HEAD',
             "Can't run git log. You must ensure to run compile from composer git repository clone and that git binary is available."
