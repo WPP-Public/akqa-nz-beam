@@ -142,34 +142,25 @@ class Utils
         return $checksums;
     }
     /**
-     * @param array $checksums
-     * @return mixed
+     * @param  array  $checksums
      * @throws InvalidEnvironmentException
+     * @return string
      */
-    public static function checksumsToBz2(array $checksums)
+    public static function checksumsToGz(array $checksums)
     {
-        self::checkExtension('bz2');
+        self::checkExtension('zlib');
 
-        return bzcompress(json_encode($checksums), 9);
-    }
-    /**
-     * @param $data
-     * @return mixed
-     * @throws InvalidEnvironmentException
-     */
-    public static function checksumsFromBz2($data)
-    {
-        self::checkExtension('bz2');
-        
-        return json_decode(bzdecompress($data), true);
+        return gzencode(json_encode($checksums), 9);
     }
     /**
      * @param $data
      * @return mixed
      */
-    public static function checksumsFromString($data)
+    public static function checksumsFromGz($data)
     {
-        return json_decode($data, true);
+        self::checkExtension('zlib');
+
+        return json_decode(gzinflate(substr($data, 10, -8)), true);
     }
     /**
      * @param $location

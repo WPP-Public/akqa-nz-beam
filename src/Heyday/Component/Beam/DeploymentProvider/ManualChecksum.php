@@ -165,8 +165,8 @@ abstract class ManualChecksum extends Deployment
             }
             // Save the checksums to the server
             $this->writeContent(
-                'checksums.json.bz2',
-                Utils::checksumsToBz2(
+                'checksums.json.gz',
+                Utils::checksumsFromGz(
                     $this->beam->hasPath() ? array_merge(
                         $targetchecksums,
                         $localchecksums
@@ -268,8 +268,8 @@ abstract class ManualChecksum extends Deployment
      */
     protected function getTargetChecksums()
     {
-        if ($this->exists('checksums.json.bz2')) {
-            $targetchecksums = Utils::checksumsFromBz2($this->read('checksums.json.bz2'));
+        if ($this->exists('checksums.json.gz')) {
+            $targetchecksums = Utils::checksumsFromGz($this->read('checksums.json.gz'));
 
             if (isset($targetchecksums)) {
                 return Utils::getFilteredChecksums(

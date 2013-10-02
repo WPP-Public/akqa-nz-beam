@@ -19,7 +19,7 @@ class MakeChecksumsCommand extends Command
     {
         $this
             ->setName('makechecksums')
-            ->setDescription('Generate a checksums file with the default compression of bz2')
+            ->setDescription('Generate a checksums file')
             ->addOption(
                 'path',
                 'p',
@@ -58,8 +58,8 @@ class MakeChecksumsCommand extends Command
         $jsonfile = rtrim($path, '/') . '/' . $input->getOption('checksumfile');
         
         file_put_contents(
-            $jsonfile . '.bz2',
-            Utils::checksumsToBz2($checksums)
+            $jsonfile . '.gz',
+            Utils::checksumsToGz($checksums)
         );
     }
 }
