@@ -61,7 +61,7 @@ abstract class ManualChecksum extends Deployment
         $dir = $this->beam->getLocalPath();
 
         $files = $this->getAllowedFiles($dir);
-        $localchecksums = $this->getLocalChecksums($files, $dir);
+        $localchecksums = Utils::checksumsFromFiles($files, $dir);
         $targetchecksums = $this->getTargetChecksums();
 
         if (null === $deploymentResult) {
@@ -268,32 +268,15 @@ abstract class ManualChecksum extends Deployment
      */
     protected function getTargetChecksums()
     {
-        if (function_exists('bzdecompress') && $this->exists('checksums.json.bz2')) {
+        if ($this->exists('checksums.json.bz2')) {
             $targetchecksums = Utils::checksumsFromBz2($this->read('checksums.json.bz2'));
-        } elseif (function_exists('gzinflate') && $this->exists('checksums.json.gz')) {
-            $targetchecksums = Utils::checksumsFromGz($this->read('checksums.json.gz'));
-        } elseif ($this->exists('checksums.json')) {
-            $targetchecksums = Utils::checksumsFromString($this->read('checksums.json'));
-        }
 
         if (isset($targetchecksums)) {
-            $targetchecksums = Utils::getFilteredChecksums(
+                return Utils::getFilteredChecksums(
                 $this->beam->getConfig('exclude'),
                 $targetchecksums
             );
-
-            return $targetchecksums;
         }
     }
-    /**
-     * @param $files
-     * @param $dir
-     * @return array
-     */
-    protected function getLocalChecksums($files, $dir)
-    {
-        $localchecksums = Utils::checksumsFromFiles($files, $dir);
-
-        return $localchecksums;
     }
 }

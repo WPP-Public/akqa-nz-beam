@@ -158,22 +158,6 @@ class Utils
         return json_decode(bzdecompress($data), true);
     }
     /**
-     * @param  array  $checksums
-     * @return string
-     */
-    public static function checksumsToGz(array $checksums)
-    {
-        return gzencode(json_encode($checksums), 9);
-    }
-    /**
-     * @param $data
-     * @return mixed
-     */
-    public static function checksumsFromGz($data)
-    {
-        return json_decode(gzinflate(substr($data, 10, -8)), true);
-    }
-    /**
      * @param $data
      * @return mixed
      */

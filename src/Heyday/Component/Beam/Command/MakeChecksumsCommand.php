@@ -34,18 +34,6 @@ class MakeChecksumsCommand extends Command
                 'Filename to save the file with',
                 'checksums.json'
             )
-            ->addOption(
-                'gzip',
-                'g',
-                InputOption::VALUE_NONE,
-                'Gzip the output'
-            )
-            ->addOption(
-                'nocompress',
-                'nc',
-                InputOption::VALUE_NONE,
-                'Don\'t compress'
-            )
             ->addConfigOption();
     }
     /**
@@ -69,21 +57,9 @@ class MakeChecksumsCommand extends Command
         $checksums = Utils::checksumsFromFiles($files, $path);
         $jsonfile = rtrim($path, '/') . '/' . $input->getOption('checksumfile');
 
-        if ($input->getOption('gzip')) {
-            file_put_contents(
-                $jsonfile . '.gz',
-                Utils::checksumsToGz($checksums)
-            );
-        } elseif ($input->getOption('nocompress')) {
-            file_put_contents(
-                $jsonfile,
-                json_encode($checksums)
-            );
-        } else {
             file_put_contents(
                 $jsonfile . '.bz2',
                 Utils::checksumsToBz2($checksums)
             );
         }
     }
-}
