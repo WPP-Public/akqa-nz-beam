@@ -2,6 +2,7 @@
 
 namespace Heyday\Component\Beam\Command;
 
+use Heyday\Component\Beam\Exception\RuntimeException;
 use Symfony\Component\Console\Command\Command as SymfonyCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -39,7 +40,7 @@ class SelfUpdateCommand extends SymfonyCommand
     /**
      * @param  InputInterface    $input
      * @param  OutputInterface   $output
-     * @throws \RuntimeException
+     * @throws RuntimeException
      * @return void
      */
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -49,13 +50,13 @@ class SelfUpdateCommand extends SymfonyCommand
         $version = trim($this->getApplication()->getVersion());
 
         if ($version === '~package_version~') {
-            throw new \RuntimeException("This command is only available for compiled phar files which you can obtain at $url");
+            throw new RuntimeException("This command is only available for compiled phar files which you can obtain at $url");
         }
 
         $latest = @file_get_contents("$url.version");
 
         if (false === $latest) {
-            throw new \RuntimeException(sprintf('Could not fetch latest version. Please try again later.'));
+            throw new RuntimeException(sprintf('Could not fetch latest version. Please try again later.'));
         }
 
         if ($version !== trim($latest) || $input->getOption('force')) {
@@ -71,7 +72,7 @@ class SelfUpdateCommand extends SymfonyCommand
             $tmpFile = tempnam(sys_get_temp_dir(), 'beam') . '.phar';
 
             if (false === @copy($url, $tmpFile)) {
-                throw new \RuntimeException(sprintf('Could not download new version'));
+                throw new RuntimeException(sprintf('Could not download latest version. Please try again later.'));
             }
 
             $phar = new \Phar($tmpFile);
@@ -81,7 +82,7 @@ class SelfUpdateCommand extends SymfonyCommand
             $permissions = fileperms($_SERVER['argv'][0]);
 
             if (false === @rename($tmpFile, $_SERVER['argv'][0])) {
-                throw new \RuntimeException(sprintf('Could not deploy new file to "%s".', $_SERVER['argv'][0]));
+                throw new RuntimeException(sprintf('Could not deploy new file to "%s".', $_SERVER['argv'][0]));
             }
 
             chmod($_SERVER['argv'][0], $permissions);

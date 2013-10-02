@@ -3,6 +3,8 @@
 namespace Heyday\Component\Beam\VcsProvider;
 
 use Heyday\Component\Beam\Utils;
+use Heyday\Component\Beam\Exception\InvalidConfigurationException;
+use Heyday\Component\Beam\Exception\RuntimeException;
 use Symfony\Component\Process\Process;
 
 /**
@@ -54,8 +56,10 @@ class Git implements VcsProvider
      */
     public function exportRef($branch, $location)
     {
+        // Clean up previous deployment
         Utils::removeDirectory($location);
 
+        // Ensure the location exists
         mkdir($location, 0755);
 
         $this->process(
@@ -73,7 +77,7 @@ class Git implements VcsProvider
     {
         $parts = $this->getRemoteName($branch);
         if (!$parts) {
-            throw new \InvalidArgumentException('The git vcs provider can only update remotes');
+            throw new InvalidConfigurationException('The git vcs provider can only update remotes');
         }
         // TODO: Replace with git fetch --all ?
         $this->process(sprintf('git remote update --prune %s', $parts[0]));
@@ -81,7 +85,7 @@ class Git implements VcsProvider
     /**
      * A helper method that returns a process with some defaults
      * @param $command
-     * @throws \RuntimeException
+     * @throws RuntimeException
      * @return Process
      */
     protected function process($command)
@@ -89,7 +93,7 @@ class Git implements VcsProvider
         $process = $this->getProcess($command);
         $process->run();
         if (!$process->isSuccessful()) {
-            throw new \RuntimeException($process->getErrorOutput());
+            throw new RuntimeException($process->getErrorOutput());
         }
 
         return $process;
@@ -192,7 +196,7 @@ class Git implements VcsProvider
 
             return $identity;
 
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
 
             // If no name/email is set in the user/project git config,
             // `git config` will exit with a non-zero code. In that case,

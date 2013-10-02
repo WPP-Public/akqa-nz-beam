@@ -5,8 +5,10 @@ namespace Heyday\Component\Beam;
 use Heyday\Component\Beam\Config\BeamConfiguration;
 use Heyday\Component\Beam\DeploymentProvider\DeploymentProvider;
 use Heyday\Component\Beam\DeploymentProvider\DeploymentResult;
+use Heyday\Component\Beam\Exception\InvalidArgumentException;
+use Heyday\Component\Beam\Exception\InvalidConfigurationException;
+use Heyday\Component\Beam\Exception\RuntimeException;
 use Heyday\Component\Beam\VcsProvider\Git;
-use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -58,14 +60,14 @@ class Beam
      * This might be useful if you prep the options for a command via a staged process
      * for example an interactive command line tool
      * @param  $options
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function setup($options)
     {
         $this->options = $this->getOptionsResolver()->resolve($options);
 
         if (!$this->isWorkingCopy() && !$this->options['vcsprovider']->exists()) {
-            throw new \InvalidArgumentException('You can\'t use beam without a vcs.');
+            throw new InvalidArgumentException("You can't use beam without a vcs.");
         }
 
         if (!$this->isWorkingCopy() && !$this->options['ref']) {
@@ -80,7 +82,7 @@ class Beam
     }
     /**
      * Validates dynamic options or options that the options resolver can't validate
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     protected function validateSetup()
     {
@@ -101,13 +103,13 @@ class Beam
 
         if (count($emptyKeys)) {
             $options = implode(', ', $emptyKeys);
-            throw new \InvalidArgumentException("The server '{$this->options['target']}' has empty values for required options: $options");
+            throw new InvalidArgumentException("The server '{$this->options['target']}' has empty values for required options: $options");
         }
 
         if ($this->options['ref']) {
             // TODO: Allow refs from the same branch (ie master~1) when locked. Git can show what branches a ref is in by using: git branch --contains [ref]
             if ($this->isServerLocked() && $this->options['ref'] !== $this->getServerLockedBranch()) {
-                throw new \InvalidArgumentException(
+                throw new InvalidArgumentException(
                     sprintf(
                         'Specified ref "%s" doesn\'t match the locked branch "%s"',
                         $this->options['ref'],
@@ -118,7 +120,7 @@ class Beam
 
             if (!$this->options['vcsprovider']->isValidRef($this->options['ref'])) {
                 $branches = $this->options['vcsprovider']->getAvailableBranches();
-                throw new \InvalidArgumentException(
+                throw new InvalidArgumentException(
                     sprintf(
                         'Ref "%s" is not valid. Available branches are: %s',
                         $this->options['ref'],
@@ -130,11 +132,11 @@ class Beam
 
         if ($this->isWorkingCopy()) {
             if ($this->isTargetLockedRemote()) {
-                throw new \InvalidArgumentException('Working copy can\'t be used with a locked remote branch');
+                throw new InvalidArgumentException('Working copy can\'t be used with a locked remote branch');
             }
         } else {
             if (!is_writable($this->getLocalPathFolder())) {
-                throw new \InvalidArgumentException(
+                throw new InvalidArgumentException(
                     sprintf('The local path "%s" is not writable', $this->getLocalPathFolder())
                 );
             }
@@ -418,14 +420,14 @@ class Beam
     /**
      * @param $option
      * @return mixed
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function getOption($option)
     {
         if (array_key_exists($option, $this->options)) {
             return $this->options[$option];
         } else {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 sprintf(
                     'Option \'%s\' doesn\'t exist',
                     $option
@@ -436,14 +438,14 @@ class Beam
     /**
      * @param $config
      * @return mixed
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function getConfig($config)
     {
         if (array_key_exists($config, $this->config)) {
             return $this->config[$config];
         } else {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 sprintf(
                     'Config \'%s\' doesn\'t exist',
                     $config
@@ -455,13 +457,13 @@ class Beam
      * A helper method that runs a process and checks its success, erroring if it failed
      * @param  Process           $process
      * @param  callable          $output
-     * @throws \RuntimeException
+     * @throws RuntimeException
      */
     protected function runProcess(Process $process, \Closure $output = null)
     {
         $process->run($output);
         if (!$process->isSuccessful()) {
-            throw new \RuntimeException($process->getErrorOutput());
+            throw new RuntimeException($process->getErrorOutput());
         }
     }
     /**
@@ -624,18 +626,18 @@ class Beam
         $this->doExecCommand($command, $this->options['localcommandoutputhandler']);
     }
     /**
-     * @param array $command
-     * @param       $outputHandler
+     * @param $command
+     * @param $outputHandler
+     * @throws RuntimeException
      */
     protected function doExecCommand($command, $outputHandler)
     {
         try {
-
             if ($command['tty']) {
                 $process = null;
                 passthru($command['command'], $exit);
                 if ($exit !== 0) {
-                    throw new \RuntimeException("Command returned a non-zero exit status ($exit)");
+                    throw new RuntimeException("Command returned a non-zero exit status ($exit)");
                 }
             } else {
                 $process = $this->getProcess(
@@ -648,8 +650,7 @@ class Beam
                     $outputHandler
                 );
             }
-
-        } catch (\RuntimeException $exception) {
+        } catch (RuntimeException $exception) {
 
             if (!$this->promptCommandFailureContinue($command, $exception, $process)) {
                 exit(1);
@@ -662,7 +663,7 @@ class Beam
      * @param                                    $command
      * @param                                    $exception
      * @param \Symfony\Component\Process\Process $process
-     * @throws \RuntimeException
+     * @throws RuntimeException
      * @return mixed
      */
     protected function promptCommandFailureContinue($command, $exception, Process $process = null)
@@ -769,42 +770,42 @@ class Beam
                     },
                     'deploymentoutputhandler'    => function (Options $options, $value) {
                         if ($value !== null && !is_callable($value)) {
-                            throw new \InvalidArgumentException('Deployment output handler must be null or callable');
+                            throw new InvalidArgumentException('Deployment output handler must be null or callable');
                         }
 
                         return $value;
                     },
                     'outputhandler'              => function (Options $options, $value) {
                         if ($value !== null && !is_callable($value)) {
-                            throw new \InvalidArgumentException('Output handler must be null or callable');
+                            throw new InvalidArgumentException('Output handler must be null or callable');
                         }
 
                         return $value;
                     },
                     'localcommandoutputhandler'  => function (Options $options, $value) {
                         if ($value !== null && !is_callable($value)) {
-                            throw new \InvalidArgumentException('Local command output handler must be null or callable');
+                            throw new InvalidArgumentException('Local command output handler must be null or callable');
                         }
 
                         return $value;
                     },
                     'targetcommandoutputhandler' => function (Options $options, $value) {
                         if ($value !== null && !is_callable($value)) {
-                            throw new \InvalidArgumentException('Target command output handler must be null or callable');
+                            throw new InvalidArgumentException('Target command output handler must be null or callable');
                         }
 
                         return $value;
                     },
                     'commandprompthandler'       => function (Options $options, $value) {
                         if ($value !== null && !is_callable($value)) {
-                            throw new \InvalidArgumentException('Command prompt handler must be null or callable');
+                            throw new InvalidArgumentException('Command prompt handler must be null or callable');
                         }
 
                         return $value;
                     },
                     'commandfailurehandler'      => function (Options $options, $value) {
                         if ($value !== null && !is_callable($value)) {
-                            throw new \InvalidArgumentException('Command failure handler must be null or callable');
+                            throw new InvalidArgumentException('Command failure handler must be null or callable');
                         }
 
                         return $value;

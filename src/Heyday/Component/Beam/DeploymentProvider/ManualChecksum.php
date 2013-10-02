@@ -3,6 +3,8 @@
 namespace Heyday\Component\Beam\DeploymentProvider;
 
 use Heyday\Component\Beam\Utils;
+use Heyday\Component\Beam\Exception\InvalidConfigurationException;
+use Heyday\Component\Beam\Exception\RuntimeException;
 
 /**
  * Class ManualChecksum
@@ -30,8 +32,9 @@ abstract class ManualChecksum extends Deployment
     /**
      * @param  callable                                                   $output
      * @param  bool                                                       $dryrun
-     * @param  \Heyday\Component\Beam\DeploymentProvider\DeploymentResult $deploymentResult
-     * @return \Heyday\Component\Beam\DeploymentProvider\DeploymentResult
+     * @param DeploymentResult $deploymentResult
+     * @return DeploymentResult
+     * @throws RuntimeException
      */
     public function up(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
     {
@@ -83,7 +86,7 @@ abstract class ManualChecksum extends Deployment
             } else {
 
                 if (!$targetchecksums) {
-                    throw new \RuntimeException('No checksums file found on target. Use --full mode to work without checksums.');
+                    throw new RuntimeException('No checksums file found on target. Use --full mode to work without checksums.');
                 }
 
                 foreach (array_diff_assoc($localchecksums, $targetchecksums) as $path => $checksum) {
@@ -159,13 +162,13 @@ abstract class ManualChecksum extends Deployment
      * @param  callable          $output
      * @param  bool              $dryrun
      * @param  DeploymentResult  $deploymentResult
-     * @throws \RuntimeException
+     * @throws RuntimeException
      * @return mixed
      */
     public function down(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
     {
         // TODO: Implement down() method.
-        throw new \RuntimeException('Not implemented');
+        throw new RuntimeException('Not implemented');
     }
     /**
      * @return array

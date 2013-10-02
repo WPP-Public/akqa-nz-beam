@@ -3,6 +3,7 @@
 namespace Heyday\Component\Beam\DeploymentProvider;
 
 use Heyday\Component\Beam\Config\DeploymentResultConfiguration;
+use Heyday\Component\Beam\Exception\InvalidArgumentException;
 use Symfony\Component\Config\Definition\Processor;
 
 /**
@@ -36,13 +37,18 @@ class DeploymentResult extends \ArrayObject
     /**
      * @param $type
      * @return mixed
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function getUpdateCount($type)
     {
         $types = $this->configuration->getUpdates();
         if (!in_array($type, $types)) {
-            throw new \InvalidArgumentException("Update type '$type' doesn't exist");
+            throw new InvalidArgumentException(
+                sprintf(
+                    "Update type '%s' doesn't exist",
+                    $type
+                )
+            );
         }
         if (null === $this->updateCounts) {
             $this->updateCounts = array_fill_keys($this->configuration->getUpdates(), 0);

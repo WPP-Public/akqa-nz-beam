@@ -137,7 +137,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
     }
     /**
      * @expectedExceptionMessage Specified ref "test" doesn't match the locked branch "master"
-     * @expectedException \InvalidArgumentException
+     * @expectedException \Heyday\Component\Beam\Exception\InvalidArgumentException
      */
     public function testBeamConstructInvalidLockedBranch()
     {
@@ -164,7 +164,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
     }
     /**
      * @expectedExceptionMessage Working copy can't be used with a locked remote branch
-     * @expectedException \InvalidArgumentException
+     * @expectedException \Heyday\Component\Beam\Exception\InvalidArgumentException
      */
     public function testBeamConstructWorkingCopyLockedRemote()
     {
@@ -203,7 +203,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
     }
     /**
      * @expectedExceptionMessage You can't use beam without a vcs.
-     * @expectedException \InvalidArgumentException
+     * @expectedException \Heyday\Component\Beam\Exception\InvalidArgumentException
      */
     public function testBeamConstructNoVcs()
     {
@@ -220,7 +220,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
     }
     /**
      * @expectedExceptionMessage The local path "vfs://root" is not writable
-     * @expectedException \InvalidArgumentException
+     * @expectedException \Heyday\Component\Beam\Exception\InvalidArgumentException
      */
     public function testBeamConstructLocalPathNotWritable()
     {

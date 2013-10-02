@@ -3,6 +3,7 @@
 namespace Heyday\Component\Beam\DeploymentProvider;
 
 use Heyday\Component\Beam\DeploymentProvider\DeploymentProvider;
+use Heyday\Component\Beam\Exception\RuntimeException;
 use Ssh\Authentication\Password;
 use Ssh\Configuration;
 use Ssh\Session;
@@ -24,7 +25,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
     protected $targetPath;
     /**
      * @return \Ssh\Sftp
-     * @throws \RuntimeException
+     * @throws RuntimeException
      */
     protected function getSftp()
     {
@@ -32,7 +33,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
             $server = $this->beam->getServer();
 
             if ($server['webroot'][0] !== '/') {
-                throw new \RuntimeException('Webroot must be a absolute path when using sftp');
+                throw new RuntimeException('Webroot must be a absolute path when using sftp');
             }
 
             if (isset($server['password'])) {

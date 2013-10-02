@@ -3,6 +3,7 @@
 namespace Heyday\Component\Beam\DeploymentProvider;
 
 use Heyday\Component\Beam\DeploymentProvider\DeploymentResult;
+use Heyday\Component\Beam\Exception\RuntimeException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Process\Process;
 
@@ -83,7 +84,7 @@ class Rsync extends Deployment implements DeploymentProvider
      * @param                    $command
      * @param  callable          $output
      * @return DeploymentResult
-     * @throws \RuntimeException
+     * @throws RuntimeException
      */
     protected function deploy($command, \Closure $output = null)
     {
@@ -91,7 +92,7 @@ class Rsync extends Deployment implements DeploymentProvider
         $process = $this->getProcess($command);
         $process->run($output);
         if (!$process->isSuccessful()) {
-            throw new \RuntimeException($process->getErrorOutput());
+            throw new RuntimeException($process->getErrorOutput());
         }
         $output = $process->getOutput();
 

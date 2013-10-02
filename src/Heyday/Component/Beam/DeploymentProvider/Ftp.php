@@ -3,6 +3,7 @@
 namespace Heyday\Component\Beam\DeploymentProvider;
 
 use Heyday\Component\Beam\DeploymentProvider\DeploymentProvider;
+use Heyday\Component\Beam\Exception\RuntimeException;
 
 /**
  * Class Ftp

@@ -3,6 +3,7 @@
 namespace Heyday\Component\Beam\TransferMethod;
 
 use Heyday\Component\Beam\Utils;
+use Heyday\Component\Beam\Exception\RuntimeException;
 use Symfony\Component\Console\Helper\DialogHelper;
 use Symfony\Component\Console\Helper\FormatterHelper;
 use Symfony\Component\Console\Input\InputArgument;
@@ -193,7 +194,7 @@ abstract class TransferMethod
             );
 
             if ($command['required']) {
-                throw new \RuntimeException('A command marked as required exited with a non-zero status');
+                throw new RuntimeException('A command marked as required exited with a non-zero status');
             }
 
             return $dialogHelper->askConfirmation(

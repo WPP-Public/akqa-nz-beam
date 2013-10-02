@@ -410,7 +410,7 @@ OUTPUT
         );
     }
     /**
-     * @expectedException RuntimeException
+     * @expectedException \Heyday\Component\Beam\Exception\RuntimeException
      * @expectedExceptionMessage Some error
      */
     public function testDeployException()

@@ -2,6 +2,7 @@
 
 namespace Heyday\Component\Beam;
 
+use Heyday\Component\Beam\Exception\RuntimeException;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Process\Process;
 
@@ -22,7 +23,7 @@ class Compiler
     /**
      * @param  string            $pharFile
      * @return string
-     * @throws \RuntimeException
+     * @throws RuntimeException
      */
     public function compile($pharFile = 'beam.phar')
     {
@@ -32,7 +33,7 @@ class Compiler
 
         $process = new Process('git log --pretty="%H" -n1 HEAD', __DIR__);
         if ($process->run() != 0) {
-            throw new \RuntimeException('Can\'t run git log. You must ensure to run compile from composer git repository clone and that git binary is available.');
+            throw new RuntimeException('Can\'t run git log. You must ensure to run compile from composer git repository clone and that git binary is available.');
         }
         $this->version = trim($process->getOutput());
 

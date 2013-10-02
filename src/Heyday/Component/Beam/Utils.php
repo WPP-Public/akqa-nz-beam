@@ -2,6 +2,8 @@
 
 namespace Heyday\Component\Beam;
 
+use Heyday\Component\Beam\Exception\InvalidEnvironmentException;
+
 /**
  * Class Utils
  * @package Heyday\Component\Beam

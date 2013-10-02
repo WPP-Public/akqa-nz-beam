@@ -5,11 +5,13 @@ namespace Heyday\Component\Beam\Command;
 use Heyday\Component\Beam\Beam;
 use Heyday\Component\Beam\Config\BeamConfiguration;
 use Heyday\Component\Beam\DeploymentProvider\DeploymentResult;
+use Heyday\Component\Beam\Exception\Exception;
+use Heyday\Component\Beam\Exception\InvalidConfigurationException;
+use Heyday\Component\Beam\Exception\RuntimeException;
 use Heyday\Component\Beam\Helper\ContentProgressHelper;
 use Heyday\Component\Beam\Helper\DeploymentResultHelper;
 use Heyday\Component\Beam\TransferMethod\TransferMethod;
 use Heyday\Component\Beam\Utils;
-use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Console\Helper\DialogHelper;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputArgument;
@@ -154,15 +156,19 @@ abstract class TransferCommand extends Command
         );
     }
 
+    /**
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     * @return int|null|void
+     * @throws \Heyday\Component\Beam\Exception\RuntimeException
+     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-
         if (!$this->transferMethod) {
-            throw new \RuntimeException('Transfer method must be set. Run initialize before execute.');
+            throw new RuntimeException('Transfer method must be set. Run initialize before execute.');
         }
 
         try {
-
             $beam = new Beam(
                 array(
                     $this->config
@@ -199,7 +205,8 @@ abstract class TransferCommand extends Command
                     if (!$input->getOption('dry-run')) {
                         // If we have confirmation do the beam
                         if (!$this->isOkay($output)) {
-                            throw new \RuntimeException('User cancelled');
+                            $this->outputError($output, 'User cancelled');
+                            exit(1);
                         }
 
                         $deleteCount = $deploymentResult->getUpdateCount('deleted');
@@ -216,7 +223,8 @@ abstract class TransferCommand extends Command
                                 'no'
                             )
                         ) {
-                            throw new \RuntimeException('User cancelled');
+                            $this->outputError($output, 'User cancelled');
+                            exit(1);
                         }
 
                         // Set the output handler for displaying the progress bar etc
@@ -229,14 +237,15 @@ abstract class TransferCommand extends Command
                         try {
                             $deploymentResult = $beam->doRun($deploymentResult);
                             $this->deploymentResultHelper->outputChangesSummary($output, $deploymentResult);
-                        } catch (\Exception $exception) {
+                        } catch (Exception $exception) {
                             if (!$this->handleDeploymentProviderFailure($exception, $output)) {
                                 exit(1);
                             }
                         }
                     }
                 } else {
-                    throw new \RuntimeException('No changed files');
+                    $this->outputError($output, 'No files to deploy');
+                    exit(0);
                 }
             } else {
 
@@ -258,6 +267,7 @@ abstract class TransferCommand extends Command
                 $output,
                 $e->getMessage()
             );
+            exit(1);
         }
 
     }
@@ -333,11 +343,11 @@ abstract class TransferCommand extends Command
     }
 
     /**
-     * @param  \Exception      $exception
+     * @param Exception       $exception
      * @param  OutputInterface $output
      * @return bool
      */
-    protected function handleDeploymentProviderFailure(\Exception $exception, OutputInterface $output)
+    protected function handleDeploymentProviderFailure(Exception $exception, OutputInterface $output)
     {
         $this->outputMultiline($output, $exception->getMessage(), 'Error', 'error');
 

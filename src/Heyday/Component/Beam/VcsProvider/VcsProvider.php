@@ -39,7 +39,7 @@ interface VcsProvider
     public function exportRef($branch, $location);
     /**
      * Updates the local remote branches
-     * @throws \RuntimeException
+     * @throws \Exception
      */
     public function updateBranch($branch);
     /**

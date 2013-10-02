@@ -5,7 +5,6 @@ namespace Heyday\Component\Beam\Config;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
-use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -110,9 +109,11 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
             )
         );
 
-        $resolver->resolve(array(
-            'target' => $input->getArgument('target')
-        ));
+        $resolver->resolve(
+            array(
+                'target' => $input->getArgument('target')
+            )
+        );
     }
     /**
      * Generates the configuration tree builder.

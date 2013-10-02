@@ -3,6 +3,7 @@
 namespace Heyday\Component\Beam\Config;
 
 use Symfony\Component\Config\Loader\FileLoader;
+use Heyday\Component\Beam\Exception\InvalidConfigurationException;
 
 /**
  * Class JsonConfigLoader
@@ -20,7 +21,7 @@ class JsonConfigLoader extends FileLoader
      *
      * @param  mixed  $resource The resource
      * @param  string $type     The resource type
-     * @throws \RuntimeException
+     * @throws InvalidConfigurationException
      * @return array
      */
     public function load($resource, $type = null)
@@ -32,7 +33,7 @@ class JsonConfigLoader extends FileLoader
         );
 
         if (json_last_error() != JSON_ERROR_NONE) {
-            throw new \RuntimeException(
+            throw new InvalidConfigurationException(
                 "Failed to parse config $path. Check for syntax errors."
             );
         }

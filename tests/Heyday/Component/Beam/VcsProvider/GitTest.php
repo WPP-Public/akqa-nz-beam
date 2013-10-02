@@ -127,7 +127,7 @@ OUTPUT
         $this->assertTrue(file_exists(vfsStream::url('root')));
     }
     /**
-     * @expectedException InvalidArgumentException
+     * @expectedException \Heyday\Component\Beam\Exception\InvalidConfigurationException
      * @expectedExceptionMessage The git vcs provider can only update remotes
      */
     public function testUpdateBranchException()
