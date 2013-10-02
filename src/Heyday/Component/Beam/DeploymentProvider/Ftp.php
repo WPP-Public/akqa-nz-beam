@@ -30,38 +30,13 @@ class Ftp extends ManualChecksum implements DeploymentProvider
     /**
      * @var
      */
-    protected $server;
-    /**
-     * @var
-     */
     protected $protocolString;
     /**
-     * @param bool $fullmode
-     * @param bool $delete
+     * @var array
      */
-    public function __construct($fullmode = false, $delete = false)
-    {
-        parent::__construct($fullmode, $delete);
-    }
-    /**
-     * @param $key
-     * @throws \InvalidArgumentException
-     * @return mixed
-     */
-    protected function getConfig($key)
-    {
-        if (null === $this->server) {
-            $this->server = $this->beam->getServer();
-            if (!isset($this->server['password'])) {
-                throw new \InvalidArgumentException('FTP Password is required');
-            }
-        }
-
-        return $this->server[$key];
-    }
     /**
      * @return resource
-     * @throws \RuntimeException
+     * @throws RuntimeException
      */
     protected function getConnection()
     {
@@ -72,7 +47,7 @@ class Ftp extends ManualChecksum implements DeploymentProvider
                 $this->connection = ftp_connect($this->getConfig('host'));
             }
             if (!$this->connection) {
-                throw new \RuntimeException("FTP connection failed\n");
+                throw new RuntimeException("FTP connection failed\n");
             }
 
             if (
@@ -82,7 +57,7 @@ class Ftp extends ManualChecksum implements DeploymentProvider
                     $this->getConfig('password')
                 )
             ) {
-                throw new \RuntimeException("FTP login failed");
+                throw new RuntimeException("FTP login failed");
             }
 
             ftp_pasv($this->connection, $this->getConfig('passive'));
@@ -149,7 +124,6 @@ class Ftp extends ManualChecksum implements DeploymentProvider
     }
     /**
      * Create a directory, creating parent directories if required
-     * @{inheritDoc}
      */
     protected function mkdir($path)
     {
@@ -174,7 +148,7 @@ class Ftp extends ManualChecksum implements DeploymentProvider
         foreach ($createDirs as $path) {
             $response = ftp_raw($connection, "MKD $path");
             if (substr($response[0], 0, 3) !== '257') {
-                throw new \RuntimeException("Failed to mkdir '$path':\n" .implode("\n", $response));
+                throw new RuntimeException("Failed to mkdir '$path':\n" .implode("\n", $response));
             }
         }
     }
@@ -186,19 +160,20 @@ class Ftp extends ManualChecksum implements DeploymentProvider
         $size = ftp_size($this->getConnection(), $this->getTargetFilePath($path));
 
         if ($size == -1) {
-            throw new \RuntimeException("Failed to get size for '$path'");
+            throw new RuntimeException("Failed to get size for '$path'");
         }
 
         return $size;
     }
     /**
      * @param $path
-     * @return mixed
+     * @return void
+     * @throws RuntimeException
      */
     protected function delete($path)
     {
         if (!ftp_delete($this->getConnection(), $this->getTargetFilePath($path))) {
-            throw new \RuntimeException("File '$path' failed to delete");
+            throw new RuntimeException("File '$path' failed to delete");
         }
     }
     /**
@@ -210,7 +185,7 @@ class Ftp extends ManualChecksum implements DeploymentProvider
         return $this->getTargetPath() . '/' . $path;
     }
     /**
-     * @throws \RuntimeException
+     * @throws RuntimeException
      * @return mixed
      */
     public function getTargetPath()
@@ -218,7 +193,7 @@ class Ftp extends ManualChecksum implements DeploymentProvider
         if (null === $this->targetPath) {
             $webroot = $this->getConfig('webroot');
             if ($webroot[0] !== '/') {
-                throw new \RuntimeException('Webroot must be a absolute path when using ftp');
+                throw new RuntimeException('Webroot must be a absolute path when using ftp');
             }
             $this->targetPath = rtrim($webroot, '/');
         }

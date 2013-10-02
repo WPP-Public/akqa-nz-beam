@@ -21,6 +21,10 @@ abstract class ManualChecksum extends Deployment
      */
     protected $delete;
     /**
+     * @var
+     */
+    protected $server;
+    /**
      * @param bool $fullmode
      * @param bool $delete
      */
@@ -28,6 +32,22 @@ abstract class ManualChecksum extends Deployment
     {
         $this->fullmode = $fullmode;
         $this->delete = $delete;
+    }
+    /**
+     * @param $key
+     * @throws InvalidConfigurationException
+     * @return mixed
+     */
+    protected function getConfig($key)
+    {
+        if (null === $this->server) {
+            $this->server = $this->beam->getServer();
+            if (!isset($this->server['password'])) {
+                throw new InvalidConfigurationException('(S)FTP Password is required');
+            }
+        }
+
+        return $this->server[$key];
     }
     /**
      * @param  callable                                                   $output
