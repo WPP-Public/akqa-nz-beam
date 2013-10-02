@@ -229,7 +229,7 @@ class Compiler
 
         $phar->addFromString(
             'vendor/autoload.php',
-$c = <<<PHP
+<<<PHP
 <?php
 require_once __DIR__ . '/composer/ClassLoader.php';
 \$dir = dirname(__DIR__);
