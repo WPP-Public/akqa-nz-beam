@@ -30,6 +30,12 @@ class Compiler
         if (!file_exists(__DIR__ . self::ROOT_DIR . '/composer.lock')) {
             throw new RuntimeException("Composer dependencies not installed");
         }
+        
+        $process = new Process('composer dump-autoload -o', __DIR__ . self::ROOT_DIR);
+        
+        if ($process->run() != 0) {
+            throw new RuntimeException("Composer failed to dump the autoloader: " . $process->getErrorOutput());
+        }
 
         $process = new Process('git log --pretty="%H" -n1 HEAD', __DIR__);
         if ($process->run() != 0) {
