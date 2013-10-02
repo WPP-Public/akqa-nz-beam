@@ -130,7 +130,7 @@ abstract class TransferCommand extends Command
      */
     protected function initialize(InputInterface $input, OutputInterface $output)
     {
-        $this->config = $this->getConfig($input);
+        $this->config = BeamConfiguration::parseConfig($this->getConfig($input));
         BeamConfiguration::validateArguments($input, $this->config);
 
         // Set transfer method from config
@@ -170,9 +170,7 @@ abstract class TransferCommand extends Command
 
         try {
             $beam = new Beam(
-                array(
-                    $this->config
-                ),
+                $this->config,
                 $this->transferMethod->getOptions($input, $output, $this->getSrcDir($input))
             );
 

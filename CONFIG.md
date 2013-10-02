@@ -79,9 +79,6 @@ When `type` is set to 'ftp' or 'sftp', a number of FTP specific properties are a
 ## Exclude
 
     "exclude" : {
-        "applications" : [
-            "silverstripe"
-        ],
         "patterns" : [
             "/heystack/cache/container.php",
             "/heystack/cache/countries.cache",
@@ -139,3 +136,16 @@ Note that running commands on a target requires an SSH connection to the target.
  * `tag` *(string)* - A tag for use with the `--tags (-t)` option. Tagged commands are not run unless their tag is specified when `beam` is run. Multiple commands can have the same tag.
  * `required` *(boolean: false)* - Specifies that a command is required for the deployment to complete successfully. Required commands do not prompt when `--command-prompt` is used, are run regardless of tags, and beam will abort if a required command fails.
  * `tty` *(boolean: false)* - Whether the command should be run in a terminal (TTY) environment. Any command that requires user input/interaction will need this option enabled to work correctly. When set to true, the i/o streams (stdin, stderr, stdout) of the command process are connected to the current terminal instead of being managed internally by `beam`.
+
+
+## Import
+
+    "import": [
+        "~/configs/another-beam-config.json",
+        "http://example.com/silverstripe-config.json"
+    ]
+    
+The `import` config option is an array of filenames that provides a way to merge multiple beam.json files together. Using imports, common settings can be used across multiple projects without duplication, and managing the shared options becomes easier.
+
+The values in `import` can be anything accepted by PHP's `file_get_contents`. Also note that imports are only fetched for the root config; `import` in external configs is ignored.
+

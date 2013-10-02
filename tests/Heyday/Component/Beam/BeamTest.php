@@ -29,6 +29,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             ),
             'exclude' => array()
         );
+
         $this->validOptions = array(
             'direction' => 'up',
             'target' => 'live',
@@ -83,9 +84,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
     public function testBeamConstructConfigException()
     {
         new Beam(
-            array(
-                array()
-            ),
+            array(),
             array()
         );
     }
@@ -95,9 +94,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
     public function testBeamConstructMissingOptionsException()
     {
         new Beam(
-            array(
-                $this->validConfig
-            ),
+            $this->validConfig,
             array()
         );
     }
@@ -108,9 +105,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
     public function testBeamConstructInvalidOptionsDirectionException()
     {
         new Beam(
-            array(
-                $this->validConfig
-            ),
+            $this->validConfig,
             $this->getCombinedOptions(
                 array(
                     'direction' => 'fake'
@@ -125,9 +120,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
     public function testBeamConstructInvalidOptionsRemoteException()
     {
         new Beam(
-            array(
-                $this->validConfig
-            ),
+            $this->validConfig,
             $this->getCombinedOptions(
                 array(
                     'target' => 'fake'
@@ -143,17 +136,15 @@ class BeamTest extends \PHPUnit_Framework_TestCase
     {
         new Beam(
             array(
-                array(
-                    'servers' => array(
-                        'live' => array(
-                            'user' => 'testuser',
-                            'host' => 'testhost',
-                            'webroot' => '/test/webroot',
-                            'branch' => 'master'
-                        )
-                    ),
-                    'exclude' => array()
-                )
+                'servers' => array(
+                    'live' => array(
+                        'user' => 'testuser',
+                        'host' => 'testhost',
+                        'webroot' => '/test/webroot',
+                        'branch' => 'master'
+                    )
+                ),
+                'exclude' => array()
             ),
             $this->getCombinedOptions(
                 array(
@@ -181,17 +172,15 @@ class BeamTest extends \PHPUnit_Framework_TestCase
 
         new Beam(
             array(
-                array(
-                    'servers' => array(
-                        'live' => array(
-                            'user' => 'testuser',
-                            'host' => 'testhost',
-                            'webroot' => '/test/webroot',
-                            'branch' => 'remotes/origin/master'
-                        )
-                    ),
-                    'exclude' => array()
-                )
+                'servers' => array(
+                    'live' => array(
+                        'user' => 'testuser',
+                        'host' => 'testhost',
+                        'webroot' => '/test/webroot',
+                        'branch' => 'remotes/origin/master'
+                    )
+                ),
+                'exclude' => array()
             ),
             $this->getCombinedOptions(
                 array(
@@ -208,9 +197,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
     public function testBeamConstructNoVcs()
     {
         new Beam(
-            array(
-                $this->validConfig
-            ),
+            $this->validConfig,
             $this->getCombinedOptions(
                 array(
                     'vcsprovider' => $this->getVcsProviderStub(false)
@@ -232,9 +219,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             )
         );
         new Beam(
-            array(
-                $this->validConfig
-            ),
+            $this->validConfig,
             $this->validOptions
         );
     }
@@ -244,9 +229,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf(
             __NAMESPACE__ . '\Beam',
             new Beam(
-                array(
-                    $this->validConfig
-                ),
+                $this->validConfig,
                 $this->validOptions
             )
         );
@@ -255,16 +238,12 @@ class BeamTest extends \PHPUnit_Framework_TestCase
     public function testGetLocalPath()
     {
         $beam = new Beam(
-            array(
-                $this->validConfig
-            ),
+            $this->validConfig,
             $this->validOptions
         );
         $this->assertEquals('/tmp/beam-57df3e8661206a673d2fef647599e814', $beam->getLocalPath());
         $beam = new Beam(
-            array(
-                $this->validConfig
-            ),
+            $this->validConfig,
             $this->getCombinedOptions(
                 array(
                     'path' => 'extra'
@@ -273,9 +252,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
         );
         $this->assertEquals('/tmp/beam-57df3e8661206a673d2fef647599e814', $beam->getLocalPath());
         $beam = new Beam(
-            array(
-                $this->validConfig
-            ),
+            $this->validConfig,
             $this->getCombinedOptions(
                 array(
                     'working-copy' => true
@@ -284,9 +261,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
         );
         $this->assertEquals('vfs://root/test', $beam->getLocalPath());
         $beam = new Beam(
-            array(
-                $this->validConfig
-            ),
+            $this->validConfig,
             $this->getCombinedOptions(
                 array(
                     'working-copy' => true,
@@ -300,9 +275,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
     public function testIsUp()
     {
         $beam = new Beam(
-            array(
-                $this->validConfig
-            ),
+            $this->validConfig,
             $this->validOptions
         );
         $this->assertTrue($beam->isUp());
@@ -311,9 +284,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
     public function testIsDown()
     {
         $beam = new Beam(
-            array(
-                $this->validConfig
-            ),
+            $this->validConfig,
             $this->getCombinedOptions(
                 array(
                     'direction' => 'down'
@@ -326,9 +297,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
     public function testIsWorkingCopy()
     {
         $beam = new Beam(
-            array(
-                $this->validConfig
-            ),
+            $this->validConfig,
             $this->getCombinedOptions(
                 array(
                     'working-copy' => true
@@ -342,17 +311,15 @@ class BeamTest extends \PHPUnit_Framework_TestCase
     {
         $beam = new Beam(
             array(
-                array(
-                    'servers' => array(
-                        'live' => array(
-                            'user' => 'testuser',
-                            'host' => 'testhost',
-                            'webroot' => '/test/webroot',
-                            'branch' => 'master'
-                        )
-                    ),
-                    'exclude' => array()
-                )
+                'servers' => array(
+                    'live' => array(
+                        'user' => 'testuser',
+                        'host' => 'testhost',
+                        'webroot' => '/test/webroot',
+                        'branch' => 'master'
+                    )
+                ),
+                'exclude' => array()
             ),
             $this->validOptions
         );
@@ -373,17 +340,15 @@ class BeamTest extends \PHPUnit_Framework_TestCase
 
         $beam = new Beam(
             array(
-                array(
-                    'servers' => array(
-                        'live' => array(
-                            'user' => 'testuser',
-                            'host' => 'testhost',
-                            'webroot' => '/test/webroot',
-                            'branch' => 'remotes/origin/master'
-                        )
-                    ),
-                    'exclude' => array()
-                )
+                'servers' => array(
+                    'live' => array(
+                        'user' => 'testuser',
+                        'host' => 'testhost',
+                        'webroot' => '/test/webroot',
+                        'branch' => 'remotes/origin/master'
+                    )
+                ),
+                'exclude' => array()
             ),
             $this->getCombinedOptions(
                 array(
@@ -402,16 +367,14 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue(true));
         $beam = new Beam(
             array(
-                array(
-                    'servers' => array(
-                        'live' => array(
-                            'user' => 'testuser',
-                            'host' => 'testhost',
-                            'webroot' => '/test/webroot'
-                        )
-                    ),
-                    'exclude' => array()
-                )
+                'servers' => array(
+                    'live' => array(
+                        'user' => 'testuser',
+                        'host' => 'testhost',
+                        'webroot' => '/test/webroot'
+                    )
+                ),
+                'exclude' => array()
             ),
             $this->getCombinedOptions(
                 array(
@@ -425,17 +388,13 @@ class BeamTest extends \PHPUnit_Framework_TestCase
     public function testHasPath()
     {
         $beam = new Beam(
-            array(
-                $this->validConfig
-            ),
+            $this->validConfig,
             $this->validOptions,
             $this->getVcsProviderStub()
         );
         $this->assertFalse($beam->hasPath());
         $beam = new Beam(
-            array(
-                $this->validConfig
-            ),
+            $this->validConfig,
             $this->getCombinedOptions(
                 array(
                     'path' => array(
@@ -449,9 +408,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
     public function testMatchTag()
     {
         $beam = new Beam(
-            array(
-                $this->validConfig
-            ),
+            $this->validConfig,
             $this->validOptions
         );
 
