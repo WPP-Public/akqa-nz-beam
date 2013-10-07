@@ -83,10 +83,8 @@ When `type` is set to 'ftp' or 'sftp', a number of FTP specific properties are a
             "silverstripe"
         ],
         "patterns" : [
-            "/heystack/cache/container.php",
-            "/heystack/cache/countries.cache",
-            "/heystack/cache/currencies.cache"
             "/cache/*",
+            "/silverstripe-cache/*",
             "*.tmp"
         ]
     }
