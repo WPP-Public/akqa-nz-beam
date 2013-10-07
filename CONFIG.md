@@ -145,7 +145,7 @@ Note that running commands on a target requires an SSH connection to the target.
         "http://example.com/silverstripe-config.json"
     ]
     
-The `import` config option is an array of filenames that provides a way to merge multiple beam.json files together. Using imports, common settings can be used across multiple projects without duplication, and managing the shared options becomes easier.
+The `import` config option is an array of filenames that provides a way to merge multiple beam.json files together. Using imports, common settings can be used across multiple projects without duplication and managing shared options becomes easier.
 
-The values in `import` can be anything accepted by PHP's `file_get_contents`. Also note that imports are only fetched for the root config; `import` in external configs is ignored.
+The values in `import` can be anything accepted by PHP's `file_get_contents`, including but not limited to HTTP URLs and local file paths. A tilde at the start of a path is replaced with the path to the current user's home directory. Imports are fetched recursively (ie. imported configs can import further configs) with each unique path being fetched only the first time it appears.
 

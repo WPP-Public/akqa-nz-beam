@@ -101,19 +101,29 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
         );
     }
     /**
-     * Load the contents of the files and URLs in $imports
-     * @param array $imports
+     * Load the contents of the files and URLs in $imports, recursively
+     * @param array $imports - list of files/urls to load
+     * @param array $imported - list of files/urls already loaded
      * @return array
      */
-    public static function loadImports(array $imports)
+    public static function loadImports(array $imports, array &$imported = array())
     {
         $configs = array();
 
         foreach ($imports as $import) {
+
+            if (in_array($import, $imported)) {
+                continue;
+            }
+
             $import = static::processPath($import);
             $json = json_decode(file_get_contents($import), true);
             if ($json) {
                 $configs[] = $json;
+                if (isset($json['import'])) {
+                    $imported[] = $import;
+                    $configs = array_merge($configs, self::loadImports($json['import'], $imported));
+                }
             }
         }
 
