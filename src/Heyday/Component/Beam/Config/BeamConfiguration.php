@@ -5,6 +5,7 @@ namespace Heyday\Component\Beam\Config;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
+use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -25,60 +26,6 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
     /**
      * @var array
      */
-    protected $applications = array(
-        '_base'        => array(
-            '*~',
-            '.DS_Store',
-            '.gitignore',
-            '.mergesources.yml',
-            'README.md',
-            'composer.json',
-            'composer.lock',
-            'deploy.json',
-            'beam.json',
-            'deploy.properties',
-            'sftp-config.json',
-            'checksums.json*',
-            '/access-logs/',
-            '/cgi-bin/',
-            '/.idea/',
-            '.svn/',
-            '.git/',
-            '/maintenance/on'
-        ),
-        'gear'         => array(
-            '/images/repository/'
-        ),
-        'silverstripe' => array(
-            '/assets/',
-            '/silverstripe-cache/',
-            '/assets-generated/',
-            '/cache-include/cache/',
-            '/heyday-cacheinclude/cache/',
-            '/silverstripe-cacheinclude/cache/'
-        ),
-        'symfony'      => array(
-            '/cache/',
-            '/data/lucene/',
-            '/config/log/',
-            '/data/lucene/',
-            '/lib/form/base/',
-            '/lib/model/map/',
-            '/lib/model/om/',
-            '/log/',
-            '/web/uploads/'
-        ),
-        'wordpress'    => array(
-            'wp-content/uploads/'
-        ),
-        'zf'           => array(
-            '/www/uploads/',
-            '/web/uploads/'
-        )
-    );
-    /**
-     * @var array
-     */
     protected $phases = array(
         'pre',
         'post'
@@ -89,6 +36,22 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
     protected $locations = array(
         'local',
         'target'
+    );
+    /**
+     * Patterns that should not be transferred
+     * @var array
+     */
+    protected static $defaultExcludes = array(
+        '*~',
+        '.DS_Store',
+        'beam.json',
+        'checksums.json*',
+        '.svn/',
+        '.git/',
+        '.gitignore',
+        '.gitmodules',
+        '.hg/',
+        '.hgignore',
     );
 
     /**
@@ -116,6 +79,71 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
         );
     }
     /**
+     * Parse a raw beam config
+     * (Includes loading imports and validation)
+     * @param array $config
+     * @return array
+     */
+    public static function parseConfig(array $config)
+    {
+        if (isset($config['import']) && is_array($config['import'])) {
+            $configs = BeamConfiguration::loadImports($config['import']);
+            array_unshift($configs, $config);
+        } else {
+            $configs = array($config);
+        }
+
+        $processor = new Processor();
+
+        return $processor->processConfiguration(
+            new BeamConfiguration(),
+            $configs
+        );
+    }
+    /**
+     * Load the contents of the files and URLs in $imports, recursively
+     * @param array $imports - list of files/urls to load
+     * @param array $imported - list of files/urls already loaded
+     * @return array
+     */
+    public static function loadImports(array $imports, array &$imported = array())
+    {
+        $configs = array();
+
+        foreach ($imports as $import) {
+
+            if (in_array($import, $imported)) {
+                continue;
+            }
+
+            $import = static::processPath($import);
+            $json = json_decode(file_get_contents($import), true);
+            if ($json) {
+                $configs[] = $json;
+                if (isset($json['import'])) {
+                    $imported[] = $import;
+                    $configs = array_merge($configs, self::loadImports($json['import'], $imported));
+                }
+            }
+        }
+
+        return $configs;
+    }
+    /**
+     * Replaces '~'' with users home path
+     * @param  string $path
+     * @return string
+     */
+    protected static function processPath($path)
+    {
+        if ($path[0] === '~') {
+            $path = substr_replace($path, getenv('HOME'), 0, 1);
+        }
+
+        return $path;
+    }
+
+    /**
      * Generates the configuration tree builder.
      *
      * @return \Symfony\Component\Config\Definition\Builder\TreeBuilder The tree builder
@@ -128,6 +156,9 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
 
         $rootNode
             ->children()
+                ->arrayNode('import')
+                    ->prototype('scalar')->end()
+                ->end()
                 ->arrayNode('servers')
                     ->isRequired()
                     ->requiresAtLeastOneElement()
@@ -185,17 +216,6 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
                 ->end()
                 ->arrayNode('exclude')
                     ->children()
-                        ->arrayNode('applications')
-                            ->prototype('scalar')
-                                ->validate()
-                                    ->ifNotInArray(array_keys($this->applications))
-                                    ->thenInvalid(
-                                        'Application "%s" is not valid, options are: ' .
-                                            $this->getFormattedOptions(array_keys($this->applications))
-                                    )
-                                ->end()
-                            ->end()
-                        ->end()
                         ->arrayNode('patterns')
                             ->prototype('scalar')->end()
                         ->end()
@@ -240,24 +260,11 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
      */
     public function buildExcludes($value)
     {
-        $excludes = array();
+        $value =  $value ? $value : array(
+            'patterns' => array()
+        );
 
-        if (!$value) {
-            $value = array(
-                'applications' => array(),
-                'patterns'     => array()
-            );
-        }
-
-        if (!in_array('_base', $value['applications'])) {
-            $value['applications'][] = '_base';
-        }
-
-        foreach ($value['applications'] as $application) {
-            $excludes = array_merge($excludes, $this->applications[$application]);
-        }
-
-        return array_merge($excludes, $value['patterns']);
+        return array_merge(static::$defaultExcludes, $value['patterns']);
     }
     /**
      * @param $name

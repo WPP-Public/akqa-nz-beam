@@ -43,15 +43,9 @@ class MakeChecksumsCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $processor = new Processor();
         $path = realpath($input->getOption('path'));
 
-        $config = $processor->processConfiguration(
-            new BeamConfiguration(),
-            array(
-                $this->getConfig($input, $path)
-            )
-        );
+        $config = BeamConfiguration::parseConfig($this->getConfig($input, $path));
 
         $checksums = Utils::checksumsFromFiles(
             Utils::getAllowedFilesFromDirectory($config['exclude'], $path),

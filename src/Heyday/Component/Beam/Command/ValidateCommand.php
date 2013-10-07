@@ -3,7 +3,6 @@
 namespace Heyday\Component\Beam\Command;
 
 use Heyday\Component\Beam\Config\BeamConfiguration;
-use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -29,14 +28,10 @@ class ValidateCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $config = $this->getConfig($input);
+
         try {
-            $processor = new Processor();
-            $processor->processConfiguration(
-                new BeamConfiguration(),
-                array(
-                    $this->getConfig($input)
-                )
-            );
+            BeamConfiguration::parseConfig($config);
 
             $configPath = $this->getConfigPath($input);
 

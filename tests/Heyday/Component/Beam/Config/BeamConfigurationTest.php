@@ -29,14 +29,6 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                         )
                     ),
                     'exclude' => array(
-                        'applications' => array(
-                            '_base',
-                            'gear',
-                            'silverstripe',
-                            'symfony',
-                            'wordpress',
-                            'zf'
-                        ),
                         'patterns' => array(
                             'test',
                             'hello'
@@ -111,6 +103,7 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                 )
             )
         );
+
         $this->assertEquals(
             array(
                 'servers' => array(
@@ -121,26 +114,19 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                         'type' => 'rsync'
                     )
                 ),
+                'import' => array(),
                 'commands' => array(),
                 'exclude' => array(
                     '*~',
                     '.DS_Store',
-                    '.gitignore',
-                    '.mergesources.yml',
-                    'README.md',
-                    'composer.json',
-                    'composer.lock',
-                    'deploy.json',
                     'beam.json',
-                    'deploy.properties',
-                    'sftp-config.json',
                     'checksums.json*',
-                    '/access-logs/',
-                    '/cgi-bin/',
-                    '/.idea/',
                     '.svn/',
                     '.git/',
-                    '/maintenance/on'
+                    '.gitignore',
+                    '.gitmodules',
+                    '.hg/',
+                    '.hgignore',
                 )
             ),
             $processedConfig
