@@ -48,7 +48,6 @@ class InitCommand extends SymfonyCommand
 
         $template = array(
             'exclude' => array(
-                'applications' => array(),
                 'patterns' => array(),
             ),
             'servers' => array(

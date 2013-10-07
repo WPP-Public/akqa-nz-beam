@@ -6,10 +6,9 @@ use Heyday\Component\Beam\Config\BeamConfiguration;
 use Heyday\Component\Beam\DeploymentProvider\DeploymentProvider;
 use Heyday\Component\Beam\DeploymentProvider\DeploymentResult;
 use Heyday\Component\Beam\Exception\InvalidArgumentException;
-use Heyday\Component\Beam\Exception\InvalidConfigurationException;
 use Heyday\Component\Beam\Exception\RuntimeException;
 use Heyday\Component\Beam\VcsProvider\Git;
-use Symfony\Component\Config\Definition\Processor;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Process\Process;
@@ -34,20 +33,17 @@ class Beam
     protected $prepared = false;
 
     /**
-     * An array of configs in the format defined in BeamConfiguration
-     * @param array $configs
+     * An config in the format defined in BeamConfiguration
+     * @param array $config
      * @param array $options
      */
     public function __construct(
-        array $configs,
+        array $config,
         array $options
     ) {
-        $processor = new Processor();
+        $beamConfiguration = new BeamConfiguration();
+        $this->config = $beamConfiguration->getConfigTreeBuilder()->buildTree()->finalize($config);
 
-        $this->config = $processor->processConfiguration(
-            new BeamConfiguration(),
-            $configs
-        );
         $this->setup($options);
     }
     /**
