@@ -2,6 +2,7 @@
 
 namespace Heyday\Component\Beam\Config;
 
+use org\bovigo\vfs\vfsStream;
 use Symfony\Component\Config\Definition\Processor;
 
 class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
@@ -9,6 +10,7 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
     protected $config;
     protected function setUp()
     {
+        vfsStream::setup();
         $this->config = new BeamConfiguration();
     }
     public function testProcess()
@@ -88,6 +90,7 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
 
     public function testExcludesEmpty()
     {
+        $reflection = new \ReflectionClass('\Heyday\Component\Beam\Config\BeamConfiguration');
         $processor = new Processor();
         $processedConfig = $processor->processConfiguration(
             $this->config,
@@ -116,20 +119,172 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                 ),
                 'import' => array(),
                 'commands' => array(),
-                'exclude' => array(
-                    '*~',
-                    '.DS_Store',
-                    'beam.json',
-                    'checksums.json*',
-                    '.svn/',
-                    '.git/',
-                    '.gitignore',
-                    '.gitmodules',
-                    '.hg/',
-                    '.hgignore',
-                )
+                'exclude' => $reflection->getStaticProperties()['defaultExcludes']
             ),
             $processedConfig
         );
+    }
+
+    public function testLoadImports()
+    {
+        $externalConfig = array(
+            'exclude' => array(
+                'patterns' => array(
+                    '/secret/files/',
+                    '.htaccess',
+                    '_*/'
+                )
+            )
+        );
+
+        $otherExternalConfig = array(
+            'commands' => array(
+                array(
+                    'command' => 'echo Hello World',
+                    'phase' => 'pre',
+                    'location' => 'local'
+                )
+            )
+        );
+
+        $file1 = vfsStream::url('root/some-beam-config.json');
+        $file2 = vfsStream::url('root/some-other-beam-config.json');
+
+        file_put_contents($file1, json_encode($externalConfig));
+        file_put_contents($file2, json_encode($otherExternalConfig));
+
+        $loaded = BeamConfiguration::loadImports(array($file1, $file2));
+
+        $this->assertEquals(array(
+                $externalConfig,
+                $otherExternalConfig
+            ),
+            $loaded,
+            'Beam config imports were not loaded correctly'
+        );
+
+        unlink($file1);
+        unlink($file2);
+    }
+
+    public function testParseConfig()
+    {
+        $file1 = vfsStream::url('root/external-config-1.json');
+        $file2 = vfsStream::url('root/external-config-2.json');
+
+        $config = array(
+            'import' => array(
+                $file1,
+            ),
+            'commands' => array(
+                array(
+                    'command' => 'test',
+                    'phase' => 'pre',
+                    'location' => 'target',
+                    'servers' => array(
+                        'live'
+                    )
+                )
+            ),
+            'exclude' => array(
+                'patterns' => array(
+                    'test',
+                    'hello'
+                )
+            ),
+            'servers' => array(
+                'live' => array(
+                    'user' => 'test',
+                    'host' => 'test',
+                    'webroot' => 'test',
+                    'branch' => 'test'
+                )
+            )
+        );
+
+        $externalConfig = array(
+            'import' => array(
+                $file2
+            ),
+            'exclude' => array(
+                'patterns' => array(
+                    '/secret/files/',
+                    '.htaccess',
+                    '_*/',
+                    'SUPER_FILE_3000'
+                )
+            )
+        );
+
+        $otherExternalConfig = array(
+            'commands' => array(
+                array(
+                    'command' => 'echo Hello World',
+                    'phase' => 'pre',
+                    'location' => 'local'
+                )
+            )
+        );
+
+        file_put_contents($file1, json_encode($externalConfig));
+        file_put_contents($file2, json_encode($otherExternalConfig));
+
+        $reflection = new \ReflectionClass('\Heyday\Component\Beam\Config\BeamConfiguration');
+
+        $this->assertEquals(
+            array(
+                'import' => array(
+                    $file1,
+                    $file2
+                ),
+                'commands' => array(
+                    array(
+                        'command' => 'test',
+                        'phase' => 'pre',
+                        'location' => 'target',
+                        'servers' => array(
+                            'live'
+                        ),
+                        'tag' => false,
+                        'tty' => false,
+                        'required' => false
+                    ),
+                    array(
+                        'command' => 'echo Hello World',
+                        'phase' => 'pre',
+                        'location' => 'local',
+                        'servers' => array(),
+                        'tag' => false,
+                        'tty' => false,
+                        'required' => false
+                    )
+                ),
+                'exclude' => array_merge(
+                    $reflection->getStaticProperties()['defaultExcludes'],
+                    array(
+                        'test',
+                        'hello',
+                        '/secret/files/',
+                        '.htaccess',
+                        '_*/',
+                        'SUPER_FILE_3000'
+                    )
+                ),
+                'servers' => array(
+                    'live' => array(
+                        'user' => 'test',
+                        'host' => 'test',
+                        'webroot' => 'test',
+                        'branch' => 'test',
+                        'type' => 'rsync'
+                    )
+                )
+            ),
+            BeamConfiguration::parseConfig($config),
+            'Beam config did not parse correctly'
+        );
+
+        unlink($file1);
+        unlink($file2);
     }
 }
