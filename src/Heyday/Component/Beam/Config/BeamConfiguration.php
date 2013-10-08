@@ -2,6 +2,7 @@
 
 namespace Heyday\Component\Beam\Config;
 
+use Heyday\Component\Beam\Exception\Exception;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
@@ -118,12 +119,22 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
 
             $import = static::processPath($import);
             $json = json_decode(file_get_contents($import), true);
+
             if ($json) {
                 $configs[] = $json;
+                $imported[] = $import;
+
                 if (isset($json['import'])) {
-                    $imported[] = $import;
                     $configs = array_merge($configs, self::loadImports($json['import'], $imported));
                 }
+
+            } else if (json_last_error() != JSON_ERROR_NONE) {
+                throw new InvalidConfigurationException(
+                    "Failed to parse JSON for '$import'. Check for syntax errors."
+                );
+
+            } else {
+                throw new Exception("Import '$import' parsed to nothing.");
             }
         }
 
