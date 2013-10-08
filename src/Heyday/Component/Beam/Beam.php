@@ -41,9 +41,7 @@ class Beam
         array $config,
         array $options
     ) {
-        $beamConfiguration = new BeamConfiguration();
-        $this->config = $beamConfiguration->getConfigTreeBuilder()->buildTree()->finalize($config);
-
+        $this->config = $config;
         $this->setup($options);
     }
     /**

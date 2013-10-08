@@ -83,6 +83,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
      */
     public function testBeamConstructConfigException()
     {
+        $this->markTestSkipped('Config is no longer validated in Beam::__constructor');
         new Beam(
             array(),
             array()
