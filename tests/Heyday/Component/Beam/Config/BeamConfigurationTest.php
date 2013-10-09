@@ -106,6 +106,8 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                 )
             )
         );
+        
+        $excludes = $reflection->getStaticProperties();
 
         $this->assertEquals(
             array(
@@ -119,7 +121,7 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                 ),
                 'import' => array(),
                 'commands' => array(),
-                'exclude' => $reflection->getStaticProperties()['defaultExcludes']
+                'exclude' => $excludes['defaultExcludes']
             ),
             $processedConfig
         );
@@ -230,6 +232,8 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
         file_put_contents($file2, json_encode($otherExternalConfig));
 
         $reflection = new \ReflectionClass('\Heyday\Component\Beam\Config\BeamConfiguration');
+        
+        $excludes = $reflection->getStaticProperties();
 
         $this->assertEquals(
             array(
@@ -260,7 +264,7 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                     )
                 ),
                 'exclude' => array_merge(
-                    $reflection->getStaticProperties()['defaultExcludes'],
+                    $excludes['defaultExcludes'],
                     array(
                         'test',
                         'hello',
