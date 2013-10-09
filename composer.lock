@@ -3,7 +3,7 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "6db07db06bfcd982558fd18892c47ea4",
+    "hash": "bc3b7f0b4179673f20e4e796df061eb9",
     "packages": [
         {
             "name": "herzult/php-ssh",
@@ -20,6 +20,7 @@
                 "shasum": ""
             },
             "require": {
+                "ext-ssh2": "*",
                 "php": ">=5.3.2"
             },
             "require-dev": {

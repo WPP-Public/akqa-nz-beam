@@ -1,5 +1,7 @@
 # Beam
 
+[![Build Status](https://travis-ci.org/heyday/beam.png?branch=master)](https://travis-ci.org/heyday/beam)
+
 Beam is a command line utility for deploying websites to servers. It allows you to sync files between a version control
 system and a remote host, and run shell commands at fixed stages to further automate the deployment process. Beam works
 best (and by default) using `rsync` over `ssh`, though it also has support for intelligent deployment through SFTP

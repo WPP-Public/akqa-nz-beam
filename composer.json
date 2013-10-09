@@ -17,7 +17,7 @@
         }
     ],
     "provide": {
-        "ext-ssh": "*"
+        "ext-ssh2": "*"
     },
     "require": {
         "symfony/console": "~2.2.0",
