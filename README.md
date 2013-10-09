@@ -91,6 +91,11 @@ $ beam down staging -p assets    # dowload a specific folder to working copy
 This means that you have `detect_unicode=On` in your `php.ini`. To fix this, open your `php.ini` (ensure it is your
 cli one) and make sure `detect_unicode=Off` is present.
 
+#### When I run `beam` I see no output
+
+If you are using `suhosin`, you will need to add `phar` to the [whitelist of allowed executor url schemes](http://www.hardened-php.net/suhosin/configuration.html#suhosin.executor.include.whitelist). To fix this, open your
+`php.ini` (ensure it is your cli one) and make sure that `suhosin.executor.include.whitelist=phar` is present.
+
 ### IRC
 
 Help is available at `#beam` on freenode.
