@@ -20,7 +20,6 @@
                 "shasum": ""
             },
             "require": {
-                "ext-ssh2": "*",
                 "php": ">=5.3.2"
             },
             "require-dev": {
