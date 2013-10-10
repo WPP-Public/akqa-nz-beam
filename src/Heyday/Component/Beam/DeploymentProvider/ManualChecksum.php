@@ -166,7 +166,7 @@ abstract class ManualChecksum extends Deployment
             // Save the checksums to the server
             $this->writeContent(
                 'checksums.json.gz',
-                Utils::checksumsFromGz(
+                Utils::checksumsToGz(
                     $this->beam->hasPath() ? array_merge(
                         $targetchecksums,
                         $localchecksums
