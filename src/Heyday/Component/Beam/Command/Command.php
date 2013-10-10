@@ -32,13 +32,15 @@ abstract class Command extends BaseCommand
         $this->formatterHelper = new FormatterHelper();
         parent::__construct($name);
     }
+
     /**
+     * @param $path
      * @return JsonConfigLoader
      */
-    protected function getJsonConfigLoader()
+    protected function getJsonConfigLoader($path = null)
     {
         if (null === $this->jsonConfigLoader) {
-            $path = getcwd();
+            $path = $path ?: getcwd();
             $paths = array();
 
             while ($path !== end($paths)) {
@@ -55,13 +57,15 @@ abstract class Command extends BaseCommand
 
         return $this->jsonConfigLoader;
     }
+
     /**
      * @param  InputInterface $input
+     * @param null $path
      * @return mixed
      */
-    protected function getConfig(InputInterface $input)
+    protected function getConfig(InputInterface $input, $path = null)
     {
-        return $this->getJsonConfigLoader()->load(
+        return $this->getJsonConfigLoader($path)->load(
             $input->getOption('config-file')
         );
     }
