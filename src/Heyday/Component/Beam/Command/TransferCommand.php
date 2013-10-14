@@ -298,9 +298,9 @@ abstract class TransferCommand extends Command
         }
 
         if ($beam->getOption('dry-run')) {
-            $action = 'You\'re about do a <comment>dry run</comment> between';
+            $action = 'You\'re about to do a <comment>dry run</comment> between';
         } else {
-            $action = 'You\'re about sync files between:';
+            $action = 'You\'re about to sync files between:';
         }
 
         $output->writeln(
