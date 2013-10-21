@@ -133,7 +133,6 @@ class Ftp extends ManualChecksum implements DeploymentProvider
         }
         
         if (($key = array_search(basename($path), $this->listCache[$dir])) !== false) {
-            unset($this->listCache[$dir][$key]);
             return true;
         } else {
             return false;
