@@ -124,6 +124,12 @@ class Ftp extends ManualChecksum implements DeploymentProvider
 
         if (!isset($this->listCache[$dir])) {
             $this->listCache[$dir] = ftp_nlist($this->getConnection(), $dir);
+            array_walk(
+                $this->listCache[$dir],
+                function(&$value) {
+                    $value = basename($value);
+                }
+            );
         }
         
         if (($key = array_search(basename($path), $this->listCache[$dir])) !== false) {
