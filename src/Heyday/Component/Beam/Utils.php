@@ -175,10 +175,10 @@ class Utils
             foreach ($iterator as $file) {
                 if (in_array($file->getBasename(), array('.', '..'))) {
                     continue;
-                } elseif ($file->isDir()) {
-                    rmdir($file->getPathname());
                 } elseif ($file->isFile() || $file->isLink()) {
                     unlink($file->getPathname());
+                } elseif ($file->isDir()) {
+                    rmdir($file->getPathname());
                 }
             }
             rmdir($location);
