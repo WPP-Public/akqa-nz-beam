@@ -3,6 +3,7 @@
 namespace Heyday\Component\Beam;
 
 use Heyday\Component\Beam\Exception\InvalidEnvironmentException;
+use Symfony\Component\Process\Process;
 
 /**
  * Class Utils
@@ -163,11 +164,28 @@ class Utils
         return json_decode(gzinflate(substr($data, 10, -8)), true);
     }
     /**
+     * Recursively remove a directory
+     *
      * @param $location
      */
     public static function removeDirectory($location)
     {
+        // Try to delete using rm if not running under Windows
+        // Skip if a protocol is used as this is not supported by rm
+        if (!defined('PHP_WINDOWS_VERSION_BUILD')
+            && !preg_match('/^.+:\/\/.+/', $location)) {
+            try {
+                $process = new Process('rm -rf '. escapeshellarg($location));
+                $process->run();
+                return;
+            } catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
+                // Removal using rm failed. Since this may have been a problem
+                // with environment and not removal, pass to let PHP try
+            }
+        }
+
         if (file_exists($location)) {
+
             $iterator = new \RecursiveIteratorIterator(
                 new \RecursiveDirectoryIterator($location),
                 \RecursiveIteratorIterator::CHILD_FIRST
