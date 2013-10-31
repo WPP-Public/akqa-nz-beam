@@ -253,6 +253,7 @@ abstract class TransferCommand extends Command
                         // Run the deployment
                         try {
                             $deploymentResult = $beam->doRun($deploymentResult);
+                            $this->progressHelper->finish();
                             $this->deploymentResultHelper->outputChangesSummary($output, $deploymentResult);
                         } catch (Exception $exception) {
                             if (!$this->handleDeploymentProviderFailure($exception, $output)) {
@@ -395,7 +396,7 @@ abstract class TransferCommand extends Command
         $count = count($deploymentResult);
         $progressHelper = $this->progressHelper;
 
-        return function () use (
+        return function ($stepSize = 1) use (
             $output,
             $deploymentResult,
             $progressHelper,
@@ -408,14 +409,9 @@ abstract class TransferCommand extends Command
                 $progressHelper->start($output, $count, 'File: ');
             }
 
-            if ($steps < $count) {
-                $filename = isset($deploymentResult[$steps]['filename']) ? $deploymentResult[$steps]['filename'] : '';
-                $progressHelper->advance(1, false, $filename);
-                $steps++;
-
-            } else if ($steps == $count) {
-                $progressHelper->finish();
-            }
+            $filename = isset($deploymentResult[$steps]['filename']) ? $deploymentResult[$steps]['filename'] : '';
+            $progressHelper->advance($stepSize, false, $filename);
+            $steps += $stepSize;
         };
     }
 

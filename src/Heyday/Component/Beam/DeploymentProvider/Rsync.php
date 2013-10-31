@@ -441,9 +441,8 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
                 return null;
             }
 
-            // Call the the callback as it would be done from Process
             if ($callback) {
-                $callback($type, $data);
+                $callback(substr_count($data, "\n"));
             }
 
             // If a stream output handler is set, parse the partial change set
