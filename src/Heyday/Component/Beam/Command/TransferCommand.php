@@ -176,6 +176,18 @@ abstract class TransferCommand extends Command
 
             $this->outputSummary($output, $beam);
 
+            // Set up to stream the list of changes if streaming is available
+            $doStreamResult = $beam->deploymentProviderImplements('Heyday\Component\Beam\DeploymentProvider\ResultStream');
+
+            if ($doStreamResult) {
+                $resultHelper = $this->deploymentResultHelper;
+                $beam->setResultStreamHandler(
+                    function($changes) use ($resultHelper, $output) {
+                        $resultHelper->outputChanges($output, new DeploymentResult($changes));
+                    }
+                );
+            }
+
             // Prompt the user with the affected files and a confirmation dialog
             if (!$input->getOption('no-prompt')) {
                 $output->writeln(
@@ -194,7 +206,9 @@ abstract class TransferCommand extends Command
                 // If there is more that 1 item there are updates
                 if ($count > 0) {
                     // Output the actual changed files and folders
-                    $this->deploymentResultHelper->outputChanges($output, $deploymentResult);
+                    if (!$doStreamResult) {
+                        $this->deploymentResultHelper->outputChanges($output, $deploymentResult);
+                    }
 
                     // Output a summary of the changes
                     $this->deploymentResultHelper->outputChangesSummary($output, $deploymentResult);
@@ -230,6 +244,11 @@ abstract class TransferCommand extends Command
                             'deploymentoutputhandler',
                             $this->getDeploymentOutputHandler($output, $deploymentResult)
                         );
+
+                        // Disable the result stream handler so it doesn't mess with the progress bar
+                        if ($doStreamResult) {
+                            $beam->setResultStreamHandler(null);
+                        }
 
                         // Run the deployment
                         try {

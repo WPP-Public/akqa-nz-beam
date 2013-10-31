@@ -447,6 +447,28 @@ class Beam
             );
         }
     }
+
+    /**
+     * Check if the deployment provider implements an interface
+     * @param $interfaceName
+     * @return bool
+     */
+    public function deploymentProviderImplements($interfaceName)
+    {
+        $interfaces = class_implements(
+            get_class($this->getOption('deploymentprovider'))
+        );
+        return isset($interfaces[$interfaceName]);
+    }
+    /**
+     * Set the deployment provider's result stream handler
+     * This is only available if the deployment provider implements the
+     * DeploymentProvider\ResultStream interface.
+     */
+    public function setResultStreamHandler(\Closure $handler = null)
+    {
+        $this->getOption('deploymentprovider')->setStreamHandler($handler);
+    }
     /**
      * A helper method that runs a process and checks its success, erroring if it failed
      * @param  Process           $process

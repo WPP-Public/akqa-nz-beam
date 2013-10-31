@@ -11,12 +11,18 @@ use Symfony\Component\Process\Process;
  * Class Rsync
  * @package Heyday\Component\Beam\DeploymentProvider
  */
-class Rsync extends Deployment implements DeploymentProvider
+class Rsync extends Deployment implements DeploymentProvider, ResultStream
 {
     /**
      * @var array
      */
     protected $options;
+
+    /**
+     * @var \Closure
+     */
+    protected $resultStreamHandler;
+
     /**
      * @param array $options
      */
@@ -89,14 +95,19 @@ class Rsync extends Deployment implements DeploymentProvider
     protected function deploy($command, \Closure $output = null)
     {
         $this->generateExcludesFile();
+        $outputHandler = $this->getOutputStreamHandler($output);
         $process = $this->getProcess($command);
-        $process->run($output);
+        $process->run($outputHandler);
         if (!$process->isSuccessful()) {
             throw new RuntimeException($process->getErrorOutput());
         }
-        $output = $process->getOutput();
 
-        return new DeploymentResult($this->formatOutput($output));
+        if ($this->resultStreamHandler && $outputHandler) {
+            return new DeploymentResult($outputHandler('fetch'));
+        } else {
+            $output = $process->getOutput();
+            return new DeploymentResult($this->formatOutput($output));
+        }
     }
     /**
      * Builds the rsync command based of current options
@@ -399,6 +410,66 @@ class Rsync extends Deployment implements DeploymentProvider
     public function getLimitations()
     {
         return null;
+    }
+    /**
+     * Set a callback function to receive a stream of changes
+     * @param \Closure $callback function(array $array)
+     */
+    public function setStreamHandler(\Closure $callback = null)
+    {
+        $this->resultStreamHandler = $callback;
+    }
+    /**
+     * Create a callback to handle the rsync process output
+     *
+     * @see setStreamHandler
+     * @param callable $callback
+     * @return callable
+     */
+    protected function getOutputStreamHandler(\Closure $callback = null)
+    {
+        if (!$this->resultStreamHandler && !$callback) {
+            return null;
+        }
+
+        $streamHandler = $this->resultStreamHandler;
+        $that = $this;
+        return function ($type, $data = "\n") use ($streamHandler, $callback, $that) {
+
+            // Ignore error output
+            if ($type === Process::ERR) {
+                return null;
+            }
+
+            // Call the the callback as it would be done from Process
+            if ($callback) {
+                $callback($type, $data);
+            }
+
+            // If a stream output handler is set, parse the partial change set
+            if ($streamHandler) {
+                static $buffer = '';
+                static $results = array();
+
+                $buffer .= $data;
+
+                $lastNewLine = strrpos($buffer, "\n");
+                if ($lastNewLine !== false) {
+                    $data = substr($buffer, 0, $lastNewLine);
+                    $buffer = substr($buffer, $lastNewLine);
+
+                    $result = $that->formatOutput($data);
+                    $results[] = $result;
+
+                    $streamHandler($result);
+                }
+
+                // Return the collected results when asked
+                if ($type === 'fetch') {
+                    return call_user_func_array('array_merge', $results);
+                }
+            }
+        };
     }
     /**
      * @param $command
