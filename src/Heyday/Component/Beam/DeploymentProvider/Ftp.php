@@ -80,6 +80,8 @@ class Ftp extends ManualChecksum implements DeploymentProvider
             $handle,
             FTP_BINARY
         );
+
+        $this->addToListCache($targetpath);
     }
     /**
      * @{inheritDoc}
@@ -92,6 +94,8 @@ class Ftp extends ManualChecksum implements DeploymentProvider
             $localpath,
             FTP_BINARY
         );
+
+        $this->addToListCache($targetpath);
     }
     /**
      * @{inheritDoc}
@@ -134,6 +138,8 @@ class Ftp extends ManualChecksum implements DeploymentProvider
         
         if (($key = array_search(basename($path), $this->listCache[$dir])) !== false) {
             return true;
+        } else if ($path == $dir && count($this->listCache[$dir])) {
+            return true;
         } else {
             return false;
         }
@@ -163,6 +169,8 @@ class Ftp extends ManualChecksum implements DeploymentProvider
         // Create each directory that didn't exist
         foreach ($createDirs as $path) {
             $response = ftp_raw($connection, "MKD $path");
+            $this->addToListCache($path);
+
             if (substr($response[0], 0, 3) !== '257') {
                 throw new RuntimeException("Failed to mkdir '$path':\n" .implode("\n", $response));
             }
@@ -188,9 +196,15 @@ class Ftp extends ManualChecksum implements DeploymentProvider
      */
     protected function delete($path)
     {
+        if (!$this->exists($path)) {
+            return;
+        }
+
         if (!ftp_delete($this->getConnection(), $this->getTargetFilePath($path))) {
             throw new RuntimeException("File '$path' failed to delete");
         }
+
+        $this->removeFromListCache($path);
     }
     /**
      * @param $path
@@ -199,6 +213,38 @@ class Ftp extends ManualChecksum implements DeploymentProvider
     protected function getTargetFilePath($path)
     {
         return $this->getTargetPath() . '/' . $path;
+    }
+    /**
+     * Add a path to the directory listing cache
+     * If a newly created file or directory is not added to the cache, exists()
+     * calls will return false if the parent directory already exists in the cache.
+     *
+     * @see exists
+     * @param $path
+     */
+    protected function addToListCache($path)
+    {
+        $parent = dirname($path);
+
+        if (!isset($this->listCache[$parent])) {
+            $this->listCache[$parent] = array('.', '..');
+        }
+
+        $this->listCache[$parent][] = basename($path);
+    }
+    /**
+     * Remove an item from the directory listing cache
+     * @param $path
+     */
+    protected function removeFromListCache($path)
+    {
+        $parent = dirname($path);
+
+        if (isset($this->listCache[$parent])) {
+            if(($key = array_search(basename($path), $this->listCache[$parent]) !== false)) {
+                unset($this->listCache[$parent][$key]);
+            }
+        }
     }
     /**
      * @throws RuntimeException
