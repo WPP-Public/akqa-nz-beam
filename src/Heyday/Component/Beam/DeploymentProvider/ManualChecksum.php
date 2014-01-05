@@ -5,6 +5,10 @@ namespace Heyday\Component\Beam\DeploymentProvider;
 use Heyday\Component\Beam\Utils;
 use Heyday\Component\Beam\Exception\InvalidConfigurationException;
 use Heyday\Component\Beam\Exception\RuntimeException;
+use Heyday\Component\Beam\Beam;
+use Symfony\Component\Console\Helper\DialogHelper;
+use Symfony\Component\Console\Helper\FormatterHelper;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Class ManualChecksum
@@ -42,9 +46,6 @@ abstract class ManualChecksum extends Deployment
     {
         if (null === $this->server) {
             $this->server = $this->beam->getServer();
-            if (!isset($this->server['password'])) {
-                throw new InvalidConfigurationException('(S)FTP Password is required');
-            }
         }
 
         return $this->server[$key];
@@ -176,6 +177,29 @@ abstract class ManualChecksum extends Deployment
         }
 
         return $deploymentResult;
+    }
+
+    /**
+     * Prompt for password if not set in selected server config
+     * Implements DeploymentProvider::configure for descendant classes
+     * @param OutputInterface $output
+     */
+    public function configure(OutputInterface $output)
+    {
+        $server = $this->beam->getServer();
+
+        if (empty($server['password'])) {
+            $formatterHelper = new FormatterHelper();
+            $dialogHelper = new DialogHelper();
+            $serverName = $this->beam->getOption('target');
+
+            $password = $dialogHelper->askHiddenResponse($output, $formatterHelper->formatSection(
+                'Prompt',
+                Utils::getQuestion("Enter password for $serverName:"),
+                'comment'
+            ), false);
+            $this->server['password'] = $password;
+        }
     }
 
     /**

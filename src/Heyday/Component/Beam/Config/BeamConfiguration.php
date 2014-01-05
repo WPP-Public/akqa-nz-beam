@@ -328,7 +328,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
                         }
                     )->end()
                     ->end()
-                    ->scalarNode('password')->isRequired()->end();
+                    ->scalarNode('password')->end();
 
                 if ($type == 'ftp') {
                     $node->scalarNode('passive')->defaultFalse()->end()

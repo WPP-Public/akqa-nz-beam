@@ -9,6 +9,7 @@ use Heyday\Component\Beam\Exception\InvalidArgumentException;
 use Heyday\Component\Beam\Exception\RuntimeException;
 use Heyday\Component\Beam\VcsProvider\Git;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Process\Process;
@@ -238,6 +239,10 @@ class Beam
             $this->writeLog();
         }
     }
+    public function configureDeploymentProvider(OutputInterface $output)
+    {
+        $this->options['deploymentprovider']->configure($output);
+    }
     /**
      * Gets the from location for rsync
      *
@@ -447,7 +452,6 @@ class Beam
             );
         }
     }
-
     /**
      * Check if the deployment provider implements an interface
      * @param $interfaceName

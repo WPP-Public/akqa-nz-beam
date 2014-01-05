@@ -176,6 +176,9 @@ abstract class TransferCommand extends Command
 
             $this->outputSummary($output, $beam);
 
+            // Trigger the deployment provider's post-init method
+            $beam->configureDeploymentProvider($output);
+
             // Set up to stream the list of changes if streaming is available
             $doStreamResult = $beam->deploymentProviderImplements('Heyday\Component\Beam\DeploymentProvider\ResultStream');
 

@@ -1,6 +1,6 @@
 # Beam configuration
 
-This file is a complete documentation of the file `beam.json` used to configure `beam`. Beam cannot operate without a valid `beam.json` file in the working directory, so creating one is a good place to start if you want to use `beam`.
+This file is a complete documentation of the file `beam.json` that is used to configure `beam`. Beam cannot operate without a valid `beam.json` file in the working directory, so creating one is a good place to start if you want to use `beam`.
 
 If you are looking for an example configuration to get you started, look in [`README.md`](README.md) or run `beam init` to create a minimal config file in your working directory.
 
@@ -68,7 +68,7 @@ When `type` is set to 'ftp' or 'sftp', a number of FTP specific properties are a
 
 **FTP & SFTP:**
 
- * `password` *(string)* - Password to connect with
+ * `password` *(string)* - Password to connect with. Beam will prompt for a password where one is not specified in the config.
 
 **FTP only:**
 

@@ -4,6 +4,7 @@ namespace Heyday\Component\Beam\DeploymentProvider;
 
 use Heyday\Component\Beam\DeploymentProvider\DeploymentResult;
 use Heyday\Component\Beam\Exception\RuntimeException;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Process\Process;
 
@@ -57,6 +58,13 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             )
         );
         $this->options = $resolver->resolve($options);
+    }
+    /**
+     * @inheritdoc
+     */
+    public function configure(OutputInterface $output)
+    {
+        // No additional configuration required currently
     }
     /**
      * @{inheritDoc}
