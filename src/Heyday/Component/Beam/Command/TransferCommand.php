@@ -284,11 +284,16 @@ abstract class TransferCommand extends Command
             }
 
         } catch (\Exception $e) {
-            $this->outputError(
-                $output,
-                $e->getMessage()
-            );
-            exit(1);
+
+            if ($output->getVerbosity() === OutputInterface::VERBOSITY_VERBOSE) {
+                throw $e;
+            } else {
+                $this->outputError(
+                    $output,
+                    $e->getMessage()
+                );
+                exit(1);
+            }
         }
 
     }
