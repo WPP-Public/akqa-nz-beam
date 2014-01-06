@@ -81,7 +81,8 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                     'host' => 'test',
                     'webroot' => 'test',
                     'branch' => 'test',
-                    'type' => 'rsync'
+                    'type' => 'rsync',
+                    'sshpass' => false
                 )
             ),
             $processedConfig['servers']
@@ -116,7 +117,8 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                         'user' => 'test',
                         'host' => 'test',
                         'webroot' => 'test',
-                        'type' => 'rsync'
+                        'type' => 'rsync',
+                        'sshpass' => false
                     )
                 ),
                 'import' => array(),
@@ -280,7 +282,8 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                         'host' => 'test',
                         'webroot' => 'test',
                         'branch' => 'test',
-                        'type' => 'rsync'
+                        'type' => 'rsync',
+                        'sshpass' => false
                     )
                 )
             ),

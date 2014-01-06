@@ -3,7 +3,11 @@
 namespace Heyday\Component\Beam\DeploymentProvider;
 
 use Heyday\Component\Beam\DeploymentProvider\DeploymentResult;
+use Heyday\Component\Beam\Exception\Exception;
 use Heyday\Component\Beam\Exception\RuntimeException;
+use Heyday\Component\Beam\Utils;
+use Symfony\Component\Console\Helper\DialogHelper;
+use Symfony\Component\Console\Helper\FormatterHelper;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Process\Process;
@@ -64,7 +68,26 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
      */
     public function configure(OutputInterface $output)
     {
-        // No additional configuration required currently
+        // Prompt for password if server config specifies to use sshpass
+        if ($this->isUsingSshPass()) {
+            $formatterHelper = new FormatterHelper();
+            $dialogHelper = new DialogHelper();
+            $serverName = $this->beam->getOption('target');
+
+            if (!Utils::command_exists('sshpass')) {
+                throw new RuntimeException("$serverName is configured to use sshpass but the sshpass program wasn't found on your path.");
+            }
+
+            $password = $dialogHelper->askHiddenResponse($output, $formatterHelper->formatSection(
+                'Prompt',
+                Utils::getQuestion("Enter password for $serverName:"),
+                'comment'
+            ), false);
+
+            // Set the password variable for sshpass and the remote shell variable for rsync so sshpass is used
+            putenv("SSHPASS={$password}");
+            putenv("RSYNC_RSH=sshpass -e ssh");
+        }
     }
     /**
      * @{inheritDoc}
@@ -106,8 +129,15 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
         $outputHandler = $this->getOutputStreamHandler($output);
         $process = $this->getProcess($command);
         $process->run($outputHandler);
+
         if (!$process->isSuccessful()) {
-            throw new RuntimeException($process->getErrorOutput());
+            $errorMessage = $process->getErrorOutput();
+
+            if ($this->isUsingSshPass() && $process->getExitCode() == 12) {
+                $errorMessage .= "\n(This error can be caused by an incorrect password when using the sshpass option.)\n";
+            }
+
+            throw new RuntimeException($errorMessage);
         }
 
         if ($this->resultStreamHandler && $outputHandler) {
@@ -205,6 +235,18 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
         }
 
         return implode(' ', $command);
+    }
+
+    /**
+     * Return if the sshpass program is to be used
+     * @return bool
+     */
+    protected function isUsingSshPass()
+    {
+        if ($this->beam) {
+            $server = $this->beam->getServer();
+            return $server['sshpass'];
+        }
     }
 
     /**

@@ -343,8 +343,9 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
                             function ($v) {
                                 return rtrim($v, '/');
                             }
-                        )
-                        ->end();
+                        )->end()
+                        ->end()
+                    ->scalarNode('sshpass')->defaultFalse()->end();
                 break;
         }
 

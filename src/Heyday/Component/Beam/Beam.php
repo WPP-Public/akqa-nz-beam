@@ -620,7 +620,8 @@ class Beam
         );
 
         $args = array(
-            'ssh',
+            // SSHPASS is set in \Heyday\Component\Beam\DeploymentProvider\Rsync
+            getenv('SSHPASS') === false ? 'ssh' : 'sshpass -e ssh',
             $command['tty'] ? '-t' : '',
             $userComponent . $server['host'],
             escapeshellcmd($remoteCmd)

@@ -75,6 +75,10 @@ When `type` is set to 'ftp' or 'sftp', a number of FTP specific properties are a
  * `passive` *(boolean: false)* - Run the FTP session in passive mode.
  * `ssl` *(boolean: false)* - Make the FTP connection over SSL (FTPS)
 
+### Rsync properties
+
+ * `sshpass` *(boolean: false)* - Use the program [`sshpass`](http://sourceforge.net/projects/sshpass/) to enter your SSH password automatically when using password authentication. With this option enabled, Beam will prompt for an SSH password once instead of an SSH client prompting for each new connection. Key-based authentication is reccommeded, though this may not suit everyone. To use this option you will need to have the `sshpass` program accessible on your path.
+
 
 ## Exclude
 
