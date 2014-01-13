@@ -56,9 +56,8 @@ class RsyncTransferMethod extends TransferMethod
             new InputOption(
                 'args',
                 '',
-                InputOption::VALUE_OPTIONAL,
-                'Additional arguments for rsync',
-                ''
+                InputOption::VALUE_REQUIRED,
+                'Additional arguments for rsync'
             )
         ));
     }
