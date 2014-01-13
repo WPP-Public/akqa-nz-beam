@@ -52,6 +52,12 @@ class RsyncTransferMethod extends TransferMethod
                 '',
                 InputOption::VALUE_NONE,
                 'Updates files directly on target <comment>(use if disk space is limited)</comment>'
+            ),
+            new InputOption(
+                'args',
+                '',
+                InputOption::VALUE_REQUIRED,
+                'Additional arguments for rsync'
             )
         ));
     }
@@ -67,7 +73,8 @@ class RsyncTransferMethod extends TransferMethod
                 'checksum'      => !$input->getOption('no-checksum'),
                 'delete'        => !$input->getOption('no-delete'),
                 'compress'      => !$input->getOption('no-compress'),
-                'delay-updates' => !$input->getOption('no-delay-updates')
+                'delay-updates' => !$input->getOption('no-delay-updates'),
+                'args'          => $input->getOption('args')
             )
         );
 

@@ -40,7 +40,8 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
                 'delete',
                 'archive',
                 'compress',
-                'delay-updates'
+                'delay-updates',
+                'args'
             )
         );
         $resolver->setAllowedTypes(
@@ -49,7 +50,8 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
                 'delete'        => 'bool',
                 'archive'       => 'bool',
                 'compress'      => 'bool',
-                'delay-updates' => 'bool'
+                'delay-updates' => 'bool',
+                'args'          => 'string'
             )
         );
         $resolver->setDefaults(
@@ -58,7 +60,8 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
                 'delete'        => false,
                 'archive'       => true,
                 'compress'      => true,
-                'delay-updates' => true
+                'delay-updates' => true,
+                'args' => ''
             )
         );
         $this->options = $resolver->resolve($options);
@@ -168,6 +171,10 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             '-' . $flags,
             '--itemize-changes'
         );
+        
+        if ($this->options['args'] !== '') {
+            $command[] = $this->options['args'];
+        }
 
         if ($this->beam->hasPath()) {
             $paths = $this->beam->getOption('path');
