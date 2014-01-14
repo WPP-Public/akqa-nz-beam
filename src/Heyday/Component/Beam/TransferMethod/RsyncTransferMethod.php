@@ -74,7 +74,7 @@ class RsyncTransferMethod extends TransferMethod
                 'delete'        => !$input->getOption('no-delete'),
                 'compress'      => !$input->getOption('no-compress'),
                 'delay-updates' => !$input->getOption('no-delay-updates'),
-                'args'          => $input->getOption('args')
+                'args'          => $input->getOption('args') ?: ''
             )
         );
 
