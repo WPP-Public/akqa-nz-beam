@@ -654,9 +654,15 @@ class Beam
     protected function doExecCommand($command, $outputHandler)
     {
         try {
+            $process = null;
+            
             if ($command['tty']) {
-                $process = null;
-                passthru($command['command'], $exit);
+
+                passthru(sprintf('%s; %s',
+                    "cd {$this->getLocalPath()}",
+                    $command['command']
+                ), $exit);
+
                 if ($exit !== 0) {
                     throw new RuntimeException("Command returned a non-zero exit status ($exit)");
                 }
