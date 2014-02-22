@@ -266,9 +266,7 @@ class Ftp extends ManualChecksum implements DeploymentProvider
     {
         if (null === $this->targetPath) {
             $webroot = $this->getConfig('webroot');
-            if ($webroot[0] !== '/') {
-                throw new RuntimeException('Webroot must be a absolute path when using ftp');
-            }
+
             $this->targetPath = rtrim($webroot, '/');
         }
 
