@@ -17,26 +17,36 @@ use Symfony\Component\Console\Output\OutputInterface;
 abstract class ManualChecksum extends Deployment
 {
     /**
-     * @var
+     * @var bool
      */
     protected $fullmode;
+
     /**
      * @var bool
      */
     protected $delete;
+
     /**
      * @var
      */
     protected $server;
+
+    /**
+     * @var bool
+     */
+    protected $force;
+
     /**
      * @param bool $fullmode
      * @param bool $delete
      */
-    public function __construct($fullmode = false, $delete = false)
+    public function __construct($fullmode = false, $delete = false, $force = false)
     {
         $this->fullmode = $fullmode;
         $this->delete = $delete;
+        $this->force = $force;
     }
+
     /**
      * @param $key
      * @throws InvalidConfigurationException
@@ -72,36 +82,49 @@ abstract class ManualChecksum extends Deployment
             if ($this->fullmode) {
                 foreach ($localchecksums as $targetpath => $checksum) {
                     $path = $dir . '/' . $targetpath;
-                    if ($this->exists($targetpath)) {
-                        if (
-                            $targetchecksums &&
-                            isset($targetchecksums[$targetpath]) &&
-                            $targetchecksums[$targetpath] !== $localchecksums[$targetpath]
-                        ) {
-                            $result[] = array(
-                                'update'        => 'sent',
-                                'filename'      => $targetpath,
-                                'localfilename' => $path,
-                                'filetype'      => 'file',
-                                'reason'        => array('checksum')
-                            );
-                        } elseif ($this->size($targetpath) !== filesize($path)) {
-                            $result[] = array(
-                                'update'        => 'sent',
-                                'filename'      => $targetpath,
-                                'localfilename' => $path,
-                                'filetype'      => 'file',
-                                'reason'        => array('size')
-                            );
-                        }
-                    } else {
+ 
+                    if ($this->force) {
+                        // skip checking the remote server completely and rely 
+                        // on sending the file
                         $result[] = array(
-                            'update'        => 'created',
+                            'update'        => 'sent',
                             'filename'      => $targetpath,
                             'localfilename' => $path,
                             'filetype'      => 'file',
-                            'reason'        => array('missing')
+                            'reason'        => array('forced')
                         );
+                    } else {
+                        if ($this->exists($targetpath)) {
+                            if (
+                                $targetchecksums &&
+                                isset($targetchecksums[$targetpath]) &&
+                                $targetchecksums[$targetpath] !== $localchecksums[$targetpath]
+                            ) {
+                                $result[] = array(
+                                    'update'        => 'sent',
+                                    'filename'      => $targetpath,
+                                    'localfilename' => $path,
+                                    'filetype'      => 'file',
+                                    'reason'        => array('checksum')
+                                );
+                            } elseif ($this->size($targetpath) !== filesize($path)) {
+                                $result[] = array(
+                                    'update'        => 'sent',
+                                    'filename'      => $targetpath,
+                                    'localfilename' => $path,
+                                    'filetype'      => 'file',
+                                    'reason'        => array('size')
+                                );
+                            }
+                        } else {
+                            $result[] = array(
+                                'update'        => 'created',
+                                'filename'      => $targetpath,
+                                'localfilename' => $path,
+                                'filetype'      => 'file',
+                                'reason'        => array('missing')
+                            );
+                        }
                     }
                 }
             } else {

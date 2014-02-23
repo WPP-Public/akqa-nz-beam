@@ -29,6 +29,12 @@ class FtpTransferMethod extends TransferMethod
                 'Does a more full check on the target, relying less on the checksums file'
             ),
             new InputOption(
+                'force',
+                'o',
+                InputOption::VALUE_NONE,
+                'Skips checking the remote server and sends the local file'
+            ),
+            new InputOption(
                 'no-delete',
                 '',
                 InputOption::VALUE_NONE,
@@ -50,7 +56,8 @@ class FtpTransferMethod extends TransferMethod
         $options = parent::getOptions($input, $output, $srcDir);
         $options['deploymentprovider'] = new Ftp(
             $input->getOption('full'),
-            !$input->getOption('no-delete')
+            !$input->getOption('no-delete'),
+            $input->getOption('force')
         );
 
         return $options;

@@ -128,6 +128,11 @@ class Ftp extends ManualChecksum implements DeploymentProvider
 
         if (!isset($this->listCache[$dir])) {
             $this->listCache[$dir] = ftp_nlist($this->getConnection(), $dir);
+
+            if(!$this->listCache[$dir]) {
+                return false;
+            }
+
             array_walk(
                 $this->listCache[$dir],
                 function(&$value) {
@@ -136,7 +141,9 @@ class Ftp extends ManualChecksum implements DeploymentProvider
             );
         }
         
-        if (($key = array_search(basename($path), $this->listCache[$dir])) !== false) {
+        if(!$this->listCache[$dir]) {
+            return false;
+        } else if (($key = array_search(basename($path), $this->listCache[$dir])) !== false) {
             return true;
         } else if ($path == $dir && count($this->listCache[$dir])) {
             return true;
@@ -167,12 +174,17 @@ class Ftp extends ManualChecksum implements DeploymentProvider
         }
 
         // Create each directory that didn't exist
+
         foreach ($createDirs as $path) {
             $response = ftp_raw($connection, "MKD $path");
             $this->addToListCache($path);
 
-            if (substr($response[0], 0, 3) !== '257') {
-                throw new RuntimeException("Failed to mkdir '$path':\n" .implode("\n", $response));
+            if($response && is_array($response)) {
+                $code = substr($response[0], 0, 3);
+
+                if ($code !== '257' && $code !== '550') {
+                    throw new RuntimeException("Failed to mkdir '$path':\n" .implode("\n", $response));
+                }
             }
         }
     }
@@ -240,7 +252,7 @@ class Ftp extends ManualChecksum implements DeploymentProvider
     {
         $parent = dirname($path);
 
-        if (isset($this->listCache[$parent])) {
+        if (isset($this->listCache[$parent]) && $this->listCache[$parent]) {
             if(($key = array_search(basename($path), $this->listCache[$parent]) !== false)) {
                 unset($this->listCache[$parent][$key]);
             }
@@ -254,9 +266,7 @@ class Ftp extends ManualChecksum implements DeploymentProvider
     {
         if (null === $this->targetPath) {
             $webroot = $this->getConfig('webroot');
-            if ($webroot[0] !== '/') {
-                throw new RuntimeException('Webroot must be a absolute path when using ftp');
-            }
+
             $this->targetPath = rtrim($webroot, '/');
         }
 

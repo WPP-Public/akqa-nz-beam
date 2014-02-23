@@ -311,15 +311,6 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
                     ->validate()
                     ->always(
                         function ($v) use ($type) {
-                            if ($v[0] !== '/') {
-                                throw new InvalidConfigurationException(
-                                    sprintf(
-                                        'Webroot must be a absolute path when using "%s"',
-                                        $type
-                                    )
-                                );
-                            }
-
                             if (strlen($v) > 1) {
                                 $v = rtrim($v, '/');
                             }
