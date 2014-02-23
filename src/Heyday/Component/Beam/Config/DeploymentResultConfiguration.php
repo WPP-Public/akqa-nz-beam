@@ -24,7 +24,8 @@ class DeploymentResultConfiguration extends Configuration implements Configurati
         'group',
         'acl',
         'extended',
-        'missing'
+        'missing',
+        'forced'
     );
     /**
      * @var array
