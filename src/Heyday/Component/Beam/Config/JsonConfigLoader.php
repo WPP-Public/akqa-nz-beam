@@ -4,6 +4,7 @@ namespace Heyday\Component\Beam\Config;
 
 use Symfony\Component\Config\Loader\FileLoader;
 use Heyday\Component\Beam\Exception\InvalidConfigurationException;
+use Seld\JsonLint\JsonParser;
 
 /**
  * Class JsonConfigLoader
@@ -27,16 +28,18 @@ class JsonConfigLoader extends FileLoader
     public function load($resource, $type = null)
     {
         $path =  $this->locate($resource);
-        $config = json_decode(
-            file_get_contents($path),
-            true
-        );
+        $json = file_get_contents($path);
 
-        if (json_last_error() != JSON_ERROR_NONE) {
+        $parser = new JsonParser();
+        $result = $parser->lint($json);
+
+        if($result !== null) {
             throw new InvalidConfigurationException(
-                "Failed to parse config $path. Check for syntax errors."
-            );
+                "Failed to parse config $path:".PHP_EOL.PHP_EOL.$result->getMessage()
+            );            
         }
+
+        $config = json_decode($json, true);
 
         return $config;
     }
