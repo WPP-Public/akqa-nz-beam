@@ -9,6 +9,7 @@ use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Seld\JsonLint\JsonParser;
 
 /**
  * Class BeamConfiguration
@@ -118,24 +119,26 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
             }
 
             $import = static::processPath($import);
-            $json = json_decode(file_get_contents($import), true);
-
-            if ($json) {
-                $configs[] = $json;
-                $imported[] = $import;
-
-                if (isset($json['import'])) {
-                    $configs = array_merge($configs, self::loadImports($json['import'], $imported));
-                }
-
-            } else if (json_last_error() != JSON_ERROR_NONE) {
+            $rawJSON = file_get_contents($import);
+            
+            $parser = new JsonParser();
+            $result = $parser->lint($rawJSON);
+            
+            if($result !== null) {
                 throw new InvalidConfigurationException(
-                    "Failed to parse JSON for '$import'. Check for syntax errors."
+                    "Failed to parse JSON for '$import':".PHP_EOL.PHP_EOL.$result->getMessage()
                 );
-
-            } else {
-                throw new Exception("Import '$import' parsed to nothing.");
             }
+            
+            $json = json_decode(file_get_contents($import), true);
+            
+            $configs[] = $json;
+            $imported[] = $import;
+
+            if (isset($json['import'])) {
+                $configs = array_merge($configs, self::loadImports($json['import'], $imported));
+            }
+
         }
 
         return $configs;
