@@ -18,6 +18,25 @@ class JsonConfigLoader extends FileLoader
     protected $locateCache = array();
 
     /**
+     * Validate the syntax of a JSON string
+     *
+     * @param string $json
+     * @param string $path
+     * @throws \Heyday\Component\Beam\Exception\InvalidConfigurationException
+     */
+    public static function validateSyntax($json, $path)
+    {
+        $parser = new JsonParser();
+        $result = $parser->lint($json);
+
+        if($result !== null) {
+            throw new InvalidConfigurationException(
+                "Failed to parse config $path:".PHP_EOL.PHP_EOL.$result->getMessage()
+            );
+        }
+    }
+
+    /**
      * Loads a resource.
      *
      * @param  mixed  $resource The resource
@@ -30,16 +49,11 @@ class JsonConfigLoader extends FileLoader
         $path =  $this->locate($resource);
         $json = file_get_contents($path);
 
-        $parser = new JsonParser();
-        $result = $parser->lint($json);
-
-        if($result !== null) {
-            throw new InvalidConfigurationException(
-                "Failed to parse config $path:".PHP_EOL.PHP_EOL.$result->getMessage()
-            );            
-        }
-
         $config = json_decode($json, true);
+
+        if ($config === null && json_last_error() !== JSON_ERROR_NONE) {
+            self::validateSyntax($json, $path);
+        }
 
         return $config;
     }

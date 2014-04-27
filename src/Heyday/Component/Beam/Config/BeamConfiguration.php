@@ -2,14 +2,12 @@
 
 namespace Heyday\Component\Beam\Config;
 
-use Heyday\Component\Beam\Exception\Exception;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Seld\JsonLint\JsonParser;
 
 /**
  * Class BeamConfiguration
@@ -119,24 +117,19 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
             }
 
             $import = static::processPath($import);
-            $rawJSON = file_get_contents($import);
-            
-            $parser = new JsonParser();
-            $result = $parser->lint($rawJSON);
-            
-            if($result !== null) {
-                throw new InvalidConfigurationException(
-                    "Failed to parse JSON for '$import':".PHP_EOL.PHP_EOL.$result->getMessage()
-                );
+            $json = file_get_contents($import);
+
+            $config = json_decode($json, true);
+
+            if ($config === null && json_last_error() !== JSON_ERROR_NONE) {
+                JsonConfigLoader::validateSyntax($json, $import);
             }
             
-            $json = json_decode(file_get_contents($import), true);
-            
-            $configs[] = $json;
+            $configs[] = $config;
             $imported[] = $import;
 
-            if (isset($json['import'])) {
-                $configs = array_merge($configs, self::loadImports($json['import'], $imported));
+            if (isset($config['import'])) {
+                $configs = array_merge($configs, self::loadImports($config['import'], $imported));
             }
 
         }
