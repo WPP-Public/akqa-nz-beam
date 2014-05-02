@@ -96,8 +96,6 @@ When using the `rsync` deployment method (default), patterns are passed directly
 
 When using (S)FTP, exclusion patterns are handled internally by beam (crudely relative to rsync) and follow the basic rules of rsync's path matching.
 
-Valid values for `applications` are: `gear`, `silverstripe`, `symfony`, `wordpress` and `zf`
-
 
 ## Commands
 
