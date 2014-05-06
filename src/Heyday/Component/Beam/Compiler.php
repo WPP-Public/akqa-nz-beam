@@ -129,7 +129,8 @@ class Compiler
             ->in("$this->vendorDir/symfony/process/")
             ->in("$this->vendorDir/symfony/options-resolver/")
             ->in("$this->vendorDir/symfony/config/")
-            ->in("$this->vendorDir/stecman/symfony-console-completion/src/");
+            ->in("$this->vendorDir/stecman/symfony-console-completion/src/")
+            ->in("$this->vendorDir/seld/jsonlint/src/");
 
         foreach ($finder as $file) {
             $this->addFile($phar, $file);
