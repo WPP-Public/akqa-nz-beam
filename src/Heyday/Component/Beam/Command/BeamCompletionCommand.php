@@ -8,7 +8,6 @@ use Stecman\Component\Symfony\Console\BashCompletion\CompletionCommand;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Input\InputOption;
 
 /**
  * Class BeamCompletionCommand
@@ -28,7 +27,7 @@ class BeamCompletionCommand extends CompletionCommand
     {
         $application = $this->getApplication();
         $handler = $this->handler;
-        $handler->configureFromEnvironment();
+        $context = $this->handler->getContext();
 
         // Trigger the merging of TransferMethod definition
         $commandName = $handler->getInput()->getFirstArgument();
@@ -38,12 +37,12 @@ class BeamCompletionCommand extends CompletionCommand
             if ($command instanceof TransferCommand) {
 
                 try {
-                    $words = $handler->getWords();
-                    unset($words[$handler->getWordIndex()]);
+                    $words = $context->getWords();
+                    unset($words[$context->getWordIndex()]);
                     array_shift($words);
                     $input = new ArgvInput($words, $command->getDefinition());
                 } catch (\RuntimeException $e) {
-                    // Input isn't parsable
+                    // Input isn't parsable - ignore
                 }
 
                 if (isset($input)) {
@@ -134,7 +133,7 @@ class BeamCompletionCommand extends CompletionCommand
             new FileLocator($paths)
         );
 
-        $words = $this->handler->getWords();
+        $words = $this->handler->getContext()->getWords();
         array_shift($words);
         $input = new ArrayInput($words);
 
