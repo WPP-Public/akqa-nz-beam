@@ -128,6 +128,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
      */
     protected function deploy($command, \Closure $output = null)
     {
+        $this->generateIncludesFile();
         $this->generateExcludesFile();
         $outputHandler = $this->getOutputStreamHandler($output);
         $process = $this->getProcess($command);
@@ -228,6 +229,13 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
         }
         if ($this->options['delay-updates']) {
             $command[] = '--delay-updates';
+        }
+
+        if ($this->beam->hasIncludes()) {
+            $command[] = array(
+                '--include-from="%s"',
+                $this->getIncludesPath()
+            );
         }
 
         $command[] = array(
@@ -406,6 +414,30 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
         return $changes;
     }
     /**
+     * Generate the includes file
+     */
+    protected function generateIncludesFile()
+    {
+        if ($this->beam->hasIncludes()) {
+            $includes = $this->beam->getConfig('include');
+            file_put_contents(
+                $this->getIncludesPath(),
+                implode(PHP_EOL, $includes) . PHP_EOL
+            );
+        }
+    }
+    /**
+     * Get the path to the includes file
+     * @return string
+     */
+    protected function getIncludesPath()
+    {
+        return sprintf(
+            '/tmp/%s.includes',
+            $this->beam->getLocalPathname()
+        );
+    }
+    /**
      * Generate the excludes file
      */
     protected function generateExcludesFile()
@@ -419,6 +451,10 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             if ($idx !== false) {
                 unset($excludes[$idx]);
             }
+        }
+        // If any includes have been specified we need to exclude everything
+        if ($this->beam->hasIncludes()) {
+            $excludes = array_merge(array('/*'), $excludes);
         }
         file_put_contents(
             $this->getExcludesPath(),

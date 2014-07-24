@@ -47,6 +47,9 @@ class InitCommand extends SymfonyCommand
         }
 
         $template = array(
+            'include' => array(
+                'patterns' => array(),
+            ),
             'exclude' => array(
                 'patterns' => array(),
             ),

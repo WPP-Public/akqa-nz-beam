@@ -221,6 +221,20 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
                         ->end()
                     ->end()
                 ->end()
+                ->arrayNode('include')
+                    ->children()
+                        ->arrayNode('patterns')
+                            ->prototype('scalar')->end()
+                        ->end()
+                    ->end()
+                    ->validate()
+                        ->always(
+                            function ($v) use ($self) {
+                                return $self->buildIncludes($v);
+                            }
+                        )
+                    ->end()
+                ->end()
                 ->arrayNode('exclude')
                     ->children()
                         ->arrayNode('patterns')
@@ -267,11 +281,23 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
      */
     public function buildExcludes($value)
     {
-        $value =  $value ? $value : array(
+        $value = $value ? $value : array(
             'patterns' => array()
         );
 
         return array_merge(static::$defaultExcludes, $value['patterns']);
+    }
+    /**
+     * @param $value
+     * @return array
+     */
+    public function buildIncludes($value)
+    {
+        $value = $value ? $value : array(
+            'patterns' => array()
+        );
+
+        return $value['patterns'];
     }
     /**
      * @param $name

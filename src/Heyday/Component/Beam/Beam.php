@@ -373,6 +373,14 @@ class Beam
         return is_array($this->options['path']) && count($this->options['path']) > 0;
     }
     /**
+     * A helper method for determining if beam is operating with a set of includes
+     * @return bool
+     */
+    public function hasIncludes()
+    {
+        return is_array($this->options['includes']) && count($this->options['includes']) > 0;
+    }
+    /**
      * Get the server config we are deploying to.
      *
      * This method is guaranteed to to return a server due to the options resolver and config
@@ -451,6 +459,14 @@ class Beam
                 )
             );
         }
+    }
+    /**
+     * @param $config
+     * @return boolean
+     */
+    public function hasConfig($config)
+    {
+        return array_key_exists($config, $this->config);
     }
     /**
      * Check if the deployment provider implements an interface
