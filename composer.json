@@ -34,8 +34,8 @@
         "symfony/finder": "~2.2.0"
     },
     "autoload": {
-        "psr-0": {
-            "Heyday\\Component\\": "src/"
+        "psr-4": {
+            "Heyday\\Beam\\": "src/"
         }
     },
     "bin": [

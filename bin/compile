@@ -9,7 +9,7 @@ ini_set('detect_unicode', 0);
 ini_set('phar.readonly', 0);
 
 try {
-    $compiler = new Heyday\Component\Beam\Compiler();
+    $compiler = new Heyday\Beam\Compiler();
     $compiler->compile();
     echo 'Done', PHP_EOL;
 } catch (\Exception $e) {
