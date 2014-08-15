@@ -300,6 +300,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
                         [.?+]?  # no meaning
                         [.?+a]? # optional aclextended
                         [.?+x]? # optional extended
+                        [.?+n]? # work around for a bug in rsync 3.1.1 when installed on OSX via Homebrew
                     )
                 )
                 [ ] # a space
