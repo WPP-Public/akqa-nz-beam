@@ -1,0 +1,307 @@
+<?php
+
+/**
+ * Modified from Composer installer by Nils Adermann, Jordi Boggiano
+ */
+
+/**
+ * Copyright (c) 2011 Nils Adermann, Jordi Boggiano
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is furnished
+ * to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+process();
+
+/**
+ * processes the installer
+ */
+function process() {
+    if (checkPlatform()) {
+        installBeam();
+        exit(0);
+    }
+
+    exit(1);
+}
+
+/**
+ * check the platform for possible issues on running Beam
+ */
+function checkPlatform()
+{
+    $errors = array();
+    $warnings = array();
+
+    $iniPath = php_ini_loaded_file();
+    $displayIniMessage = false;
+    if ($iniPath) {
+        $iniMessage = PHP_EOL.PHP_EOL.'The php.ini used by your command-line PHP is: ' . $iniPath;
+    } else {
+        $iniMessage = PHP_EOL.PHP_EOL.'A php.ini file does not exist. You will have to create one.';
+    }
+    $iniMessage .= PHP_EOL.'If you can not modify the ini file, you can also run `php -d option=value` to modify ini values on the fly. You can use -d multiple times.';
+
+    if (ini_get('detect_unicode')) {
+        $errors['unicode'] = 'On';
+    }
+
+    if (extension_loaded('suhosin')) {
+        $suhosin = ini_get('suhosin.executor.include.whitelist');
+        $suhosinBlacklist = ini_get('suhosin.executor.include.blacklist');
+        if (false === stripos($suhosin, 'phar') && (!$suhosinBlacklist || false !== stripos($suhosinBlacklist, 'phar'))) {
+            $errors['suhosin'] = $suhosin;
+        }
+    }
+
+    if (!function_exists('json_decode')) {
+        $errors['json'] = true;
+    }
+
+    if (!extension_loaded('Phar')) {
+        $errors['phar'] = true;
+    }
+
+    if (!extension_loaded('zlib')) {
+        $errors['zlib'] = true;
+    }
+
+    if (!ini_get('allow_url_fopen')) {
+        $errors['allow_url_fopen'] = true;
+    }
+
+    if (version_compare(PHP_VERSION, '5.3.2', '<')) {
+        $errors['php'] = PHP_VERSION;
+    }
+
+    if (version_compare(PHP_VERSION, '5.3.4', '<')) {
+        $warnings['php'] = PHP_VERSION;
+    }
+
+    if (!defined('HHVM_VERSION') && ini_get('apc.enable_cli')) {
+        $warnings['apc_cli'] = true;
+    }
+
+    if (!empty($errors)) {
+        out("Some settings on your machine make Beam unable to work properly.", 'error');
+
+        out('Make sure that you fix the issues listed below and run this script again:', 'error');
+        foreach ($errors as $error => $current) {
+            switch ($error) {
+                case 'json':
+                    $text = PHP_EOL."The json extension is missing.".PHP_EOL;
+                    $text .= "Install it or recompile php without --disable-json";
+                    break;
+
+                case 'phar':
+                    $text = PHP_EOL."The phar extension is missing.".PHP_EOL;
+                    $text .= "Install it or recompile php without --disable-phar";
+                    break;
+
+                case 'zlib':
+                    $text = PHP_EOL."The zlib extension is missing.".PHP_EOL;
+                    $text .= "Install it or recompile php with --with-zlib";
+                    break;
+
+                case 'unicode':
+                    $text = PHP_EOL."The detect_unicode setting must be disabled.".PHP_EOL;
+                    $text .= "Add the following to the end of your `php.ini`:".PHP_EOL;
+                    $text .= "    detect_unicode = Off";
+                    $displayIniMessage = true;
+                    break;
+
+                case 'suhosin':
+                    $text = PHP_EOL."The suhosin.executor.include.whitelist setting is incorrect.".PHP_EOL;
+                    $text .= "Add the following to the end of your `php.ini` or suhosin.ini (Example path [for Debian]: /etc/php5/cli/conf.d/suhosin.ini):".PHP_EOL;
+                    $text .= "    suhosin.executor.include.whitelist = phar ".$current;
+                    $displayIniMessage = true;
+                    break;
+
+                case 'php':
+                    $text = PHP_EOL."Your PHP ({$current}) is too old, you must upgrade to PHP 5.3.2 or higher.";
+                    break;
+
+                case 'allow_url_fopen':
+                    $text = PHP_EOL."The allow_url_fopen setting is incorrect.".PHP_EOL;
+                    $text .= "Add the following to the end of your `php.ini`:".PHP_EOL;
+                    $text .= "    allow_url_fopen = On";
+                    $displayIniMessage = true;
+                    break;
+            }
+            if ($displayIniMessage) {
+                $text .= $iniMessage;
+            }
+            out($text, 'info');
+        }
+
+        out('');
+        return false;
+    }
+
+    if (!empty($warnings)) {
+        out("Some settings on your machine may cause stability issues with Beam.", 'error');
+
+        out('If you encounter issues, try to change the following:', 'error');
+        foreach ($warnings as $warning => $current) {
+            switch ($warning) {
+                case 'apc_cli':
+                    $text = PHP_EOL."The apc.enable_cli setting is incorrect.".PHP_EOL;
+                    $text .= "Add the following to the end of your `php.ini`:".PHP_EOL;
+                    $text .= "    apc.enable_cli = Off";
+                    $displayIniMessage = true;
+                    break;
+
+                case 'php':
+                    $text = PHP_EOL."Your PHP ({$current}) is quite old, upgrading to PHP 5.3.4 or higher is recommended.".PHP_EOL;
+                    $text .= "Beam works with 5.3.2+ for most people, but there might be edge case issues.";
+                    break;
+            }
+            if ($displayIniMessage) {
+                $text .= $iniMessage;
+            }
+            out($text, 'info');
+        }
+
+        out('');
+        return true;
+    }
+
+    out("All settings correct for using Beam", 'success');
+    
+    return true;
+}
+
+/**
+ * installs Beam to the current working directory
+ */
+function installBeam() {
+    $installDir  = getcwd();
+    $file        = $installDir.DIRECTORY_SEPARATOR.'beam';
+
+    if (is_readable($file)) {
+        @unlink($file);
+    }
+
+    $retries = 3;
+    while ($retries--) {
+        out("Downloading...", 'info');
+        $error = false;
+
+        $fh = fopen($file, 'w');
+        if (!$fh) {
+            out("Could not create file $file", 'error');
+            $error = true;
+        }
+        if (!fwrite($fh, file_get_contents("http://beam.heyday.net.nz/beam.phar"))) {
+            out('Download failed', 'error');
+            $error = true;
+        }
+
+        fclose($fh);
+        
+        if ($error) {
+            continue;
+        }
+
+        try {
+            // create a temp file ending in .phar since the Phar class only accepts that
+            if ('.phar' !== substr($file, -5)) {
+                copy($file, $file.'.tmp.phar');
+                $pharFile = $file.'.tmp.phar';
+            } else {
+                $pharFile = $file;
+            }
+            if (!ini_get('phar.readonly')) {
+                // test the phar validity
+                $phar = new Phar($pharFile);
+                // free the variable to unlock the file
+                unset($phar);
+            }
+            // clean up temp file if needed
+            if ($file !== $pharFile) {
+                unlink($pharFile);
+            }
+            break;
+        } catch (Exception $e) {
+            if (!$e instanceof UnexpectedValueException && !$e instanceof PharException) {
+                throw $e;
+            }
+            // clean up temp file if needed
+            if ($file !== $pharFile) {
+                unlink($pharFile);
+            }
+            unlink($file);
+            if ($retries) {
+                out('The download is corrupt, retrying...', 'error');
+            } else {
+                out('The download is corrupt ('.$e->getMessage().'), aborting.', 'error');
+                exit(1);
+            }
+        }
+    }
+
+    if ($error) {
+        out('The download failed repeatedly, aborting.', 'error');
+        exit(1);
+    }
+
+    chmod($file, 0755);
+
+    out(PHP_EOL."Beam successfully installed to: " . $file, 'success', false);
+    out(PHP_EOL."To use it run: ./beam", 'info');
+
+    if (file_exists('/usr/local/bin/')) {
+        out(PHP_EOL."Would you like to install beam on your PATH (/usr/local/bin/beam)? (y/n) ", 'error', false);
+
+        if (readline() == 'y') {
+            if (!rename($file, "/usr/local/bin/beam")) {
+                passthru("sudo mv $file /usr/local/bin/beam");
+            }
+            out(PHP_EOL."Beam successfully installed to: /usr/local/bin/beam", 'success');
+        }
+    }
+
+    if (file_exists("./installer")) {
+        unlink("./installer");
+    }
+}
+
+/**
+ * colorize output
+ * @return string|void
+ */
+function out($text, $color = null, $newLine = true)
+{
+    $styles = array(
+        'success' => "\033[0;32m%s\033[0m",
+        'error' => "\033[31;31m%s\033[0m",
+        'info' => "\033[33;33m%s\033[0m"
+    );
+
+    $format = '%s';
+
+    if (isset($styles[$color])) {
+        $format = $styles[$color];
+    }
+
+    if ($newLine) {
+        $format .= PHP_EOL;
+    }
+    
+    printf($format, $text);
+}

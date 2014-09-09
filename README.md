@@ -9,26 +9,11 @@ and FTP.
 
 ## Installation
 
-Download the [`beam.phar`](http://beam.heyday.net.nz/beam.phar) file and store it somewhere on your computer.
+```bash
+$ curl -s http://beam.heyday.net.nz/installer -O; php installer
+```
 
-#### With `wget`:
-
-    $ sudo wget http://beam.heyday.net.nz/beam.phar -O /usr/local/bin/beam
-
-#### With `curl`:
-
-    $ sudo curl http://beam.heyday.net.nz/beam.phar -o /usr/local/bin/beam
-
-then:
-
-    $ sudo chmod +x /usr/local/bin/beam
-    
-## Requirements
-
-* PHP 5.3+
-* `--with-zlib` compile flag
-* `detect_unicode=Off` (php.ini setting)
-* `php-ssh2` extension (only if you need SFTP)
+Note: this will create a file called `installer` and then delete it after the installation has completed.
 
 ## Updating
 
