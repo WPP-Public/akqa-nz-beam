@@ -262,18 +262,27 @@ function installBeam() {
 
     chmod($file, 0755);
 
-    out(PHP_EOL."Beam successfully installed to: " . $file, 'success', false);
-    out(PHP_EOL."To use it run: ./beam", 'info');
+    $installPath = "/usr/local/bin/beam";
 
-    if (file_exists('/usr/local/bin/')) {
-        out(PHP_EOL."Would you like to install beam on your PATH (/usr/local/bin/beam)? (y/n) ", 'error', false);
+    if (prompt(PHP_EOL."Would you like to install beam on your PATH ({$installPath})?", ['y', 'n'], 'n') == 'y') {
+        if (!rename($file, $installPath)) {
 
-        if (readline() == 'y') {
-            if (!rename($file, "/usr/local/bin/beam")) {
-                passthru("sudo mv $file /usr/local/bin/beam");
+            out(PHP_EOL."Failed to install beam using the current user. Retrying with sudo", 'info');
+            passthru("sudo mv $file {$installPath}", $status);
+
+            if ($status === 0) {
+                out(PHP_EOL."Beam successfully installed to: {$installPath}", 'success');
+            } else {
+                out(PHP_EOL."Failed to move beam to {$installPath} with elevated privileges", 'error');
             }
-            out(PHP_EOL."Beam successfully installed to: /usr/local/bin/beam", 'success');
+
+        } else {
+            out(PHP_EOL."Beam successfully installed to: {$installPath}", 'success');
+            out("To use it run: beam", 'info');
         }
+    } else {
+        out(PHP_EOL."Beam successfully installed to: " . $file, 'success');
+        out("To use it run: ./beam", 'info');
     }
 
     if (file_exists("./installer")) {
@@ -304,4 +313,28 @@ function out($text, $color = null, $newLine = true)
     }
     
     printf($format, $text);
+}
+
+/**
+ * Prompt the user to choose an single character option
+ */
+function prompt($prompt, array $options, $default = null)
+{
+    $options = array_map('strtolower', $options);
+
+    $formattedPrompt = sprintf(
+        "\033[0;94m%s [%s]:\033[0m ",
+        $prompt,
+        str_replace($default, strtoupper($default), implode('/', $options))
+    );
+
+    do {
+        $response = trim(strtolower(readline($formattedPrompt)));
+
+        if (!$response) {
+            return $default;
+        }
+    } while (!in_array($response, $options));
+
+    return $response;
 }
