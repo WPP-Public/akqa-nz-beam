@@ -10,7 +10,7 @@ and FTP.
 ## Installation
 
 ```bash
-$ curl -s http://beam.heyday.net.nz/installer -O; php installer
+$ curl -s https://beam.heyday.net.nz/installer -O; php installer
 ```
 
 Note: this will create a file called `installer` and then delete it after the installation has completed.

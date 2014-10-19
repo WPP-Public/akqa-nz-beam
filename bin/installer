@@ -207,7 +207,7 @@ function installBeam() {
             out("Could not create file $file", 'error');
             $error = true;
         }
-        if (!fwrite($fh, file_get_contents("http://beam.heyday.net.nz/beam.phar"))) {
+        if (!fwrite($fh, file_get_contents("https://beam.heyday.net.nz/beam.phar"))) {
             out('Download failed', 'error');
             $error = true;
         }
