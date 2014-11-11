@@ -150,11 +150,13 @@ class Beam
 
         }
     }
+
     /**
      * @param  \Heyday\Component\Beam\DeploymentProvider\DeploymentResult $deploymentResult
+     * @param \Closure $deploymentCallback - callback to run immediately after deployment, before commands
      * @return mixed
      */
-    public function doRun(DeploymentResult $deploymentResult = null)
+    public function doRun(DeploymentResult $deploymentResult = null, $deploymentCallback = null)
     {
         if ($this->isUp()) {
             $this->prepareLocalPath();
@@ -164,6 +166,11 @@ class Beam
                 false,
                 $deploymentResult
             );
+
+            if (is_callable($deploymentCallback)) {
+                $deploymentCallback();
+            }
+
             if (!$this->isWorkingCopy()) {
                 $this->runPostLocalCommands();
             }

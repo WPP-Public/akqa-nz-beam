@@ -255,8 +255,11 @@ abstract class TransferCommand extends Command
 
                         // Run the deployment
                         try {
-                            $deploymentResult = $beam->doRun($deploymentResult);
-                            $this->progressHelper->finish();
+                            $progressHelper = $this->progressHelper;
+
+                            $deploymentResult = $beam->doRun($deploymentResult, function() use ($progressHelper) {
+                                $progressHelper->finish();
+                            });
                             $this->deploymentResultHelper->outputChangesSummary($output, $deploymentResult);
                         } catch (Exception $exception) {
                             if (!$this->handleDeploymentProviderFailure($exception, $output)) {
