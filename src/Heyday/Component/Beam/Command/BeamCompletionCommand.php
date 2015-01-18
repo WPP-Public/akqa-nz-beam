@@ -55,6 +55,7 @@ class BeamCompletionCommand extends CompletionCommand
             $config = $this->getConfig();
         } catch (\Exception $e) {
             $config = null;
+            $projectPath = null;
         }
 
         // Add argument handlers
@@ -107,8 +108,12 @@ class BeamCompletionCommand extends CompletionCommand
                             return $tags;
                         }
                     }
+                ),
+                new Completion\ShellPathCompletion(
+                    Completion::ALL_COMMANDS,
+                    'path',
+                    Completion::TYPE_OPTION
                 )
-
             )
         );
 
@@ -121,16 +126,8 @@ class BeamCompletionCommand extends CompletionCommand
      */
     protected function getConfig()
     {
-        $path = getcwd();
-        $paths = array();
-
-        while ($path !== end($paths)) {
-            $paths[] = $path;
-            $path = dirname($path);
-        }
-
         $jsonConfigLoader = new JsonConfigLoader(
-            new FileLocator($paths)
+            $this->getFileLocator()
         );
 
         $words = $this->handler->getContext()->getWords();
@@ -140,6 +137,22 @@ class BeamCompletionCommand extends CompletionCommand
         return $jsonConfigLoader->load(
             $input->hasOption('config-file') ? $input->getOption('config-file') : 'beam.json'
         );
+    }
+
+    /**
+     * @return FileLocator
+     */
+    protected function getFileLocator()
+    {
+        $path = getcwd();
+        $paths = array();
+
+        while ($path !== end($paths)) {
+            $paths[] = $path;
+            $path = dirname($path);
+        }
+
+        return new FileLocator($paths);
     }
 
     /**

@@ -105,16 +105,16 @@
         },
         {
             "name": "stecman/symfony-console-completion",
-            "version": "0.4.2",
+            "version": "0.4.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/stecman/symfony-console-completion.git",
-                "reference": "4eea8874aa8f3e908bf649914486ff0760b051f0"
+                "reference": "2bf3ddcaf31db1f0622a7db29bfc85fbc776bdaf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/stecman/symfony-console-completion/zipball/4eea8874aa8f3e908bf649914486ff0760b051f0",
-                "reference": "4eea8874aa8f3e908bf649914486ff0760b051f0",
+                "url": "https://api.github.com/repos/stecman/symfony-console-completion/zipball/2bf3ddcaf31db1f0622a7db29bfc85fbc776bdaf",
+                "reference": "2bf3ddcaf31db1f0622a7db29bfc85fbc776bdaf",
                 "shasum": ""
             },
             "require": {
@@ -140,7 +140,7 @@
                 }
             ],
             "description": "Automatic BASH completion for Symfony Console Component based applications.",
-            "time": "2014-11-10 19:48:36"
+            "time": "2014-11-18 03:19:13"
         },
         {
             "name": "symfony/config",
@@ -840,6 +840,7 @@
     "minimum-stability": "stable",
     "stability-flags": [],
     "prefer-stable": false,
+    "prefer-lowest": false,
     "platform": [],
     "platform-dev": []
 }
