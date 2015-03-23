@@ -151,31 +151,32 @@ The values in `import` can be anything accepted by PHP's `file_get_contents`, in
 
 ## Dynamic interpolated values
 
-The following tokens are recognized as dynamically interpolated values:
-
-<dl>
-<dt>%%branch%%
-    <dd>the branch that is being pushed from (`git symbolic-ref --short HEAD`)
-<dt>%%branch_pathsafe%%
-    <dd>same as %%branch%%, but changes each path separator to a hyphen
-<dt>%%commit%%
-    <dd>the commit hash being pushed up
-<dt>%%commit_abbrev%%
-    <dd>the abbreviated hash being pushed up
-<dt>%%user%%
-    <dd>the username of the user running the beam process (`id -un`)
-<dt>%%user_fullname%%
-    <dd>the full name of the user running the beam process (`id -F`)
-</dl>
-
-Sample configuration fragment:
-
 ```json
-"servers": {
+"servers": [
     "live": {
-        "user": "operator",
+        "user": "%%username%%",
         "host": "www.example.com",
         "webroot": "/usr/local/www/%%branch_pathsafe%%/shared/cached-copy",
         "branch": "master"
     },
+]
 ```
+
+Beam offers some support for using dynamic values in configs by way of token replacement. The following tokens are recognized and will be replaced automatically in free-text config values where they are used:
+
+<dl>
+<dt>%%branch%%
+    <dd>The branch name that is being deployed. If a commit hash is passed to <code>--ref</code> on the command line, this is a best-guess of what the branch is, since a commit can be on multiple branches.
+<dt>%%branch_pathsafe%%
+    <dd>The same as <code>%%branch%%</code>, but changes each path separator to a hyphen
+<dt>%%commit%%
+    <dd>The commit hash being deployed
+<dt>%%commit_abbrev%%
+    <dd>The abbreviated hash being deployed
+<dt>%%target%%
+    <dd>The name of the server config being used for deployment.
+<dt>%%username%%
+    <dd>The username of the user running the beam process
+<dt>%%user_identity%%
+    <dd>The full name and email address of the current user according to the VCS. Eg. <code>Joe Smith &lt;joe.smith@example.com&gt;</code>
+</dl>
