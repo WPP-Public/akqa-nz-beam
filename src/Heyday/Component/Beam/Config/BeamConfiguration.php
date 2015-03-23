@@ -151,6 +151,27 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
     }
 
     /**
+     * Applies the specified interpolations to the fields of a config
+     * 
+     * @param array $config
+     */
+    protected function applyInterpolations(array &$config) {
+        $interpolations = array(
+            '%%branch%%' => function() { return exec('git symbolic-ref --short HEAD'); },
+            '%%branch_pathsafe%%' => function() { return str_replace(DIRECTORY_SEPARATOR, '-', exec('git symbolic-ref --short HEAD')); },
+            '%%commit%%' => function() { return exec('git rev-parse HEAD'); },
+            '%%commit_abbrev%%' => function() { return exec('git rev-parse --short HEAD'); },
+            '%%user%%' => function() { return exec('id -un'); },
+        );
+        array_walk_recursive($config, function(&$value, $key) use ($interpolations) {
+            foreach ($interpolations as $search => $replace_func) {
+                $value = str_replace($search, $replace_func(), $value);
+            }
+        });
+        return $config;
+    }
+
+    /**
      * Generates the configuration tree builder.
      *
      * @return \Symfony\Component\Config\Definition\Builder\TreeBuilder The tree builder
@@ -239,6 +260,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
             ->validate()
                 ->always(
                     function ($v) use ($self) {
+                        $v = $self->applyInterpolations($v);
                         foreach ($v['commands'] as $commandName => $command) {
                             foreach ($command['servers'] as $server) {
                                 if (!isset($v['servers'][$server])) {

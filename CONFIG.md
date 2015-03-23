@@ -149,3 +149,33 @@ The `import` config option is an array of filenames that provides a way to merge
 
 The values in `import` can be anything accepted by PHP's `file_get_contents`, including but not limited to HTTP URLs and local file paths. A tilde at the start of a path is replaced with the path to the current user's home directory. Imports are fetched recursively (ie. imported configs can import further configs) with each unique path being fetched only the first time it appears.
 
+## Dynamic interpolated values
+
+The following tokens are recognized as dynamically interpolated values:
+
+<dl>
+<dt>%%branch%%
+    <dd>the branch that is being pushed from (`git symbolic-ref --short HEAD`)
+<dt>%%branch_pathsafe%%
+    <dd>same as %%branch%%, but changes each path separator to a hyphen
+<dt>%%commit%%
+    <dd>the commit hash being pushed up
+<dt>%%commit_abbrev%%
+    <dd>the abbreviated hash being pushed up
+<dt>%%user%%
+    <dd>the username of the user running the beam process (`id -un`)
+<dt>%%user_fullname%%
+    <dd>the full name of the user running the beam process (`id -F`)
+</dl>
+
+Sample configuration fragment:
+
+```json
+"servers": {
+    "live": {
+        "user": "operator",
+        "host": "www.example.com",
+        "webroot": "/usr/local/www/%%branch_pathsafe%%/shared/cached-copy",
+        "branch": "master"
+    },
+```
