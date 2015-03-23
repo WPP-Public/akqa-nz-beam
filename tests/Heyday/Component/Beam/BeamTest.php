@@ -46,7 +46,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
      */
     protected function getVcsProviderStub($exists = true, $available = array('master'), $current = 'master')
     {
-        $vcsProviderStub = $this->getMock('Heyday\Component\Beam\VcsProvider\VcsProvider');
+        $vcsProviderStub = $this->getMock('Heyday\Component\Beam\VcsProvider\GitLikeVcsProvider');
         $vcsProviderStub->expects($this->any())
             ->method('getCurrentBranch')
             ->will($this->returnValue($current));

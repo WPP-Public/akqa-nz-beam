@@ -100,6 +100,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
             $configs
         );
     }
+
     /**
      * Load the contents of the files and URLs in $imports, recursively
      * @param array $imports - list of files/urls to load

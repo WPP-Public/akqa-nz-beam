@@ -3,11 +3,14 @@
 namespace Heyday\Component\Beam;
 
 use Heyday\Component\Beam\Config\BeamConfiguration;
+use Heyday\Component\Beam\Config\ValueInterpolator;
 use Heyday\Component\Beam\DeploymentProvider\DeploymentProvider;
 use Heyday\Component\Beam\DeploymentProvider\DeploymentResult;
+use Heyday\Component\Beam\Exception\Exception;
 use Heyday\Component\Beam\Exception\InvalidArgumentException;
 use Heyday\Component\Beam\Exception\RuntimeException;
 use Heyday\Component\Beam\VcsProvider\Git;
+use Heyday\Component\Beam\VcsProvider\GitLikeVcsProvider;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\OptionsResolver\Options;
@@ -42,8 +45,12 @@ class Beam
         array $config,
         array $options
     ) {
+        // Perform initial setup and validation
         $this->config = $config;
         $this->setup($options);
+
+        // Apply variable interpolation config after initial checks
+        $this->config = $this->replaceConfigVariables($config);
     }
     /**
      * Uses the options resolver to set the options to the object from an array
@@ -721,6 +728,28 @@ class Beam
 
         return false;
     }
+
+    /**
+     * Replace variable placeholders in config fields
+     *
+     * @param array $config
+     * @return array
+     * @throws Exception
+     */
+    protected function replaceConfigVariables(array $config)
+    {
+        $vcs = $this->options['vcsprovider'];
+
+        if ($vcs instanceof GitLikeVcsProvider) {
+            $interpolator = new ValueInterpolator($vcs, $this->getOption('ref'), array(
+                'target' => $this->getOption('target')
+            ));
+            return $interpolator->process($config);
+        } else {
+            throw new Exception('Config interpolation is only possible using a Git-like VCS');
+        }
+    }
+
     /**
      * This returns an options resolver that will ensure required options are set and that all options set are valid
      * @return OptionsResolver

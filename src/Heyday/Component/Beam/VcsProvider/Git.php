@@ -11,7 +11,7 @@ use Symfony\Component\Process\Process;
  * Class Git
  * @package Heyday\Component\Beam\VcsProvider
  */
-class Git implements VcsProvider
+class Git implements GitLikeVcsProvider
 {
     /**
      * @var
@@ -203,5 +203,64 @@ class Git implements VcsProvider
             // fall back to using the current username.
             return $identity ? $identity : get_current_user();
         }
+    }
+
+    /**
+     * Return the commit hash for a given reference
+     *
+     * @param string $ref
+     * @param bool $abbreviated
+     * @return string - commit hash
+     * @throws RuntimeException
+     */
+    public function resolveReference($ref, $abbreviated = false)
+    {
+        if ($abbreviated) {
+            $command = 'git rev-parse --short %s';
+        } else {
+            $command = 'git rev-parse %s';
+        }
+
+        $process = $this->process(sprintf(
+            $command,
+            escapeshellarg($ref)
+        ));
+
+        return trim($process->getOutput());
+    }
+
+    /**
+     * Determine the branch a reference is on
+     *
+     * In the case multiple branches are returned, the current branch is preferred,
+     * otherwise the first returned by Git is used. This means the return value of
+     * this function is a bit of a guess.
+     *
+     * @param string $ref
+     * @return string - branch name
+     */
+    public function getBranchForReference($ref)
+    {
+        $process = $this->process(sprintf(
+            'git branch --contains %s -a',
+            escapeshellarg($ref)
+        ));
+
+        $lines = explode("\n", trim($process->getOutput()));
+
+        foreach ($lines as $index => $line) {
+            // Prefer the current branch
+            if (strpos($line, '*') === 0) {
+                $branch = $line;
+                break;
+            }
+
+            // Default to the first line if there's no current branch returned
+            if ($index === 0) {
+                $branch = $line;
+            }
+        }
+
+        return ltrim($branch, '* ');
     }
 }
