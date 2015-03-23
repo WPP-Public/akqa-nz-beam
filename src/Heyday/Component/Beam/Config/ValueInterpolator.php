@@ -20,14 +20,22 @@ class ValueInterpolator
     protected $ref;
 
     /**
+     * Map of identifiers to replacement values
+     *
+     * @var array
+     */
+    protected $extraReplacements;
+
+    /**
      * @param GitLikeVcsProvider $vcs
      * @param string $vcsReference - commit reference to use when retrieving information from the VCS
-     * @throws Exception
+     * @param array $extraReplacements - array of tokens to provide replacement for
      */
-    public function __construct(GitLikeVcsProvider $vcs, $vcsReference)
+    public function __construct(GitLikeVcsProvider $vcs, $vcsReference, array $extraReplacements = array())
     {
         $this->vcs = $vcs;
         $this->ref = $vcsReference;
+        $this->extraReplacements = $extraReplacements;
     }
 
     /**
@@ -80,6 +88,10 @@ class ValueInterpolator
             },
             '%%username%%' => get_current_user(),
         );
+
+        foreach ($this->extraReplacements as $token => $value) {
+            $interpolations["%%$token%%"] = $value;
+        }
 
         return $interpolations;
     }

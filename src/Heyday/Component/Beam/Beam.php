@@ -741,7 +741,9 @@ class Beam
         $vcs = $this->options['vcsprovider'];
 
         if ($vcs instanceof GitLikeVcsProvider) {
-            $interpolator = new ValueInterpolator($vcs, $this->getOption('ref'));
+            $interpolator = new ValueInterpolator($vcs, $this->getOption('ref'), array(
+                'target' => $this->getOption('target')
+            ));
             return $interpolator->process($config);
         } else {
             throw new Exception('Config interpolation is only possible using a Git-like VCS');
