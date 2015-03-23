@@ -4,7 +4,7 @@
 namespace Heyday\Component\Beam\VcsProvider;
 
 
-interface GitLikeVcsProvider
+interface GitLikeVcsProvider extends VcsProvider
 {
     /**
      * Return the commit hash for a given reference

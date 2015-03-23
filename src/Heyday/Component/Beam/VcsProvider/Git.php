@@ -11,7 +11,7 @@ use Symfony\Component\Process\Process;
  * Class Git
  * @package Heyday\Component\Beam\VcsProvider
  */
-class Git implements VcsProvider, GitLikeVcsProvider
+class Git implements GitLikeVcsProvider
 {
     /**
      * @var
