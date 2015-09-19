@@ -228,6 +228,10 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
         }
         if ($this->options['delay-updates']) {
             $command[] = '--delay-updates';
+
+            if ($this->options['delete']) {
+                $command[] = '--delete-delay';
+            }
         }
 
         $command[] = array(
