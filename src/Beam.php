@@ -5,9 +5,11 @@ namespace Heyday\Beam;
 use Heyday\Beam\Config\ValueInterpolator;
 use Heyday\Beam\DeploymentProvider\DeploymentProvider;
 use Heyday\Beam\DeploymentProvider\DeploymentResult;
+use Heyday\Beam\Exception\Exception;
 use Heyday\Beam\Exception\InvalidArgumentException;
 use Heyday\Beam\Exception\RuntimeException;
 use Heyday\Beam\VcsProvider\Git;
+use Heyday\Beam\VcsProvider\GitLikeVcsProvider;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\OptionsResolver\Options;
@@ -786,6 +788,7 @@ class Beam
                 )
             )->setDefaults(
                 array(
+                    'ref'                        => '',
                     'path'                       => array(),
                     'dry-run'                    => false,
                     'working-copy'               => false,

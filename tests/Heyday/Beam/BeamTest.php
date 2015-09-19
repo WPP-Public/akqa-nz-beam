@@ -46,7 +46,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
      */
     protected function getVcsProviderStub($exists = true, $available = array('master'), $current = 'master')
     {
-        $vcsProviderStub = $this->getMock('Heyday\Beam\VcsProvider\VcsProvider');
+        $vcsProviderStub = $this->getMock('Heyday\Beam\VcsProvider\GitLikeVcsProvider');
         $vcsProviderStub->expects($this->any())
             ->method('getCurrentBranch')
             ->will($this->returnValue($current));
@@ -100,7 +100,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
         );
     }
     /**
-     * @expectedExceptionMessage The option "direction" has the value "fake", but is expected to be one of "up", "down"
+     * @expectedExceptionMessage The option "direction" with value "fake" is invalid. Accepted values are: "up", "down".
      * @expectedException \Symfony\Component\OptionsResolver\Exception\InvalidOptionsException
      */
     public function testBeamConstructInvalidOptionsDirectionException()
@@ -115,7 +115,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
         );
     }
     /**
-     * @expectedExceptionMessage The option "target" has the value "fake", but is expected to be one of "live"
+     * @expectedExceptionMessage The option "target" with value "fake" is invalid. Accepted values are: "live".
      * @expectedException \Symfony\Component\OptionsResolver\Exception\InvalidOptionsException
      */
     public function testBeamConstructInvalidOptionsRemoteException()
