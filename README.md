@@ -41,7 +41,6 @@ At a minimum, to use Beam at least one server needs to be defined.
 {
 	"servers": {
 		"live": {
-			"user": "user",
 			"host": "some.host.com",
 			"webroot": "/home/user/www"
 		}
@@ -98,7 +97,7 @@ This project follows the standards defined in:
 
 ## Unit testing
 
-    $ composer install --dev
+    $ composer install
     $ phpunit
     
 # License
