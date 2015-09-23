@@ -658,7 +658,7 @@ OUTPUT
         $rsync->setBeam($beamMock);
 
         $this->assertEquals(
-            'rsync /testfrom/ /testto -rlpD --itemize-changes --checksum --delete --compress --delay-updates --exclude-from="/test"',
+            'rsync /testfrom/ /testto -rlpD --itemize-changes --checksum --delete --compress --delay-updates --delete-delay --exclude-from="/test"',
             $this->getAccessibleMethod('buildCommand')->invoke(
                 $rsync,
                 '/testfrom',
