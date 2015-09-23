@@ -298,13 +298,15 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
             ->children()
                 ->scalarNode('type')->isRequired()->end()
                 ->scalarNode('host')->isRequired()->end()
-                ->scalarNode('user')->isRequired()->end()
                 ->scalarNode('branch')->end();
 
         switch ($type) {
             case 'sftp':
+                $node->scalarNode('user')->isRequired()->end();
             case 'ftp':
-                $node->scalarNode('webroot')->isRequired()
+                $node
+                    ->scalarNode('user')->isRequired()->end()
+                    ->scalarNode('webroot')->isRequired()
                     ->validate()
                     ->always(
                         function ($v) use ($type) {
@@ -333,6 +335,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
                             }
                         )->end()
                         ->end()
+                    ->scalarNode('user')->end()
                     ->scalarNode('sshpass')->defaultFalse()->end();
                 break;
         }

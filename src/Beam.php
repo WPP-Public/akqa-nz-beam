@@ -89,7 +89,6 @@ class Beam
     {
         // Prevent a server with empty options being used
         $requiredKeys = array(
-            'user',
             'host',
             'webroot'
         );
@@ -624,7 +623,7 @@ class Beam
 
         $server = $this->getServer();
 
-        $userComponent = $server['user'] <> '' ? $server['user'] . '@' : '';
+        $userComponent = isset($server['user']) && $server['user'] <> '' ? $server['user'] . '@' : '';
 
         $remoteCmd = sprintf(
             'cd \'%s\' && %s',

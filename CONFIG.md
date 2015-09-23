@@ -43,7 +43,6 @@ To give a clear picture of what a `beam up my-target` does with no command line 
             "webroot": "subdomains/staging"
         },
         "live": {
-            "user": "user",
             "host": "some.host.name",
             "webroot": "public_html",
             "branch": "remotes/origin/master"
@@ -54,11 +53,11 @@ Servers are individual, named deployment targets. When using `beam up` or `beam 
 
 **The following properties are required for each defined server:**
 
- * `user` - User to log into the server with
  * `host` - Host name or IP address of the server
  * `webroot` - Path to the deployment directory on the server. Relative paths are relative to the user's home directory. A trailing slash is optional.
 
 ### Optional properties
+ * `user` - User to log into the server with
  * `type` *(string: rsync)* - Transfer method to use with the server. This must be one of `rsync`, `ftp`, and `sftp` (FTP over SSH).
  * `branch` *(string)* - Branch to lock this server to. When specified, a `beam up` to this server will always send this branch, regardless of the currently checked out branch and the `--ref` and `--working-copy` flags. This is useful for ensuring that only one branch can be deployed to, for example, your production server. Any git branch is valid here, including remote branches like `remotes/origin/master`.
 

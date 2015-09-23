@@ -450,13 +450,17 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     public function getTargetPath()
     {
         $server = $this->beam->getServer();
-
-        return sprintf(
-            '%s@%s:%s',
-            $server['user'],
+        $hostPath = sprintf(
+            '%s:%s',
             $server['host'],
             $server['webroot']
         );
+
+        if (isset($server['user']) && $user = $server['user']) {
+            $hostPath = $user . '@' . $hostPath;
+        }
+
+        return $hostPath;
     }
     /**
      * Return a string representation of the target
