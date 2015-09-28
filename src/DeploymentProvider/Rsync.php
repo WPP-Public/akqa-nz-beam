@@ -159,7 +159,6 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
      */
     protected function buildCommand($fromPath, $toPath, $dryrun = false)
     {
-
         $flags = 'rlpD'; // recursion, links, perms, devices, specials
 
         $command = array(
@@ -230,7 +229,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             $command[] = '--delay-updates';
 
             if ($this->options['delete']) {
-                $command[] = '--delete-delay';
+                $command[] = $this->rsyncVersionCompare('>=', '3.0.0') ? '--delete-delay' : '--delete-after';
             }
         }
 
@@ -246,6 +245,39 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
         }
 
         return implode(' ', $command);
+    }
+
+    /**
+     * Get the version of the rsync program that will be used for transfer
+     *
+     * @return string
+     * @throws RuntimeException
+     */
+    protected function getRsyncVersion()
+    {
+        $process = new Process('rsync --version');
+        $process->run();
+
+        list($version) = sscanf($process->getOutput(), 'rsync version %s');
+
+        if (!$version) {
+            throw new RuntimeException("Couldn't check rsync version. Is rsync installed and on your PATH?");
+        }
+
+        return $version;
+    }
+
+    /**
+     * Compare the available version number of rsync against a value
+     *
+     * @param string $comparison - see version_compare $operator argument docs
+     * @param string $version
+     * @return bool
+     * @throws RuntimeException
+     */
+    protected function rsyncVersionCompare($comparison, $version)
+    {
+        return version_compare($this->getRsyncVersion(), $version, $comparison);
     }
 
     /**
