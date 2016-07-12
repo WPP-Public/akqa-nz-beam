@@ -34,7 +34,7 @@ class SelfUpdateCommand extends SymfonyCommand
                 null,
                 InputOption::VALUE_REQUIRED,
                 'The host to download from',
-                'http://beam.heyday.net.nz'
+                'http://getbeam.io'
             );
     }
     /**

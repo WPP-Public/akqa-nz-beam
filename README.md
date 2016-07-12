@@ -10,7 +10,7 @@ and FTP.
 ## Installation
 
 ```bash
-$ curl -s https://beam.heyday.net.nz/installer -O; php installer
+$ curl -s https://getbeam.io/installer -O; php installer
 ```
 
 Note: this will create a file called `installer` and then delete it after the installation has completed.
@@ -99,7 +99,7 @@ This project follows the standards defined in:
 
     $ composer install
     $ phpunit
-    
+
 # License
 
 MIT, see LICENSE.
