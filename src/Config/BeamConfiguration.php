@@ -302,7 +302,6 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
 
         switch ($type) {
             case 'sftp':
-                $node->scalarNode('user')->isRequired()->end();
             case 'ftp':
                 $node
                     ->scalarNode('user')->isRequired()->end()
