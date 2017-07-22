@@ -16,7 +16,6 @@ use Heyday\Beam\Utils;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputArgument;
-use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\NullOutput;
@@ -37,10 +36,6 @@ abstract class TransferCommand extends Command
      */
     protected $config;
     /**
-     * @var \Heyday\Beam\Helper\ContentProgressHelper
-     */
-    protected $progressHelper;
-    /**
      * @var \Heyday\Beam\Helper\DeploymentResultHelper
      */
     protected $deploymentResultHelper;
@@ -55,7 +50,6 @@ abstract class TransferCommand extends Command
     public function __construct($name = null)
     {
         parent::__construct($name);
-        $this->progressHelper = new ContentProgressHelper();
         $this->deploymentResultHelper = new DeploymentResultHelper($this->formatterHelper);
         $this->questionHelper = new QuestionHelper();
     }
@@ -157,12 +151,6 @@ abstract class TransferCommand extends Command
         );
     }
 
-    /**
-     * @param InputInterface  $input
-     * @param OutputInterface $output
-     * @return int|null|void
-     * @throws \Heyday\Beam\Exception\RuntimeException
-     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         if (!$this->transferMethod) {
@@ -244,10 +232,13 @@ abstract class TransferCommand extends Command
                             exit(1);
                         }
 
+                        // Create a progress bar
+                        $progressHelper = new ContentProgressHelper($output);
+
                         // Set the output handler for displaying the progress bar etc
                         $beam->setOption(
                             'deploymentoutputhandler',
-                            $this->getDeploymentOutputHandler($output, $deploymentResult)
+                            $this->getDeploymentOutputHandler($progressHelper, $deploymentResult)
                         );
 
                         // Disable the result stream handler so it doesn't mess with the progress bar
@@ -257,8 +248,6 @@ abstract class TransferCommand extends Command
 
                         // Run the deployment
                         try {
-                            $progressHelper = $this->progressHelper;
-
                             $deploymentResult = $beam->doRun($deploymentResult, function() use ($progressHelper) {
                                 $progressHelper->finish();
                             });
@@ -410,26 +399,25 @@ abstract class TransferCommand extends Command
      * @param  DeploymentResult $deploymentResult
      * @return callable
      */
-    protected function getDeploymentOutputHandler(OutputInterface $output, DeploymentResult $deploymentResult)
+    protected function getDeploymentOutputHandler(ContentProgressHelper $progressHelper, DeploymentResult $deploymentResult)
     {
         $count = count($deploymentResult);
-        $progressHelper = $this->progressHelper;
 
         return function ($stepSize = 1) use (
-            $output,
             $deploymentResult,
             $progressHelper,
             $count
         ) {
             static $steps = 0;
             if ($steps === 0) {
-                $progressHelper->setAutoWidth($count);
                 // Start the progress bar
-                $progressHelper->start($output, $count, 'File: ');
+                $progressHelper->setAutoWidth($count);
+                $progressHelper->start($count);
             }
 
             $filename = isset($deploymentResult[$steps]['filename']) ? $deploymentResult[$steps]['filename'] : '';
-            $progressHelper->advance($stepSize, false, $filename);
+            $progressHelper->setContent($filename);
+            $progressHelper->advance($stepSize, $filename);
             $steps += $stepSize;
         };
     }
