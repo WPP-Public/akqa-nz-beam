@@ -468,29 +468,28 @@ abstract class TransferCommand extends Command
     }
 
     /**
+     * Return the command synopsis with current target's TransferMethod options merged in
+     *
+     * This override is used to ensure TransferMethod options get into the help text.
+     *
+     * If no target is specified, none of the TransferMethod options are displayed currently. This used
+     * to be more customisable before Symfony Console 2.3 when formatting of command descriptions was
+     * moved to an internal class: Symfony\Component\Console\Descriptor
+     *
      * @inheritdoc
      */
-    public function asText()
+    public function getSynopsis($short = false)
     {
         $this->guessTarget();
-
-        $text = parent::asText();
-
-        $definitions = array();
-        foreach (BeamConfiguration::$transferMethods as $class) {
-            $class = new $class();
-            $definitions[$class->getName()] = $class->getInputDefinition();
-        }
-
-        $text .= $this->inputDefinitionsAsText($definitions);
-
-        return $text;
+        return parent::getSynopsis($short);
     }
 
     /**
      * Try to establish the transfer method to use.
+     *
      * This is used when the help command has taken over, since our initialize() method isn't called.
      * Where no input definition is available, see if $argv matches the definition for this command.
+     *
      * @param InputInterface $input - if null, an input will be created using argv
      */
     public function guessTarget(InputInterface $input = null)
@@ -510,99 +509,4 @@ abstract class TransferCommand extends Command
             }
         }
     }
-
-    /**
-     * Lifted from InputDefinition->asText
-     * @param array|InputDefinition $inputs
-     * @return string
-     */
-    protected function inputDefinitionsAsText($inputs)
-    {
-        // find the largest option or argument name
-        $max = 0;
-        $text = array('');
-
-        foreach ($inputs as $input) {
-
-            foreach ($input->getOptions() as $option) {
-                $nameLength = strlen($option->getName()) + 2;
-                if ($option->getShortcut()) {
-                    $nameLength += strlen($option->getShortcut()) + 3;
-                }
-
-                $max = max($max, $nameLength);
-            }
-            foreach ($input->getArguments() as $argument) {
-                $max = max($max, strlen($argument->getName()));
-            }
-            ++$max;
-
-        }
-
-        foreach ($inputs as $name => $input) {
-
-            if ($input->getArguments()) {
-                $text[] = '<comment>Arguments:</comment>';
-                foreach ($input->getArguments() as $argument) {
-                    if (null !== $argument->getDefault() && (!is_array($argument->getDefault()) || count($argument->getDefault()))) {
-                        $default = sprintf('<comment> (default: %s)</comment>', $this->formatDefaultValue($argument->getDefault()));
-                    } else {
-                        $default = '';
-                    }
-
-                    $description = str_replace("\n", "\n".str_repeat(' ', $max + 2), $argument->getDescription());
-
-                    $text[] = sprintf(" <info>%-${max}s</info> %s%s", $argument->getName(), $description, $default);
-                }
-
-                $text[] = '';
-            }
-
-            if ($input->getOptions()) {
-                if (is_string($name)) {
-                    $text[] = "<comment>$name Options:</comment>";
-                } else {
-                    $text[] = '<comment>Options:</comment>';
-                }
-
-                foreach ($input->getOptions() as $option) {
-                    if ($option->acceptValue() && null !== $option->getDefault() && (!is_array($option->getDefault()) || count($option->getDefault()))) {
-                        $default = sprintf('<comment> (default: %s)</comment>', $this->formatDefaultValue($option->getDefault()));
-                    } else {
-                        $default = '';
-                    }
-
-                    $multiple = $option->isArray() ? '<comment> (multiple values allowed)</comment>' : '';
-                    $description = str_replace("\n", "\n".str_repeat(' ', $max + 2), $option->getDescription());
-
-                    $optionMax = $max - strlen($option->getName()) - 2;
-                    $text[] = sprintf(" <info>%s</info> %-${optionMax}s%s%s%s",
-                        '--'.$option->getName(),
-                        $option->getShortcut() ? sprintf('(-%s) ', $option->getShortcut()) : '',
-                        $description,
-                        $default,
-                        $multiple
-                    );
-                }
-
-                $text[] = '';
-            }
-
-        }
-
-        return implode("\n", $text);
-    }
-
-    /**
-     * Copy of InputDefinition->formatDefaultValue
-     */
-    protected function formatDefaultValue($default)
-    {
-        if (version_compare(PHP_VERSION, '5.4', '<')) {
-            return str_replace('\/', '/', json_encode($default));
-        }
-
-        return json_encode($default, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-    }
-
 }
