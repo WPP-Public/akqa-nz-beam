@@ -61,7 +61,8 @@ class BeamCompletionCommand extends CompletionCommand
         // Add argument handlers
         $handler->addHandlers(
             array(
-                Completion::makeGlobalHandler(
+                new Completion(
+                    Completion::ALL_COMMANDS,
                     'target',
                     Completion::TYPE_ARGUMENT,
                     function () use ($config) {
@@ -78,7 +79,8 @@ class BeamCompletionCommand extends CompletionCommand
         // Add option handlers
         $handler->addHandlers(
             array(
-                Completion::makeGlobalHandler(
+                new Completion(
+                    Completion::ALL_COMMANDS,
                     'ref',
                     Completion::TYPE_OPTION,
                     function () {
@@ -88,7 +90,8 @@ class BeamCompletionCommand extends CompletionCommand
                         }
                     }
                 ),
-                Completion::makeGlobalHandler(
+                new Completion(
+                    Completion::ALL_COMMANDS,
                     'tags',
                     Completion::TYPE_OPTION,
                     function () use ($config) {
