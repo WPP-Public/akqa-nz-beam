@@ -34,7 +34,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     public function __construct(array $options)
     {
         $resolver = new OptionsResolver();
-        $resolver->setOptional(
+        $resolver->setDefined(
             array(
                 'checksum',
                 'delete',

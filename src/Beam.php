@@ -764,7 +764,7 @@ class Beam
                 'srcdir',
                 'deploymentprovider'
             )
-        )->setOptional(
+            )->setDefined(
                 array(
                     'ref',
                     'path',
