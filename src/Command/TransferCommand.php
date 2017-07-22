@@ -10,9 +10,10 @@ use Heyday\Beam\Exception\InvalidConfigurationException;
 use Heyday\Beam\Exception\RuntimeException;
 use Heyday\Beam\Helper\ContentProgressHelper;
 use Heyday\Beam\Helper\DeploymentResultHelper;
+use Heyday\Beam\Helper\YesNoQuestion;
 use Heyday\Beam\TransferMethod\TransferMethod;
 use Heyday\Beam\Utils;
-use Symfony\Component\Console\Helper\DialogHelper;
+use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputDefinition;
@@ -44,9 +45,9 @@ abstract class TransferCommand extends Command
      */
     protected $deploymentResultHelper;
     /**
-     * @var \Symfony\Component\Console\Helper\DialogHelper
+     * @var QuestionHelper
      */
-    protected $dialogHelper;
+    protected $questionHelper;
 
     /**
      * @param null $name
@@ -56,7 +57,7 @@ abstract class TransferCommand extends Command
         parent::__construct($name);
         $this->progressHelper = new ContentProgressHelper();
         $this->deploymentResultHelper = new DeploymentResultHelper($this->formatterHelper);
-        $this->dialogHelper = new DialogHelper();
+        $this->questionHelper = new QuestionHelper();
     }
 
     /**
@@ -177,7 +178,7 @@ abstract class TransferCommand extends Command
             $this->outputSummary($output, $beam);
 
             // Trigger the deployment provider's post-init method
-            $beam->configureDeploymentProvider($output);
+            $beam->configureDeploymentProvider($input, $output);
 
             // Set up to stream the list of changes if streaming is available
             $doStreamResult = $beam->deploymentProviderImplements('Heyday\Beam\DeploymentProvider\ResultStream');
@@ -219,7 +220,7 @@ abstract class TransferCommand extends Command
                     // If it is a dry run we are complete
                     if (!$input->getOption('dry-run')) {
                         // If we have confirmation do the beam
-                        if (!$this->isOkay($output)) {
+                        if (!$this->isOkay($input, $output)) {
                             $this->outputError($output, 'User cancelled');
                             exit(1);
                         }
@@ -229,6 +230,7 @@ abstract class TransferCommand extends Command
                         if (
                             $deleteCount > 0
                             && !$this->isOkay(
+                                $input,
                                 $output,
                                 sprintf(
                                     '%d file%s going to be deleted in this deployment, are you sure this is okay?',
@@ -262,7 +264,7 @@ abstract class TransferCommand extends Command
                             });
                             $this->deploymentResultHelper->outputChangesSummary($output, $deploymentResult);
                         } catch (Exception $exception) {
-                            if (!$this->handleDeploymentProviderFailure($exception, $output)) {
+                            if (!$this->handleDeploymentProviderFailure($exception, $input, $output)) {
                                 exit(1);
                             }
                         }
@@ -372,23 +374,29 @@ abstract class TransferCommand extends Command
     }
 
     /**
-     * @param Exception       $exception
+     * @param Exception $exception
+     * @param InputInterface $input
      * @param OutputInterface $output
      * @return bool
      */
-    protected function handleDeploymentProviderFailure(Exception $exception, OutputInterface $output)
+    protected function handleDeploymentProviderFailure(Exception $exception, InputInterface $input, OutputInterface $output)
     {
         $this->outputMultiline($output, $exception->getMessage(), 'Error', 'error');
 
+        $question = new YesNoQuestion(
+            $this->formatterHelper->formatSection(
+                'Prompt',
+                Utils::getQuestion('The deployment provider threw an exception. Do you want to continue?', 'n'),
+                'error'
+            ),
+            false
+        );
+
         return in_array(
-            $this->dialogHelper->askConfirmation(
+            $this->questionHelper->ask(
+                $input,
                 $output,
-                $this->formatterHelper->formatSection(
-                    'Prompt',
-                    Utils::getQuestion('The deployment provider threw an exception. Do you want to continue?', 'n'),
-                    'error'
-                ),
-                false
+                $question
             ),
             array(
                 'y',
@@ -427,29 +435,32 @@ abstract class TransferCommand extends Command
     }
 
     /**
+     * @param InputInterface $input
      * @param  OutputInterface $output
-     * @param  string          $question
-     * @param  string          $default
+     * @param  string $questionText
+     * @param  string $default
      * @return mixed
      */
     protected function isOkay(
+        InputInterface $input,
         OutputInterface $output,
-        $question = 'Is this okay?',
+        $questionText = 'Is this okay?',
         $default = 'yes'
     ) {
         //TODO: Respect no-interaction
-        return $this->dialogHelper->askConfirmation(
-            $output,
+        $question = new YesNoQuestion(
             $this->formatterHelper->formatSection(
                 'prompt',
                 Utils::getQuestion(
-                    $question,
+                    $questionText,
                     $default
                 ),
                 'comment'
             ),
-            $default[0] === 'y' ? true : false
+            $default
         );
+
+        return $this->questionHelper->ask($input, $output, $question);
     }
 
     /**

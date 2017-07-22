@@ -251,9 +251,9 @@ class Beam
             $this->writeLog();
         }
     }
-    public function configureDeploymentProvider(OutputInterface $output)
+    public function configureDeploymentProvider(InputInterface $input, OutputInterface $output)
     {
-        $this->options['deploymentprovider']->configure($output);
+        $this->options['deploymentprovider']->configure($input, $output);
     }
     /**
      * Gets the from location for rsync

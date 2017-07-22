@@ -2,13 +2,14 @@
 
 namespace Heyday\Beam\DeploymentProvider;
 
-use Heyday\Beam\Utils;
 use Heyday\Beam\Exception\InvalidConfigurationException;
 use Heyday\Beam\Exception\RuntimeException;
-use Heyday\Beam\Beam;
-use Symfony\Component\Console\Helper\DialogHelper;
+use Heyday\Beam\Utils;
 use Symfony\Component\Console\Helper\FormatterHelper;
+use Symfony\Component\Console\Helper\QuestionHelper;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\Question;
 
 /**
  * Class ManualChecksum
@@ -205,23 +206,32 @@ abstract class ManualChecksum extends Deployment
     /**
      * Prompt for password if not set in selected server config
      * Implements DeploymentProvider::configure for descendant classes
+     *
+     * @param InputInterface $input
      * @param OutputInterface $output
+     * @throws \Heyday\Beam\Exception\InvalidArgumentException
      */
-    public function configure(OutputInterface $output)
+    public function configure(InputInterface $input, OutputInterface $output)
     {
         $server = $this->beam->getServer();
 
         if (empty($server['password'])) {
             $formatterHelper = new FormatterHelper();
-            $dialogHelper = new DialogHelper();
+            $questionHelper = new QuestionHelper();
             $serverName = $this->beam->getOption('target');
 
-            $password = $dialogHelper->askHiddenResponse($output, $formatterHelper->formatSection(
-                'Prompt',
-                Utils::getQuestion("Enter password for $serverName:"),
-                'comment'
-            ), false);
-            $this->server['password'] = $password;
+            $question = new Question(
+                $formatterHelper->formatSection(
+                    'Prompt',
+                    Utils::getQuestion("Enter password for $serverName:"),
+                    'comment'
+                ),
+                false
+            );
+
+            $question->setHidden(true);
+
+            $this->server['password'] = $questionHelper->ask($input, $output, $question);
         }
     }
 

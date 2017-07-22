@@ -2,15 +2,15 @@
 
 namespace Heyday\Beam\TransferMethod;
 
-use Heyday\Beam\Utils;
 use Heyday\Beam\Exception\RuntimeException;
-use Symfony\Component\Console\Helper\DialogHelper;
+use Heyday\Beam\Helper\YesNoQuestion;
+use Heyday\Beam\Utils;
 use Symfony\Component\Console\Helper\FormatterHelper;
-use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Process\Process;
 
 /**
@@ -24,9 +24,9 @@ abstract class TransferMethod
      */
     protected $direction;
     /**
-     * @var \Symfony\Component\Console\Helper\DialogHelper
+     * @var QuestionHelper
      */
-    protected $dialogHelper;
+    protected $questionHelper;
     /**
      * @var \Symfony\Component\Console\Helper\FormatterHelper
      */
@@ -41,7 +41,7 @@ abstract class TransferMethod
 
     public function __construct()
     {
-        $this->dialogHelper = new DialogHelper();
+        $this->questionHelper = new QuestionHelper();
         $this->formatterHelper = new FormatterHelper();
     }
 
@@ -78,10 +78,10 @@ abstract class TransferMethod
             $options['working-copy'] = true;
         }
         if ($input->getOption('command-prompt')) {
-            $options['commandprompthandler'] = $this->getCommandPromptHandler($output);
+            $options['commandprompthandler'] = $this->getCommandPromptHandler($input, $output);
         }
 
-        $options['commandfailurehandler'] = $this->getCommandFailureHandler($output);
+        $options['commandfailurehandler'] = $this->getCommandFailureHandler($input, $output);
 
         $options['outputhandler'] = $this->getOutputHandler($output);
 
@@ -139,24 +139,30 @@ abstract class TransferMethod
     }
 
     /**
+     * @param InputInterface $input
      * @param  OutputInterface $output
      * @return callable
      */
-    protected function getCommandPromptHandler(OutputInterface $output)
+    protected function getCommandPromptHandler(InputInterface $input, OutputInterface $output)
     {
-        $dialogHelper = $this->dialogHelper;
+        $questionHelper = $this->questionHelper;
         $formatterHelper = $this->formatterHelper;
 
-        return function ($command) use ($output, $dialogHelper, $formatterHelper) {
+        return function ($command) use ($input, $output, $questionHelper, $formatterHelper) {
+            $question = new YesNoQuestion(
+                $formatterHelper->formatSection(
+                    $command['command'],
+                    Utils::getQuestion('Do you want to run this command?', 'y'),
+                    'comment'
+                ),
+                'y'
+            );
+
             return in_array(
-                $dialogHelper->askConfirmation(
+                $questionHelper->ask(
+                    $input,
                     $output,
-                    $formatterHelper->formatSection(
-                        $command['command'],
-                        Utils::getQuestion('Do you want to run this command?', 'y'),
-                        'comment'
-                    ),
-                    'y'
+                    $question
                 ),
                 array(
                     'y',
@@ -167,15 +173,18 @@ abstract class TransferMethod
     }
 
     /**
+     * @param InputInterface $input
      * @param  OutputInterface $output
      * @return callable
      */
-    protected function getCommandFailureHandler(OutputInterface $output)
+    protected function getCommandFailureHandler(InputInterface $input, OutputInterface $output)
     {
-        $dialogHelper = $this->dialogHelper;
+        $questionHelper = $this->questionHelper;
         $formatterHelper = $this->formatterHelper;
 
-        return function ($command, \Exception $exception, Process $process = null) use ($output, $dialogHelper, $formatterHelper) {
+        return function ($command, \Exception $exception, Process $process = null)
+            use ($input, $output, $questionHelper, $formatterHelper) {
+
             // Ensure the output of the failed command is shown
             if (OutputInterface::VERBOSITY_VERBOSE !== $output->getVerbosity()) {
                 $message = trim($exception->getMessage());
@@ -197,12 +206,15 @@ abstract class TransferMethod
                 throw new RuntimeException('A command marked as required exited with a non-zero status');
             }
 
-            return $dialogHelper->askConfirmation(
+            return $questionHelper->ask(
+                $input,
                 $output,
-                $formatterHelper->formatSection(
-                    'Prompt',
-                    Utils::getQuestion('A command exited with a non-zero status. Do you want to continue', 'yes'),
-                    'error'
+                new YesNoQuestion(
+                    $formatterHelper->formatSection(
+                        'Prompt',
+                        Utils::getQuestion('A command exited with a non-zero status. Do you want to continue', 'yes'),
+                        'error'
+                    )
                 )
             );
         };
