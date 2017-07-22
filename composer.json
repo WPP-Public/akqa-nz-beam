@@ -20,7 +20,7 @@
         "ext-ssh2": "*"
     },
     "require": {
-        "symfony/console": "~2.2",
+        "symfony/console": "^2.8.3",
         "symfony/process": "~2.3",
         "symfony/options-resolver": "~2.2",
         "symfony/config": "~2.2",
