@@ -2,173 +2,91 @@
 
 namespace Heyday\Beam\Helper;
 
-use Symfony\Component\Console\Helper\ProgressHelper;
+use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Class ContentProgressHelper
  * @package Heyday\Beam\Helper
  */
-class ContentProgressHelper extends ProgressHelper
+class ContentProgressHelper extends ProgressBar
 {
     /**
-     * @var
+     * Name of the format this helper creates and uses through static methods on ProgressBar
      */
-    protected $content;
+    const FORMAT_DEFINITION = 'beam-file-progress';
+
     /**
-     * @var array
-     */
-    protected $methods = array();
-    /**
-     * @var array
-     */
-    protected $properties = array();
-    /**
-     * @var
-     */
-    protected $cols;
-    /**
-     * @var
-     */
-    protected $first;
-    /**
+     * Description of the content
      * @var string
      */
-    protected $prefix = '';
+    protected $prefix = 'File: ';
+
     /**
-     * @var bool
+     * Current terminal width in columns
+     * @var int
      */
-    protected $isActive = false;
+    protected $cols;
+
     /**
-     *
+     * @var OutputInterface
      */
-    public function __construct()
+    protected $output;
+
+    /**
+     * @inheritdoc
+     */
+    public function __construct(OutputInterface $output, $max = null)
     {
+        parent::__construct($output, $max);
+
+        // ProgressBar hides all of its member variables so we need to capture this
+        $this->output = $output;
+
+        // Find terminal width
         $this->cols = exec('tput cols');
-        $this->setFormat("\033[34m[%bar%]\033[0m %current%/%max% files");
-    }
 
-    /**
-     * @param $name
-     * @return mixed
-     */
-    protected function getReflectionMethod($name)
-    {
-        if (!isset($this->methods[$name])) {
-            $this->methods[$name] = new \ReflectionMethod('Symfony\Component\Console\Helper\ProgressHelper', $name);
-            $this->methods[$name]->setAccessible(true);
-        }
+        // Blank content initially (this prevents '%content%' being printed literally)
+        $this->setMessage(' ', 'content');
 
-        return $this->methods[$name];
-    }
-
-    /**
-     * @param $name
-     * @return mixed
-     */
-    protected function getReflectionProperty($name)
-    {
-        if (!isset($this->properties[$name])) {
-            $this->properties[$name] = new \ReflectionProperty('Symfony\Component\Console\Helper\ProgressHelper', $name);
-            $this->properties[$name]->setAccessible(true);
-        }
-
-        return $this->properties[$name];
-    }
-
-    /**
-     * @param OutputInterface $output
-     * @param null            $max
-     * @param string          $prefix
-     */
-    public function start(OutputInterface $output, $max = null, $prefix = '')
-    {
-        $this->prefix = $prefix;
-        $output->write(str_repeat("\x20", $this->cols * 2)); //next line and end line
-
-        if (!$this->isActive) {
-            parent::start($output, $max);
-            $this->isActive = true;
-        }
-    }
-
-    public function finish()
-    {
-        if ($this->isActive) {
-            $this->isActive = false;
-            parent::finish();
-        }
-    }
-
-    /**
-     * @param int    $step
-     * @param bool   $redraw
-     * @param string $content
-     */
-    public function advance($step = 1, $redraw = false, $content = '')
-    {
-        $this->setContent($content);
-        parent::advance($step, $redraw);
-    }
-
-    /**
-     * @param string $content
-     */
-    public function setContent($content = '')
-    {
-        $space = $this->cols - strlen($this->prefix);
-        $contentlen = strlen($content);
-        if ($contentlen > $space) {
-            $this->content = $this->prefix . '...' . substr($content, -1 * ($space - 3));
-        } else {
-            $this->content = $this->prefix . str_pad($content, $space, ' ', STR_PAD_LEFT);
-        }
-    }
-
-    /**
-     * @param  bool            $finish
-     * @throws \LogicException
-     */
-    public function display($finish = false)
-    {
-        if (null === $this->getReflectionProperty('startTime')->getValue($this)) {
-            throw new \LogicException('You must start the progress bar before calling display().');
-        }
-
-        $message = $this->getReflectionProperty('format')->getValue($this);
-        foreach ($this->getReflectionMethod('generate')->invoke($this, $finish) as $name => $value) {
-            $message = str_replace("%{$name}%", $value, $message);
-        }
-        $this->overwrite($this->getReflectionProperty('output')->getValue($this), $message);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    private function overwrite(OutputInterface $output, $messages)
-    {
-        $output->write(
-            "\033[?25l\033[A\x0D" .
-            $this->content .
-            "\n\033[K" .
-            $messages .
-            "\033[?12l\033[?25h"
+        // Custom output format
+        ProgressBar::setFormatDefinition(
+            self::FORMAT_DEFINITION,
+            "%content%\n" . "\033[34m[%bar%]\033[0m %current%/%max% files\n"
         );
+
+        $this->setFormat(self::FORMAT_DEFINITION);
     }
 
     /**
-     * @param $max
+     * Set the content to display in the progress bar (eg. current filename)
+     *
+     * @param string $content
+     */
+    public function setContent($content)
+    {
+        $availableCols = $this->cols - strlen($this->prefix);
+
+        if (strlen($content) > $availableCols) {
+            $paddedContent = $this->prefix . '...' . substr($content, -1 * ($availableCols - 3));
+        } else {
+            $paddedContent = $this->prefix . str_pad($content, $availableCols, ' ', STR_PAD_LEFT);
+        }
+
+        $this->setMessage($paddedContent, 'content');
+    }
+
+    /**
+     * Set the progress bar to an appropriate size for the current terminal
+     *
+     * This accounts for the length of the largest number that will be displayed, plus the length of
+     * other whitespace and text in the progress output (eg. " 1000/1000 files")
+     *
+     * @param int $max
      */
     public function setAutoWidth($max)
     {
-        $this->setBarWidth($this->cols - (strlen($max) * 2 + 18));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getName()
-    {
-        return 'contentprogress';
+        $maxValueText = (string) $max;
+        $this->setBarWidth($this->cols - (strlen($maxValueText) * 2 + 18));
     }
 }

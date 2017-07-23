@@ -11,6 +11,7 @@ use Heyday\Beam\Exception\RuntimeException;
 use Heyday\Beam\VcsProvider\Git;
 use Heyday\Beam\VcsProvider\GitLikeVcsProvider;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -251,9 +252,9 @@ class Beam
             $this->writeLog();
         }
     }
-    public function configureDeploymentProvider(OutputInterface $output)
+    public function configureDeploymentProvider(InputInterface $input, OutputInterface $output)
     {
-        $this->options['deploymentprovider']->configure($output);
+        $this->options['deploymentprovider']->configure($input, $output);
     }
     /**
      * Gets the from location for rsync
@@ -750,11 +751,11 @@ class Beam
 
     /**
      * This returns an options resolver that will ensure required options are set and that all options set are valid
+     *
      * @return OptionsResolver
      */
     protected function getOptionsResolver()
     {
-        $that = $this;
         $resolver = new OptionsResolver();
         $resolver->setRequired(
             array(
@@ -763,7 +764,7 @@ class Beam
                 'srcdir',
                 'deploymentprovider'
             )
-        )->setOptional(
+            )->setDefined(
                 array(
                     'ref',
                     'path',
@@ -812,70 +813,86 @@ class Beam
                     'vcsprovider'        => __NAMESPACE__ . '\VcsProvider\VcsProvider',
                     'deploymentprovider' => __NAMESPACE__ . '\DeploymentProvider\DeploymentProvider',
                 )
-            )->setNormalizers(
-                array(
-                    'ref'                        => function (Options $options, $value) {
-                        return trim($value);
-                    },
-                    'path'                       => function (Options $options, $value) {
-                        return is_array($value) ? array_map(function($value){
-                            return trim($value, '/');
-                        }, $value) : false;
-                    },
-                    'deploymentprovider'         => function (Options $options, $value) use ($that) {
-                        if (is_callable($value)) {
-                            $value = $value($options);
-                        }
-                        $value->setBeam($that);
-
-                        return $value;
-                    },
-                    'deploymentoutputhandler'    => function (Options $options, $value) {
-                        if ($value !== null && !is_callable($value)) {
-                            throw new InvalidArgumentException('Deployment output handler must be null or callable');
-                        }
-
-                        return $value;
-                    },
-                    'outputhandler'              => function (Options $options, $value) {
-                        if ($value !== null && !is_callable($value)) {
-                            throw new InvalidArgumentException('Output handler must be null or callable');
-                        }
-
-                        return $value;
-                    },
-                    'localcommandoutputhandler'  => function (Options $options, $value) {
-                        if ($value !== null && !is_callable($value)) {
-                            throw new InvalidArgumentException('Local command output handler must be null or callable');
-                        }
-
-                        return $value;
-                    },
-                    'targetcommandoutputhandler' => function (Options $options, $value) {
-                        if ($value !== null && !is_callable($value)) {
-                            throw new InvalidArgumentException('Target command output handler must be null or callable');
-                        }
-
-                        return $value;
-                    },
-                    'commandprompthandler'       => function (Options $options, $value) {
-                        if ($value !== null && !is_callable($value)) {
-                            throw new InvalidArgumentException('Command prompt handler must be null or callable');
-                        }
-
-                        return $value;
-                    },
-                    'commandfailurehandler'      => function (Options $options, $value) {
-                        if ($value !== null && !is_callable($value)) {
-                            throw new InvalidArgumentException('Command failure handler must be null or callable');
-                        }
-
-                        return $value;
-                    }
-                )
             );
 
+        // Configure option normalizers
+        // This was previously done with a fluid interface, but Symfony Console 3.x removes support for that
+        foreach ($this->getOptionNormalizers() as $optionName => $normalizer) {
+            $resolver->setNormalizer($optionName, $normalizer);
+        }
+
         return $resolver;
+    }
+
+    /**
+     * Return a map of option names to normalization functions
+     *
+     * @return Callable[]
+     */
+    protected function getOptionNormalizers()
+    {
+        $that = $this;
+
+        return array(
+            'ref'                        => function (Options $options, $value) {
+                return trim($value);
+            },
+            'path'                       => function (Options $options, $value) {
+                return is_array($value) ? array_map(function($value){
+                    return trim($value, '/');
+                }, $value) : false;
+            },
+            'deploymentprovider'         => function (Options $options, $value) use ($that) {
+                if (is_callable($value)) {
+                    $value = $value($options);
+                }
+                $value->setBeam($that);
+
+                return $value;
+            },
+            'deploymentoutputhandler'    => function (Options $options, $value) {
+                if ($value !== null && !is_callable($value)) {
+                    throw new InvalidArgumentException('Deployment output handler must be null or callable');
+                }
+
+                return $value;
+            },
+            'outputhandler'              => function (Options $options, $value) {
+                if ($value !== null && !is_callable($value)) {
+                    throw new InvalidArgumentException('Output handler must be null or callable');
+                }
+
+                return $value;
+            },
+            'localcommandoutputhandler'  => function (Options $options, $value) {
+                if ($value !== null && !is_callable($value)) {
+                    throw new InvalidArgumentException('Local command output handler must be null or callable');
+                }
+
+                return $value;
+            },
+            'targetcommandoutputhandler' => function (Options $options, $value) {
+                if ($value !== null && !is_callable($value)) {
+                    throw new InvalidArgumentException('Target command output handler must be null or callable');
+                }
+
+                return $value;
+            },
+            'commandprompthandler'       => function (Options $options, $value) {
+                if ($value !== null && !is_callable($value)) {
+                    throw new InvalidArgumentException('Command prompt handler must be null or callable');
+                }
+
+                return $value;
+            },
+            'commandfailurehandler'      => function (Options $options, $value) {
+                if ($value !== null && !is_callable($value)) {
+                    throw new InvalidArgumentException('Command failure handler must be null or callable');
+                }
+
+                return $value;
+            }
+        );
     }
 
     /**
@@ -896,6 +913,7 @@ class Beam
 
         return false;
     }
+
     /**
      *
      */

@@ -3,6 +3,7 @@
 namespace Heyday\Beam\DeploymentProvider;
 
 use Heyday\Beam\Beam;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -46,10 +47,11 @@ interface DeploymentProvider
      * @return array
      */
     public function getLimitations();
+
     /**
      * Allow post-init configuration of the deployment provider
+     * @param InputInterface $input
      * @param OutputInterface $output
-     * @return mixed
      */
-    public function configure(OutputInterface $output);
+    public function configure(InputInterface $input, OutputInterface $output);
 }

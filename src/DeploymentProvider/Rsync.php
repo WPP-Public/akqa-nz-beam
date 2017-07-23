@@ -2,13 +2,13 @@
 
 namespace Heyday\Beam\DeploymentProvider;
 
-use Heyday\Beam\DeploymentProvider\DeploymentResult;
-use Heyday\Beam\Exception\Exception;
 use Heyday\Beam\Exception\RuntimeException;
 use Heyday\Beam\Utils;
-use Symfony\Component\Console\Helper\DialogHelper;
 use Symfony\Component\Console\Helper\FormatterHelper;
+use Symfony\Component\Console\Helper\QuestionHelper;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\Question;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Process\Process;
 
@@ -34,7 +34,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     public function __construct(array $options)
     {
         $resolver = new OptionsResolver();
-        $resolver->setOptional(
+        $resolver->setDefined(
             array(
                 'checksum',
                 'delete',
@@ -69,23 +69,30 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     /**
      * @inheritdoc
      */
-    public function configure(OutputInterface $output)
+    public function configure(InputInterface $input, OutputInterface $output)
     {
         // Prompt for password if server config specifies to use sshpass
         if ($this->isUsingSshPass()) {
             $formatterHelper = new FormatterHelper();
-            $dialogHelper = new DialogHelper();
+            $questionHelper = new QuestionHelper();
             $serverName = $this->beam->getOption('target');
 
             if (!Utils::command_exists('sshpass')) {
                 throw new RuntimeException("$serverName is configured to use sshpass but the sshpass program wasn't found on your path.");
             }
 
-            $password = $dialogHelper->askHiddenResponse($output, $formatterHelper->formatSection(
-                'Prompt',
-                Utils::getQuestion("Enter password for $serverName:"),
-                'comment'
-            ), false);
+            $question = new Question(
+                $formatterHelper->formatSection(
+                    'Prompt',
+                    Utils::getQuestion("Enter password for $serverName:"),
+                    'comment'
+                ),
+                false
+            );
+
+            $question->setHidden(true);
+
+            $password = $questionHelper->ask($input, $output, $question);
 
             // Set the password variable for sshpass and the remote shell variable for rsync so sshpass is used
             putenv("SSHPASS={$password}");
