@@ -166,7 +166,9 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
      */
     protected function buildCommand($fromPath, $toPath, $dryrun = false)
     {
-        $flags = 'rlpD'; // recursion, links, perms, devices, specials
+        $server = $this->beam->getServer();
+
+        $flags = 'rlD'; // recursion, links, devices, specials
 
         $command = array(
             array(
@@ -177,6 +179,11 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             '-' . $flags,
             '--itemize-changes'
         );
+
+        // Sync permissions if enabled for the target
+        if ($server['syncPermissions']) {
+            $command[] = '--perms';
+        }
         
         if ($this->options['args'] !== '') {
             $command[] = $this->options['args'];

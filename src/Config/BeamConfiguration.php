@@ -324,6 +324,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
                         ->scalarNode('ssl')->defaultFalse()->end();
                 }
                 break;
+
             case 'rsync':
                 $node->scalarNode('webroot')
                     ->isRequired()
@@ -335,6 +336,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
                         )->end()
                         ->end()
                     ->scalarNode('user')->end()
+                    ->scalarNode('syncPermissions')->defaultTrue()->end()
                     ->scalarNode('sshpass')->defaultFalse()->end();
                 break;
         }
