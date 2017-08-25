@@ -621,10 +621,20 @@ OUTPUT
                 $this->returnValue(false)
             );
 
+        $server = array(
+            'syncPermissions' => false
+        );
+
+        $beamMock->method('getServer')->will(
+            $this->returnCallback(function() use (&$server) {
+                return $server;
+            })
+        );
+
         $rsync->setBeam($beamMock);
 
         $this->assertEquals(
-            'rsync /testfrom/ /testto -rlpD --itemize-changes --checksum --compress --delay-updates --exclude-from="/test"',
+            'rsync /testfrom/ /testto -rlD --itemize-changes --checksum --compress --delay-updates --exclude-from="/test"',
             $this->getAccessibleMethod('buildCommand')->invoke(
                 $rsync,
                 '/testfrom',
@@ -632,8 +642,10 @@ OUTPUT
             )
         );
 
+        $server['syncPermissions'] = true;
+
         $this->assertEquals(
-            'rsync /testfrom/ /testto -rlpD --itemize-changes --dry-run --checksum --compress --delay-updates --exclude-from="/test"',
+            'rsync /testfrom/ /testto -rlD --itemize-changes --perms --dry-run --checksum --compress --delay-updates --exclude-from="/test"',
             $this->getAccessibleMethod('buildCommand')->invoke(
                 $rsync,
                 '/testfrom',
@@ -641,6 +653,8 @@ OUTPUT
                 true
             )
         );
+
+        $server['syncPermissions'] = false;
 
         // Pretend to be an old version of rsync to output pre-3.0.1 compatible options
         $rsync = $this->getRsyncMock(
@@ -662,7 +676,7 @@ OUTPUT
         $rsync->method('getRsyncVersion')->willReturn('2.6.0');
 
         $this->assertEquals(
-            'rsync /testfrom/ /testto -rlpD --itemize-changes --checksum --delete --compress --delay-updates --delete-after --exclude-from="/test"',
+            'rsync /testfrom/ /testto -rlD --itemize-changes --checksum --delete --compress --delay-updates --delete-after --exclude-from="/test"',
             $this->getAccessibleMethod('buildCommand')->invoke(
                 $rsync,
                 '/testfrom',
@@ -686,7 +700,7 @@ OUTPUT
         $rsync->setBeam($beamMock);
 
         $this->assertEquals(
-            'rsync /testfrom/ /testto -rlpD --itemize-changes --checksum --delete --compress --delay-updates --delete-delay --exclude-from="/test"',
+            'rsync /testfrom/ /testto -rlD --itemize-changes --checksum --delete --compress --delay-updates --delete-delay --exclude-from="/test"',
             $this->getAccessibleMethod('buildCommand')->invoke(
                 $rsync,
                 '/testfrom',
