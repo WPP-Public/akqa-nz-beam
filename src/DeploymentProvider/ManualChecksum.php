@@ -15,7 +15,7 @@ use Symfony\Component\Console\Question\Question;
  * Class ManualChecksum
  * @package Heyday\Beam\DeploymentProvider
  */
-abstract class ManualChecksum extends Deployment
+abstract class ManualChecksum extends Deployment implements DeploymentProvider
 {
     /**
      * @var bool
@@ -83,9 +83,9 @@ abstract class ManualChecksum extends Deployment
             if ($this->fullmode) {
                 foreach ($localchecksums as $targetpath => $checksum) {
                     $path = $dir . '/' . $targetpath;
- 
+
                     if ($this->force) {
-                        // skip checking the remote server completely and rely 
+                        // skip checking the remote server completely and rely
                         // on sending the file
                         $result[] = array(
                             'update'        => 'sent',

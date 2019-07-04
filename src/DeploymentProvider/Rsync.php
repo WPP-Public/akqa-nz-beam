@@ -3,6 +3,7 @@
 namespace Heyday\Beam\DeploymentProvider;
 
 use Closure;
+use Heyday\Beam\Config\DeploymentResultConfiguration;
 use Heyday\Beam\Exception\RuntimeException;
 use Heyday\Beam\Utils;
 use Symfony\Component\Console\Helper\FormatterHelper;
@@ -105,13 +106,17 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     /**
      * Beam up will beam to all target hosts
      *
-     * @{inheritDoc}
+     * @param Closure          $output
+     * @param bool             $dryrun
+     * @param DeploymentResult $deploymentResult
+     * @return DeploymentResult
+     * @throws RuntimeException
      */
     public function up(Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
     {
-        $result = null;
+        /** @var DeploymentResult $mergedResult */
+        $mergedResult = null;
         foreach ($this->getTargetPaths() as $targetPath) {
-            // @todo - Deal with multiple $results instead of just the last one
             $result = $this->deploy(
                 $this->buildCommand(
                     $this->beam->getLocalPath(),
@@ -120,14 +125,26 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
                 ),
                 $output
             );
+
+            // Merge all results
+            if (!$mergedResult) {
+                $mergedResult = $result;
+            } else {
+                $mergedResult = $this->combineResults($mergedResult, $result);
+            }
+
         }
-        return $result;
+        return $mergedResult;
     }
 
     /**
      * Beam down only beams down from the master host
      *
-     * @{inheritDoc}
+     * @param Closure          $output
+     * @param bool             $dryrun
+     * @param DeploymentResult $deploymentResult
+     * @return DeploymentResult
+     * @throws RuntimeException
      */
     public function down(Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
     {
@@ -142,8 +159,8 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     }
 
     /**
-     * @param                    $command
-     * @param  callable          $output
+     * @param string  $command
+     * @param Closure $output
      * @return DeploymentResult
      * @throws RuntimeException
      */
@@ -647,5 +664,56 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
         }
 
         return $hostPath;
+    }
+
+    /**
+     * @param DeploymentResult $left
+     * @param DeploymentResult $right
+     * @return DeploymentResult
+     */
+    protected function combineResults($left, $right)
+    {
+        $result = [];
+        // Map left result by filename
+        foreach ($left as $leftItem) {
+            $result[$leftItem['filename']] = $leftItem;
+        }
+        // Merge in right item
+        foreach ($right as $rightItem) {
+            $filename = $rightItem['filename'];
+            if (isset($result[$filename])) {
+                $result[$filename] = $this->combineResultRows(
+                    $result[$filename],
+                    $filename,
+                    $right->getConfiguration()
+                );
+            } else {
+                $result[$filename] = $rightItem;
+            }
+        }
+        return new DeploymentResult(array_values($result));
+    }
+
+    /**
+     * If multiple servers have different update type, pick the best one to display in the output log
+     *
+     * @param array                         $left
+     * @param array                         $right
+     * @param DeploymentResultConfiguration $config
+     * @return array
+     */
+    protected function combineResultRows($left, $right, $config)
+    {
+        // Get first item matching update type
+        foreach ($config->getUpdates() as $update) {
+            if ($left['update'] === $update) {
+                return $left;
+            }
+            if ($right['update'] === $update) {
+                return $right;
+            }
+        }
+
+        return $left;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Heyday\Beam\DeploymentProvider;
 
+use Closure;
 use Heyday\Beam\Beam;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -15,24 +16,27 @@ interface DeploymentProvider
     const LIMITATION_REMOTECOMMAND = 'remote-command';
 
     /**
-     * @param  Beam  $beam
+     * @param  Beam $beam
      * @return mixed
      */
     public function setBeam(Beam $beam);
+
     /**
-     * @param  callable        $output
+     * @param  Closure         $output
+     * @param  bool            $dryrun
+     * @param DeploymentResult $deploymentResult
+     * @return DeploymentResult
+     */
+    public function up(Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null);
+
+    /**
+     * @param  Closure         $output
      * @param  bool            $dryrun
      * @param DeploymentResult $deploymentResult
      * @return mixed
      */
-    public function up(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null);
-    /**
-     * @param  callable $output
-     * @param  bool     $dryrun
-     * @param DeploymentResult $deploymentResult
-     * @return mixed
-     */
-    public function down(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null);
+    public function down(Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null);
+
     /**
      * @return mixed
      */
@@ -50,6 +54,7 @@ interface DeploymentProvider
      * @return string
      */
     public function getTargetAsText();
+
     /**
      * Return any limitations of the provider
      * @return array
@@ -58,7 +63,7 @@ interface DeploymentProvider
 
     /**
      * Allow post-init configuration of the deployment provider
-     * @param InputInterface $input
+     * @param InputInterface  $input
      * @param OutputInterface $output
      */
     public function configure(InputInterface $input, OutputInterface $output);

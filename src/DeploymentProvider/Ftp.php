@@ -10,7 +10,7 @@ use Heyday\Beam\Exception\RuntimeException;
  *
  * @todo Update to support multiple `hosts' key
  */
-class Ftp extends ManualChecksum implements DeploymentProvider
+class Ftp extends ManualChecksum
 {
     /**
      * @var
