@@ -9,6 +9,41 @@ class BeamTest extends \PHPUnit_Framework_TestCase
     protected $validConfig;
     protected $validOptions;
 
+    /**
+     * Shiv for deprecated getMock()
+     *
+     * @param string $originalClassName
+     * @param array  $methods
+     * @param array  $arguments
+     * @param string $mockClassName
+     * @param bool   $callOriginalConstructor
+     * @param bool   $callOriginalClone
+     * @param bool   $callAutoload
+     * @param bool   $cloneArguments
+     * @param bool   $callOriginalMethods
+     * @param null   $proxyTarget
+     * @return \PHPUnit_Framework_MockObject_MockObject
+     */
+    protected function getMock($originalClassName, $methods = [], array $arguments = [], $mockClassName = '', $callOriginalConstructor = true, $callOriginalClone = true, $callAutoload = true, $cloneArguments = false, $callOriginalMethods = false, $proxyTarget = null)
+    {
+        $mockObject = $this->getMockObjectGenerator()->getMock(
+            $originalClassName,
+            $methods,
+            $arguments,
+            $mockClassName,
+            $callOriginalConstructor,
+            $callOriginalClone,
+            $callAutoload,
+            $cloneArguments,
+            $callOriginalMethods,
+            $proxyTarget
+        );
+
+        $this->registerMockObject($mockObject);
+
+        return $mockObject;
+    }
+
     public function setUp()
     {
         vfsStream::setup(
@@ -22,8 +57,8 @@ class BeamTest extends \PHPUnit_Framework_TestCase
         $this->validConfig = array(
             'servers' => array(
                 'live' => array(
-                    'user' => 'testuser',
-                    'host' => 'testhost',
+                    'user'    => 'testuser',
+                    'host'    => 'testhost',
                     'webroot' => '/test/webroot'
                 )
             ),
@@ -31,17 +66,18 @@ class BeamTest extends \PHPUnit_Framework_TestCase
         );
 
         $this->validOptions = array(
-            'direction' => 'up',
-            'target' => 'live',
-            'srcdir' => vfsStream::url('root/test'),
-            'vcsprovider' => $this->getVcsProviderStub(),
+            'direction'          => 'up',
+            'target'             => 'live',
+            'srcdir'             => vfsStream::url('root/test'),
+            'vcsprovider'        => $this->getVcsProviderStub(),
             'deploymentprovider' => $this->getDeploymentProviderStub()
         );
     }
+
     /**
-     * @param  bool                                     $exists
-     * @param  array                                    $available
-     * @param  string                                   $current
+     * @param  bool   $exists
+     * @param  array  $available
+     * @param  string $current
      * @return \PHPUnit_Framework_MockObject_MockObject
      */
     protected function getVcsProviderStub($exists = true, $available = array('master'), $current = 'master')
@@ -77,18 +113,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             $options
         );
     }
-    /**
-     * @expectedExceptionMessage The child node "servers" at path "beam" must be configured.
-     * @expectedException \Symfony\Component\Config\Definition\Exception\InvalidConfigurationException
-     */
-    public function testBeamConstructConfigException()
-    {
-        $this->markTestSkipped('Config is no longer validated in Beam::__constructor');
-        new Beam(
-            array(),
-            array()
-        );
-    }
+
     /**
      * @expectedException \Symfony\Component\OptionsResolver\Exception\MissingOptionsException
      */
@@ -99,6 +124,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             array()
         );
     }
+
     /**
      * @expectedExceptionMessage The option "direction" with value "fake" is invalid. Accepted values are: "up", "down".
      * @expectedException \Symfony\Component\OptionsResolver\Exception\InvalidOptionsException
@@ -114,6 +140,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             )
         );
     }
+
     /**
      * @expectedExceptionMessage The option "target" with value "fake" is invalid. Accepted values are: "live".
      * @expectedException \Symfony\Component\OptionsResolver\Exception\InvalidOptionsException
@@ -129,6 +156,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             )
         );
     }
+
     /**
      * @expectedExceptionMessage Specified ref "test" doesn't match the locked branch "master"
      * @expectedException \Heyday\Beam\Exception\InvalidArgumentException
@@ -139,10 +167,10 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             array(
                 'servers' => array(
                     'live' => array(
-                        'user' => 'testuser',
-                        'host' => 'testhost',
+                        'user'    => 'testuser',
+                        'host'    => 'testhost',
                         'webroot' => '/test/webroot',
-                        'branch' => 'master'
+                        'branch'  => 'master'
                     )
                 ),
                 'exclude' => array()
@@ -154,6 +182,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             )
         );
     }
+
     /**
      * @expectedExceptionMessage Working copy can't be used with a locked remote branch
      * @expectedException \Heyday\Beam\Exception\InvalidArgumentException
@@ -175,10 +204,10 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             array(
                 'servers' => array(
                     'live' => array(
-                        'user' => 'testuser',
-                        'host' => 'testhost',
+                        'user'    => 'testuser',
+                        'host'    => 'testhost',
                         'webroot' => '/test/webroot',
-                        'branch' => 'remotes/origin/master'
+                        'branch'  => 'remotes/origin/master'
                     )
                 ),
                 'exclude' => array()
@@ -186,11 +215,12 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             $this->getCombinedOptions(
                 array(
                     'working-copy' => true,
-                    'vcsprovider' => $vcsProvider
+                    'vcsprovider'  => $vcsProvider
                 )
             )
         );
     }
+
     /**
      * @expectedExceptionMessage You can't use beam without a vcs.
      * @expectedException \Heyday\Beam\Exception\InvalidArgumentException
@@ -206,6 +236,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             )
         );
     }
+
     /**
      * @expectedExceptionMessage The local path "vfs://root" is not writable
      * @expectedException \Heyday\Beam\Exception\InvalidArgumentException
@@ -266,7 +297,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             $this->getCombinedOptions(
                 array(
                     'working-copy' => true,
-                    'path' => 'test/'
+                    'path'         => 'test/'
                 )
             )
         );
@@ -314,10 +345,10 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             array(
                 'servers' => array(
                     'live' => array(
-                        'user' => 'testuser',
-                        'host' => 'testhost',
+                        'user'    => 'testuser',
+                        'host'    => 'testhost',
                         'webroot' => '/test/webroot',
-                        'branch' => 'master'
+                        'branch'  => 'master'
                     )
                 ),
                 'exclude' => array()
@@ -326,6 +357,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
         );
         $this->assertTrue($beam->isServerLocked());
     }
+
     public function testIsServerLockedRemote()
     {
         $vcsProvider = $this->getVcsProviderStub(
@@ -343,10 +375,10 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             array(
                 'servers' => array(
                     'live' => array(
-                        'user' => 'testuser',
-                        'host' => 'testhost',
+                        'user'    => 'testuser',
+                        'host'    => 'testhost',
                         'webroot' => '/test/webroot',
-                        'branch' => 'remotes/origin/master'
+                        'branch'  => 'remotes/origin/master'
                     )
                 ),
                 'exclude' => array()
@@ -359,6 +391,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
         );
         $this->assertTrue($beam->isTargetLockedRemote());
     }
+
     public function testIsBranchRemote()
     {
         $vcsProvider = $this->getVcsProviderStub(true, array('remotes/origin/master'));
@@ -370,8 +403,8 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             array(
                 'servers' => array(
                     'live' => array(
-                        'user' => 'testuser',
-                        'host' => 'testhost',
+                        'user'    => 'testuser',
+                        'host'    => 'testhost',
                         'webroot' => '/test/webroot'
                     )
                 ),
@@ -379,13 +412,14 @@ class BeamTest extends \PHPUnit_Framework_TestCase
             ),
             $this->getCombinedOptions(
                 array(
-                    'ref' => 'remotes/origin/master',
+                    'ref'         => 'remotes/origin/master',
                     'vcsprovider' => $vcsProvider
                 )
             )
         );
         $this->assertTrue($beam->isBranchRemote());
     }
+
     public function testHasPath()
     {
         $beam = new Beam(
@@ -406,6 +440,7 @@ class BeamTest extends \PHPUnit_Framework_TestCase
         );
         $this->assertTrue($beam->hasPath());
     }
+
     public function testMatchTag()
     {
         $beam = new Beam(
@@ -418,30 +453,30 @@ class BeamTest extends \PHPUnit_Framework_TestCase
         $matchTag->setAccessible(true);
 
         $tests = array(
-            'kitten' => array(
-                'kitten' => true,
-                'kitties' => false,
+            'kitten'  => array(
+                'kitten'         => true,
+                'kitties'        => false,
                 'kittens-deploy' => false,
-                'puppies' => false
+                'puppies'        => false
             ),
             'kitten*' => array(
-                'kitten' => true,
-                'kitties' => false,
+                'kitten'         => true,
+                'kitties'        => false,
                 'kittens-deploy' => true,
-                'puppies' => false
+                'puppies'        => false
             ),
-            'kit*' => array(
-                'kitten' => true,
-                'kitties' => true,
+            'kit*'    => array(
+                'kitten'         => true,
+                'kitties'        => true,
                 'kittens-deploy' => true,
-                'puppies' => false
+                'puppies'        => false
             ),
             '*deploy' => array(
-                'kitten' => false,
-                'kitties' => false,
-                'kittens-deploy' => true,
+                'kitten'               => false,
+                'kitties'              => false,
+                'kittens-deploy'       => true,
                 'deploy-velociraptors' => false,
-                'puppies-deploy' => true
+                'puppies-deploy'       => true
             )
         );
 

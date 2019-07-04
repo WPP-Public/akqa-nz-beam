@@ -8,6 +8,41 @@ class GitTest extends \PHPUnit_Framework_TestCase
 {
     protected $gitMock;
 
+    /**
+     * Shiv for deprecated getMock()
+     *
+     * @param string $originalClassName
+     * @param array  $methods
+     * @param array  $arguments
+     * @param string $mockClassName
+     * @param bool   $callOriginalConstructor
+     * @param bool   $callOriginalClone
+     * @param bool   $callAutoload
+     * @param bool   $cloneArguments
+     * @param bool   $callOriginalMethods
+     * @param null   $proxyTarget
+     * @return \PHPUnit_Framework_MockObject_MockObject
+     */
+    protected function getMock($originalClassName, $methods = [], array $arguments = [], $mockClassName = '', $callOriginalConstructor = true, $callOriginalClone = true, $callAutoload = true, $cloneArguments = false, $callOriginalMethods = false, $proxyTarget = null)
+    {
+        $mockObject = $this->getMockObjectGenerator()->getMock(
+            $originalClassName,
+            $methods,
+            $arguments,
+            $mockClassName,
+            $callOriginalConstructor,
+            $callOriginalClone,
+            $callAutoload,
+            $cloneArguments,
+            $callOriginalMethods,
+            $proxyTarget
+        );
+
+        $this->registerMockObject($mockObject);
+
+        return $mockObject;
+    }
+
     protected function setUp()
     {
         $this->gitMock = $this->getMock(
@@ -21,6 +56,7 @@ class GitTest extends \PHPUnit_Framework_TestCase
             false
         );
     }
+
     public function testGetCurrentBranch()
     {
         $processMock = $this->getMock(
@@ -33,10 +69,10 @@ class GitTest extends \PHPUnit_Framework_TestCase
         $processMock->expects($this->once())
             ->method('getOutput')
             ->will($this->returnValue(
-                    <<<OUTPUT
+                <<<OUTPUT
    master
 OUTPUT
-        ));
+            ));
 
         $this->gitMock->expects($this->once())
             ->method('process')
@@ -59,20 +95,20 @@ OUTPUT
         $processMock->expects($this->once())
             ->method('getOutput')
             ->will($this->returnValue(
-<<<OUTPUT
+                <<<OUTPUT
 * test
   master
   remotes/origin/HEAD -> origin/master
   remotes/origin/test
   remotes/origin/master
 OUTPUT
-                ));
+            ));
 
         $this->gitMock->expects($this->once())
             ->method('process')
             ->will(
                 $this->returnValue($processMock)
-        );
+            );
 
         $this->assertEquals(
             array(
@@ -126,6 +162,7 @@ OUTPUT
         $this->assertFalse(file_exists(vfsStream::url('root/.git')));
         $this->assertTrue(file_exists(vfsStream::url('root')));
     }
+
     /**
      * @expectedException \Heyday\Beam\Exception\InvalidConfigurationException
      * @expectedExceptionMessage The git vcs provider can only update remotes
@@ -156,7 +193,7 @@ OUTPUT
         $processMock->expects($this->once())
             ->method('getOutput')
             ->will($this->returnValue(
-                    <<<OUTPUT
+                <<<OUTPUT
 commit 4627bea545766a6a50abffa0512aa0c0a7c85158
 Merge: 1d25c4e 0c85469
 Author: Author <email@test.com>
@@ -164,7 +201,7 @@ Date:   Sun Apr 21 18:11:28 2013 -0700
 
     Test date
 OUTPUT
-                ));
+            ));
 
         $this->gitMock->expects($this->once())
             ->method('process')

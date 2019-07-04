@@ -311,6 +311,14 @@ class Beam
     }
 
     /**
+     * @return array
+     */
+    public function getTargetPaths()
+    {
+        return $this->getDeploymentProvider()->getTargetPaths();
+    }
+
+    /**
      * @param boolean $prepared
      */
     public function setPrepared($prepared)

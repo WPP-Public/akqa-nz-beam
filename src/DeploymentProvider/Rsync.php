@@ -533,7 +533,8 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     public function getTargetPath()
     {
         $server = $this->beam->getServer();
-        $host = $this->beam->getPrimaryHost();
+        $host = $this->beam->getPrimaryHost($server);
+
         return $this->buildPath($host, $server);
     }
 
