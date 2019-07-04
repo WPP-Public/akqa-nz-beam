@@ -684,7 +684,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             if (isset($result[$filename])) {
                 $result[$filename] = $this->combineResultRows(
                     $result[$filename],
-                    $filename,
+                    $rightItem,
                     $right->getConfiguration()
                 );
             } else {
