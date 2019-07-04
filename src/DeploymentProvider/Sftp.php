@@ -2,7 +2,6 @@
 
 namespace Heyday\Beam\DeploymentProvider;
 
-use Heyday\Beam\DeploymentProvider\DeploymentProvider;
 use Heyday\Beam\Exception\RuntimeException;
 use Heyday\Beam\Utils;
 use Ssh\Authentication\Password;
@@ -13,6 +12,8 @@ use Ssh\SshConfigFileConfiguration;
 /**
  * Class Sftp
  * @package Heyday\Beam\DeploymentProvider
+ *
+ * @todo    Update to support multiple `hosts' key
  */
 class Sftp extends ManualChecksum implements DeploymentProvider
 {
@@ -24,6 +25,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
      * @var
      */
     protected $targetPath;
+
     /**
      * @return \Ssh\Sftp
      * @throws RuntimeException
@@ -66,6 +68,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
 
         return $this->sftp;
     }
+
     /**
      * @{inheritDoc}
      */
@@ -76,6 +79,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
             $content
         );
     }
+
     /**
      * @{inheritDoc}
      */
@@ -86,6 +90,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
             $this->getTargetFilePath($targetpath)
         );
     }
+
     /**
      * @{inheritDoc}
      */
@@ -95,6 +100,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
             $this->getTargetFilePath($path)
         );
     }
+
     /**
      * @{inheritDoc}
      */
@@ -104,6 +110,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
             $this->getTargetFilePath($path)
         );
     }
+
     /**
      * @{inheritDoc}
      */
@@ -115,6 +122,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
             true
         );
     }
+
     /**
      * @{inheritDoc}
      */
@@ -126,6 +134,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
 
         return $stat['size'];
     }
+
     /**
      * @param $path
      * @return mixed
@@ -136,6 +145,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
             $this->getTargetFilePath($path)
         );
     }
+
     /**
      * @param $path
      * @return mixed|string
@@ -144,6 +154,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
     {
         return $this->getTargetPath() . '/' . $path;
     }
+
     /**
      * @return mixed
      */
@@ -156,6 +167,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
 
         return $this->targetPath;
     }
+
     /**
      * Return a string representation of the target
      * @return string
@@ -164,6 +176,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
     {
         return $this->getConfig('user') . '@' . $this->getConfig('host') . ':' . $this->getTargetPath();
     }
+
     /**
      * @throws \Heyday\Beam\Exception\InvalidEnvironmentException
      * @return array
@@ -174,9 +187,20 @@ class Sftp extends ManualChecksum implements DeploymentProvider
             'ssh2',
             "The PHP '%s' extension is required to use SFTP deployment, but it is not loaded. (You may need to install it)."
         );
-        
+
         return array(
             DeploymentProvider::LIMITATION_REMOTECOMMAND
         );
+    }
+
+    /**
+     * Gets the to location for rsync for all hostnames (supports multiple hosts)
+     *
+     * @return array
+     */
+    public function getTargetPaths()
+    {
+        // @todo - support
+        return [];
     }
 }

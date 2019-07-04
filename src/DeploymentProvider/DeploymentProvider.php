@@ -37,6 +37,14 @@ interface DeploymentProvider
      * @return mixed
      */
     public function getTargetPath();
+
+    /**
+     * Gets the to location for rsync for all hostnames (supports multiple hosts)
+     *
+     * @return array
+     */
+    public function getTargetPaths();
+
     /**
      * Return a string representation of the target
      * @return string

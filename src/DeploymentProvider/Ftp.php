@@ -2,12 +2,13 @@
 
 namespace Heyday\Beam\DeploymentProvider;
 
-use Heyday\Beam\DeploymentProvider\DeploymentProvider;
 use Heyday\Beam\Exception\RuntimeException;
 
 /**
  * Class Ftp
  * @package Heyday\Beam\DeploymentProvider
+ *
+ * @todo Update to support multiple `hosts' key
  */
 class Ftp extends ManualChecksum implements DeploymentProvider
 {
@@ -140,7 +141,7 @@ class Ftp extends ManualChecksum implements DeploymentProvider
                 }
             );
         }
-        
+
         if(!$this->listCache[$dir]) {
             return false;
         } else if (($key = array_search(basename($path), $this->listCache[$dir])) !== false) {
@@ -279,5 +280,16 @@ class Ftp extends ManualChecksum implements DeploymentProvider
     public function getTargetAsText()
     {
         return $this->getConfig('user') . '@' . $this->getConfig('host') . ':' . $this->getTargetPath();
+    }
+
+    /**
+     * Gets the to location for rsync for all hostnames (supports multiple hosts)
+     *
+     * @return array
+     */
+    public function getTargetPaths()
+    {
+        // @todo - support
+        return [];
     }
 }

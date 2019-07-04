@@ -2,6 +2,7 @@
 
 namespace Heyday\Beam\DeploymentProvider;
 
+use Closure;
 use Heyday\Beam\Exception\RuntimeException;
 use Heyday\Beam\Utils;
 use Symfony\Component\Console\Helper\FormatterHelper;
@@ -24,7 +25,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     protected $options;
 
     /**
-     * @var \Closure
+     * @var Closure
      */
     protected $resultStreamHandler;
 
@@ -61,11 +62,12 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
                 'archive'       => true,
                 'compress'      => true,
                 'delay-updates' => true,
-                'args' => ''
+                'args'          => ''
             )
         );
         $this->options = $resolver->resolve($options);
     }
+
     /**
      * @inheritdoc
      */
@@ -99,41 +101,53 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             putenv("RSYNC_RSH=sshpass -e ssh");
         }
     }
+
     /**
+     * Beam up will beam to all target hosts
+     *
      * @{inheritDoc}
      */
-    public function up(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
+    public function up(Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
+    {
+        $result = null;
+        foreach ($this->getTargetPaths() as $targetPath) {
+            // @todo - Deal with multiple $results instead of just the last one
+            $result = $this->deploy(
+                $this->buildCommand(
+                    $this->beam->getLocalPath(),
+                    $targetPath,
+                    $dryrun
+                ),
+                $output
+            );
+        }
+        return $result;
+    }
+
+    /**
+     * Beam down only beams down from the master host
+     *
+     * @{inheritDoc}
+     */
+    public function down(Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
     {
         return $this->deploy(
             $this->buildCommand(
-                $this->beam->getLocalPath(),
                 $this->getTargetPath(),
+                $this->beam->getLocalPath(),
                 $dryrun
             ),
             $output
         );
     }
-    /**
-     * @{inheritDoc}
-     */
-    public function down(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
-    {
-        return $this->deploy(
-            $this->buildCommand(
-                $this->getTargetPath(),
-                $this->beam->getLocalPath(),
-                $dryrun
-            ),
-            $output
-        );
-    }
+
     /**
      * @param                    $command
      * @param  callable          $output
      * @return DeploymentResult
      * @throws RuntimeException
      */
-    protected function deploy($command, \Closure $output = null)
+    protected function deploy($command, Closure $output = null)
     {
         $this->generateExcludesFile();
         $outputHandler = $this->getOutputStreamHandler($output);
@@ -157,6 +171,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             return new DeploymentResult($this->formatOutput($output));
         }
     }
+
     /**
      * Builds the rsync command based of current options
      * @param         $fromPath
@@ -184,7 +199,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
         if ($server['syncPermissions']) {
             $command[] = '--perms';
         }
-        
+
         if ($this->options['args'] !== '') {
             $command[] = $this->options['args'];
         }
@@ -325,6 +340,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
 
         return $steps;
     }
+
     /**
      * @param $line
      * @return array|bool
@@ -334,7 +350,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
         $change = array();
         $matches = array();
         if (1 !== preg_match(
-            '/
+                '/
                 (?:
                     (^\*\w+) # capture anything with a "*" then words e.g. "*deleting"
                     | # or
@@ -356,9 +372,9 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
                 [ ] # a space
                 (.*) # filename
             /x',
-            $line,
-            $matches
-        )) {
+                $line,
+                $matches
+            )) {
             return false;
         }
         if ($matches[1] == '*deleting') {
@@ -437,6 +453,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
 
         return $change;
     }
+
     /**
      * @param $output
      * @return array
@@ -456,6 +473,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
 
         return $changes;
     }
+
     /**
      * Generate the excludes file
      */
@@ -476,6 +494,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             implode(PHP_EOL, $excludes) . PHP_EOL
         );
     }
+
     /**
      * Get the path to the excludes file
      * @return string
@@ -487,6 +506,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             $this->beam->getLocalPathname()
         );
     }
+
     /**
      * Gets the to location for rsync
      *
@@ -496,18 +516,23 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     public function getTargetPath()
     {
         $server = $this->beam->getServer();
-        $hostPath = sprintf(
-            '%s:%s',
-            $server['host'],
-            $server['webroot']
-        );
-
-        if (isset($server['user']) && $user = $server['user']) {
-            $hostPath = $user . '@' . $hostPath;
-        }
-
-        return $hostPath;
+        $host = $this->beam->getPrimaryHost();
+        return $this->buildPath($host, $server);
     }
+
+    /**
+     * Gets the to location for rsync for all hostnames (supports multiple hosts)
+     *
+     * @return array
+     */
+    public function getTargetPaths()
+    {
+        $server = $this->beam->getServer();
+        return array_map(function ($host) use ($server) {
+            return $this->buildPath($host, $server);
+        }, $this->beam->getHosts());
+    }
+
     /**
      * Return a string representation of the target
      * @return string
@@ -516,6 +541,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     {
         return $this->getTargetPath();
     }
+
     /**
      * @return mixed|null
      */
@@ -523,14 +549,16 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     {
         return null;
     }
+
     /**
      * Set a callback function to receive a stream of changes
-     * @param \Closure $callback function(array $array)
+     * @param Closure $callback function(array $array)
      */
-    public function setStreamHandler(\Closure $callback = null)
+    public function setStreamHandler(Closure $callback = null)
     {
         $this->resultStreamHandler = $callback;
     }
+
     /**
      * Create a callback to handle the rsync process output
      *
@@ -538,7 +566,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
      * @param callable $callback
      * @return callable
      */
-    protected function getOutputStreamHandler(\Closure $callback = null)
+    protected function getOutputStreamHandler(Closure $callback = null)
     {
         if (!$this->resultStreamHandler && !$callback) {
             return null;
@@ -582,6 +610,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             }
         };
     }
+
     /**
      * @param $command
      * @return Process
@@ -597,5 +626,26 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
         );
 
         return $process;
+    }
+
+    /** Helper to build a path based on a hostname and server config array
+     *
+     * @param string $host
+     * @param array  $server
+     * @return string
+     */
+    protected function buildPath($host, $server)
+    {
+        $hostPath = sprintf(
+            '%s:%s',
+            $host,
+            $server['webroot']
+        );
+
+        if (isset($server['user']) && $user = $server['user']) {
+            $hostPath = $user . '@' . $hostPath;
+        }
+
+        return $hostPath;
     }
 }

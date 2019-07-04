@@ -52,6 +52,7 @@ class Beam
         // Apply variable interpolation config after initial checks
         $this->config = $this->replaceConfigVariables($config);
     }
+
     /**
      * Uses the options resolver to set the options to the object from an array
      *
@@ -82,6 +83,7 @@ class Beam
 
         $this->validateSetup();
     }
+
     /**
      * Validates dynamic options or options that the options resolver can't validate
      * @throws InvalidArgumentException
@@ -89,17 +91,14 @@ class Beam
     protected function validateSetup()
     {
         // Prevent a server with empty options being used
-        $requiredKeys = array(
-            'host',
-            'webroot'
-        );
-
         $server = $this->getServer();
         $emptyKeys = array();
-        foreach ($requiredKeys as $key) {
-            if (empty($server[$key])) {
-                $emptyKeys[] = $key;
-            }
+        if (empty($server['webroot'])) {
+            $emptyKeys[] = 'webroot';
+        }
+        if (empty($server['host']) && empty($server['host'])) {
+            $emptyKeys[] = 'host';
+            $emptyKeys[] = 'hosts';
         }
 
         if (count($emptyKeys)) {
@@ -159,7 +158,7 @@ class Beam
 
     /**
      * @param \Heyday\Beam\DeploymentProvider\DeploymentResult $deploymentResult
-     * @param \Closure $deploymentCallback - callback to run immediately after deployment, before commands
+     * @param \Closure                                         $deploymentCallback - callback to run immediately after deployment, before commands
      * @return mixed
      */
     public function doRun(DeploymentResult $deploymentResult = null, $deploymentCallback = null)
@@ -191,6 +190,7 @@ class Beam
 
         return $deploymentResult;
     }
+
     /**
      * @return mixed
      */
@@ -211,6 +211,7 @@ class Beam
 
         return $deploymentResult;
     }
+
     /**
      * Ensures that the correct content is at the local path
      */
@@ -252,10 +253,12 @@ class Beam
             $this->writeLog();
         }
     }
+
     public function configureDeploymentProvider(InputInterface $input, OutputInterface $output)
     {
         $this->options['deploymentprovider']->configure($input, $output);
     }
+
     /**
      * Gets the from location for rsync
      *
@@ -278,6 +281,7 @@ class Beam
             $path
         );
     }
+
     /**
      * @return string
      */
@@ -288,6 +292,7 @@ class Beam
             md5($this->options['srcdir'])
         );
     }
+
     /**
      * @return mixed
      */
@@ -295,6 +300,7 @@ class Beam
     {
         return $this->options['deploymentprovider']->getTargetAsText();
     }
+
     /**
      * @param boolean $prepared
      */
@@ -302,6 +308,7 @@ class Beam
     {
         $this->prepared = $prepared;
     }
+
     /**
      * @param $key
      * @param $value
@@ -318,6 +325,7 @@ class Beam
             )
         );
     }
+
     /**
      * @return boolean
      */
@@ -325,6 +333,7 @@ class Beam
     {
         return $this->prepared;
     }
+
     /**
      * Returns whether or not files are being sent to the target
      * @return bool
@@ -333,6 +342,7 @@ class Beam
     {
         return $this->options['direction'] === 'up';
     }
+
     /**
      * Returns whether or not files are being sent to the local
      * @return bool
@@ -341,6 +351,7 @@ class Beam
     {
         return $this->options['direction'] === 'down';
     }
+
     /**
      * Returns whether or not beam is operating from a working copy
      * @return mixed
@@ -349,6 +360,7 @@ class Beam
     {
         return $this->options['working-copy'];
     }
+
     /**
      * Returns whether or not the server is locked to a branch
      * @return bool
@@ -359,6 +371,7 @@ class Beam
 
         return isset($server['branch']) && $server['branch'];
     }
+
     /**
      * Returns whether or not the server is locked to a remote branch
      * @return bool
@@ -369,6 +382,7 @@ class Beam
 
         return $this->isServerLocked() && $this->options['vcsprovider']->isRemote($server['branch']);
     }
+
     /**
      * Returns whether or not the branch is remote
      * @return bool
@@ -377,6 +391,7 @@ class Beam
     {
         return $this->options['vcsprovider']->isRemote($this->options['ref']);
     }
+
     /**
      * A helper method for determining if beam is operating with a list of paths
      * @return bool
@@ -385,6 +400,7 @@ class Beam
     {
         return is_array($this->options['path']) && count($this->options['path']) > 0;
     }
+
     /**
      * Get the server config we are deploying to.
      *
@@ -395,6 +411,41 @@ class Beam
     {
         return $this->config['servers'][$this->options['target']];
     }
+
+    /**
+     * Get all host names for a server
+     *
+     * @param array|null $server Optional server config
+     * @return array|string[]
+     */
+    public function getHosts($server = null)
+    {
+        if (!$server) {
+            $server = $this->getServer();
+        }
+
+        $hosts = [];
+        if (isset($server['host'])) {
+            $hosts[] = $server['host'];
+        }
+        if (isset($server['hosts'])) {
+            $hosts = array_merge($hosts, $server['hosts']);
+        }
+        return $hosts;
+    }
+
+    /**
+     * Get primary (first) host
+     *
+     * @param array|null $server Optional server config
+     * @return string
+     */
+    public function getPrimaryHost($server = null)
+    {
+        $hosts = $this->getHosts($server);
+        return reset($hosts);
+    }
+
     /**
      * Get the locked branch
      * @return mixed
@@ -405,6 +456,7 @@ class Beam
 
         return $this->isServerLocked() ? $server['branch'] : false;
     }
+
     /**
      * @return string
      */
@@ -412,6 +464,7 @@ class Beam
     {
         return dirname($this->options['srcdir']);
     }
+
     /**
      * A helper method that returns a process with some defaults
      * @param          $commandline
@@ -429,6 +482,7 @@ class Beam
             $timeout
         );
     }
+
     /**
      * @param $option
      * @return mixed
@@ -447,6 +501,7 @@ class Beam
             );
         }
     }
+
     /**
      * @param $config
      * @return mixed
@@ -465,6 +520,7 @@ class Beam
             );
         }
     }
+
     /**
      * Check if the deployment provider implements an interface
      * @param $interfaceName
@@ -477,6 +533,7 @@ class Beam
         );
         return isset($interfaces[$interfaceName]);
     }
+
     /**
      * Set the deployment provider's result stream handler
      * This is only available if the deployment provider implements the
@@ -486,10 +543,11 @@ class Beam
     {
         $this->getOption('deploymentprovider')->setStreamHandler($handler);
     }
+
     /**
      * A helper method that runs a process and checks its success, erroring if it failed
-     * @param  Process           $process
-     * @param  callable          $output
+     * @param  Process  $process
+     * @param  callable $output
      * @throws RuntimeException
      */
     protected function runProcess(Process $process, \Closure $output = null)
@@ -499,6 +557,7 @@ class Beam
             throw new RuntimeException($process->getErrorOutput());
         }
     }
+
     /**
      * Runs commands specified in config in the pre phase on the local
      */
@@ -510,6 +569,7 @@ class Beam
             'runLocalCommand'
         );
     }
+
     /**
      * Runs commands specified in config in the pre phase on the target
      */
@@ -521,6 +581,7 @@ class Beam
             'runTargetCommand'
         );
     }
+
     /**
      * Runs commands specified in config in the post phase on the local
      */
@@ -532,6 +593,7 @@ class Beam
             'runLocalCommand'
         );
     }
+
     /**
      * Runs commands specified in config in the post phase on the target
      */
@@ -543,6 +605,7 @@ class Beam
             'runTargetCommand'
         );
     }
+
     /**
      * @param $commands
      * @param $message
@@ -562,6 +625,7 @@ class Beam
             }
         }
     }
+
     /**
      * @param $phase
      * @param $location
@@ -593,6 +657,7 @@ class Beam
 
         return $commands;
     }
+
     /**
      * Checks if a tag matches one passed on the command line.
      * Wildcard matching is supported supported
@@ -609,6 +674,7 @@ class Beam
 
         return false;
     }
+
     /**
      * @param   $command
      */
@@ -632,18 +698,21 @@ class Beam
             $command['command']
         );
 
-        $args = array(
-            // SSHPASS is set in \Heyday\Beam\DeploymentProvider\Rsync
-            getenv('SSHPASS') === false ? 'ssh' : 'sshpass -e ssh',
-            $command['tty'] ? '-t' : '',
-            $userComponent . $server['host'],
-            escapeshellcmd($remoteCmd)
-        );
+        foreach ($this->getHosts() as $host) {
+            $args = array(
+                // SSHPASS is set in \Heyday\Beam\DeploymentProvider\Rsync
+                getenv('SSHPASS') === false ? 'ssh' : 'sshpass -e ssh',
+                $command['tty'] ? '-t' : '',
+                $userComponent . $host,
+                escapeshellcmd($remoteCmd)
+            );
 
-        $command['command'] = implode(' ', $args);
+            $command['command'] = implode(' ', $args);
 
-        $this->doExecCommand($command, $this->options['targetcommandoutputhandler']);
+            $this->doExecCommand($command, $this->options['targetcommandoutputhandler']);
+        }
     }
+
     /**
      * @param   $command
      */
@@ -659,6 +728,7 @@ class Beam
 
         $this->doExecCommand($command, $this->options['localcommandoutputhandler']);
     }
+
     /**
      * @param $command
      * @param $outputHandler
@@ -668,7 +738,7 @@ class Beam
     {
         try {
             $process = null;
-            
+
             if ($command['tty']) {
 
                 passthru(sprintf('%s; %s',
@@ -714,6 +784,7 @@ class Beam
 
         return $this->options['commandfailurehandler']($command, $exception, $process);
     }
+
     /**
      * @param $handler
      * @param $arguments
@@ -764,56 +835,56 @@ class Beam
                 'srcdir',
                 'deploymentprovider'
             )
-            )->setDefined(
-                array(
-                    'ref',
-                    'path',
-                    'dry-run',
-                    'working-copy',
-                    'command-tags',
-                    'vcsprovider',
-                    'deploymentprovider',
-                    'deploymentoutputhandler',
-                    'localcommandoutputhandler',
-                    'targetcommandoutputhandler',
-                    'outputhandler'
-                )
-            )->setAllowedValues(
-                array(
-                    'direction' => array(
-                        'up',
-                        'down'
-                    ),
-                    'target'    => array_keys($this->config['servers'])
-                )
-            )->setDefaults(
-                array(
-                    'ref'                        => '',
-                    'path'                       => array(),
-                    'dry-run'                    => false,
-                    'working-copy'               => false,
-                    'command-tags'               => array(),
-                    'vcsprovider'                => function (Options $options) {
-                        return new Git($options['srcdir']);
-                    },
-                    'deploymentoutputhandler'    => null,
-                    'outputhandler'              => null,
-                    'localcommandoutputhandler'  => null,
-                    'targetcommandoutputhandler' => null,
-                    'commandprompthandler'       => null,
-                    'commandfailurehandler'      => null
-                )
-            )->setAllowedTypes(
-                array(
-                    'ref'                => 'string',
-                    'srcdir'             => 'string',
-                    'dry-run'            => 'bool',
-                    'working-copy'       => 'bool',
-                    'command-tags'       => 'array',
-                    'vcsprovider'        => __NAMESPACE__ . '\VcsProvider\VcsProvider',
-                    'deploymentprovider' => __NAMESPACE__ . '\DeploymentProvider\DeploymentProvider',
-                )
-            );
+        )->setDefined(
+            array(
+                'ref',
+                'path',
+                'dry-run',
+                'working-copy',
+                'command-tags',
+                'vcsprovider',
+                'deploymentprovider',
+                'deploymentoutputhandler',
+                'localcommandoutputhandler',
+                'targetcommandoutputhandler',
+                'outputhandler'
+            )
+        )->setAllowedValues(
+            array(
+                'direction' => array(
+                    'up',
+                    'down'
+                ),
+                'target'    => array_keys($this->config['servers'])
+            )
+        )->setDefaults(
+            array(
+                'ref'                        => '',
+                'path'                       => array(),
+                'dry-run'                    => false,
+                'working-copy'               => false,
+                'command-tags'               => array(),
+                'vcsprovider'                => function (Options $options) {
+                    return new Git($options['srcdir']);
+                },
+                'deploymentoutputhandler'    => null,
+                'outputhandler'              => null,
+                'localcommandoutputhandler'  => null,
+                'targetcommandoutputhandler' => null,
+                'commandprompthandler'       => null,
+                'commandfailurehandler'      => null
+            )
+        )->setAllowedTypes(
+            array(
+                'ref'                => 'string',
+                'srcdir'             => 'string',
+                'dry-run'            => 'bool',
+                'working-copy'       => 'bool',
+                'command-tags'       => 'array',
+                'vcsprovider'        => __NAMESPACE__ . '\VcsProvider\VcsProvider',
+                'deploymentprovider' => __NAMESPACE__ . '\DeploymentProvider\DeploymentProvider',
+            )
+        );
 
         // Configure option normalizers
         // This was previously done with a fluid interface, but Symfony Console 3.x removes support for that
@@ -838,7 +909,7 @@ class Beam
                 return trim($value);
             },
             'path'                       => function (Options $options, $value) {
-                return is_array($value) ? array_map(function($value){
+                return is_array($value) ? array_map(function ($value) {
                     return trim($value, '/');
                 }, $value) : false;
             },
