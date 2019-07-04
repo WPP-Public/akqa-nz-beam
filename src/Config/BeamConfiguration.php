@@ -171,7 +171,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
                     ->isRequired()
                     ->requiresAtLeastOneElement()
                     ->prototype('array')
-                        ->prototype('scalar')->end()
+                        ->prototype('variable')->end()
                     ->end()
                     ->validate()
                     ->always(
@@ -298,7 +298,9 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
             ->children()
                 ->scalarNode('type')->isRequired()->end()
                 ->scalarNode('host')->end()
-                ->scalarNode('hosts')->end()
+                ->arrayNode('hosts')
+                    ->prototype('scalar')->end()
+                    ->end()
                 ->scalarNode('branch')->end();
 
         switch ($type) {

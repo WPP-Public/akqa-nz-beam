@@ -92,11 +92,12 @@ class Beam
     {
         // Prevent a server with empty options being used
         $server = $this->getServer();
+
         $emptyKeys = array();
         if (empty($server['webroot'])) {
             $emptyKeys[] = 'webroot';
         }
-        if (empty($server['host']) && empty($server['host'])) {
+        if (empty($server['hosts']) && empty($server['host'])) {
             $emptyKeys[] = 'host';
             $emptyKeys[] = 'hosts';
         }
