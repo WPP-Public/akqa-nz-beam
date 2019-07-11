@@ -25,6 +25,7 @@ class DeploymentResultHelper extends Helper
     {
         $this->formatterHelper = $formatterHelper;
     }
+
     /**
      * Returns the canonical name of this helper.
      *
@@ -36,6 +37,7 @@ class DeploymentResultHelper extends Helper
     {
         return 'deploymentresult';
     }
+
     /**
      * @param OutputInterface  $output
      * @param DeploymentResult $deploymentResult
@@ -62,38 +64,49 @@ class DeploymentResultHelper extends Helper
             }
         }
     }
+
     /**
      * @param OutputInterface  $output
      * @param DeploymentResult $deploymentResult
      */
     public function outputChangesSummary(OutputInterface $output, DeploymentResult $deploymentResult)
     {
-        $totals = array(
-            'sent'       => 0,
-            'received'   => 0,
-            'created'    => 0,
-            'deleted'    => 0,
-            'attributes' => 0
-        );
+        foreach ($deploymentResult->getNestedResults() as $result) {
+            $totals = array(
+                'sent'       => 0,
+                'received'   => 0,
+                'created'    => 0,
+                'deleted'    => 0,
+                'attributes' => 0
+            );
 
-        foreach ($deploymentResult as $change) {
-            $totals[$change['update']]++;
-        }
+            foreach ($result as $change) {
+                $totals[$change['update']]++;
+            }
 
-        $length = max(array_map('strlen', array_keys($totals))) + 2;
+            $length = max(array_map('strlen', array_keys($totals))) + 2;
 
-        foreach ($totals as $key => $total) {
-            $output->writeLn(
+            $output->writeln(
                 $this->formatterHelper->formatSection(
                     'summary',
-                    sprintf(
-                        '%s%s',
-                        str_pad($key . ':', $length, ' '),
-                        $total
-                    ),
+                    '<comment>[host ' . $result->getName() . ']</comment>',
                     'info'
                 )
             );
+
+            foreach ($totals as $key => $total) {
+                $output->writeLn(
+                    $this->formatterHelper->formatSection(
+                        'summary',
+                        sprintf(
+                            '%s%s',
+                            str_pad($key . ':', $length, ' '),
+                            $total
+                        ),
+                        'info'
+                    )
+                );
+            }
         }
     }
 }

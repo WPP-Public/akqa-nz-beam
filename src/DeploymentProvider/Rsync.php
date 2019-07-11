@@ -701,7 +701,12 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
                 $result[$filename] = $rightItem;
             }
         }
-        return new DeploymentResult(array_values($result));
+        $result = new DeploymentResult(array_values($result));
+        $result->setNestedResults(array_merge(
+            $left->getNestedResults(),
+            $right->getNestedResults()
+        ));
+        return $result;
     }
 
     /**

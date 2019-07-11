@@ -30,6 +30,13 @@ class DeploymentResult extends \ArrayObject
     protected $name = null;
 
     /**
+     * Nested result items
+     *
+     * @var DeploymentResult[]
+     */
+    protected $nestedResults = [];
+
+    /**
      * @param $result
      */
     public function __construct(array $result)
@@ -94,5 +101,25 @@ class DeploymentResult extends \ArrayObject
     public function getName()
     {
         return $this->name;
+    }
+
+    /**
+     * Get all nested results
+     *
+     * @return DeploymentResult[]
+     */
+    public function getNestedResults()
+    {
+        return $this->nestedResults ?: [$this];
+    }
+
+    /**
+     * @param DeploymentResult[] $nestedResults
+     * @return DeploymentResult
+     */
+    public function setNestedResults($nestedResults)
+    {
+        $this->nestedResults = $nestedResults;
+        return $this;
     }
 }
