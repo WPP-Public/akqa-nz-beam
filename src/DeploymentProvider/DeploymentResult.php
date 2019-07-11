@@ -23,6 +23,13 @@ class DeploymentResult extends \ArrayObject
     protected $configuration;
 
     /**
+     * If result is tied to a specific node, name of this node
+     *
+     * @var string|null
+     */
+    protected $name = null;
+
+    /**
      * @param $result
      */
     public function __construct(array $result)
@@ -69,5 +76,23 @@ class DeploymentResult extends \ArrayObject
     public function getConfiguration()
     {
         return $this->configuration;
+    }
+
+    /**
+     * @param null|string $name
+     * @return DeploymentResult
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getName()
+    {
+        return $this->name;
     }
 }

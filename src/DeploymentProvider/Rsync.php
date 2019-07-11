@@ -116,15 +116,19 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     {
         /** @var DeploymentResult $mergedResult */
         $mergedResult = null;
-        foreach ($this->getTargetPaths() as $targetPath) {
+        $results = [];
+        foreach ($this->getTargetPaths() as $server => $targetPath) {
             $result = $this->deploy(
                 $this->buildCommand(
                     $this->beam->getLocalPath(),
                     $targetPath,
                     $dryrun
                 ),
-                $output
+                $output,
+                true // silence per-server output
             );
+            $result->setName($server);
+            $results[] = $result;
 
             // Merge all results
             if (!$mergedResult) {
@@ -132,8 +136,14 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             } else {
                 $mergedResult = $this->combineResults($mergedResult, $result);
             }
-
         }
+
+        // Render merged output here
+        if ($this->resultStreamHandler) {
+            $handler = $this->resultStreamHandler;
+            $handler($mergedResult);
+        }
+
         return $mergedResult;
     }
 
@@ -154,20 +164,22 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
                 $this->beam->getLocalPath(),
                 $dryrun
             ),
-            $output
+            $output,
+            false
         );
     }
 
     /**
      * @param string  $command
      * @param Closure $output
+     * @param bool    $silent
      * @return DeploymentResult
      * @throws RuntimeException
      */
-    protected function deploy($command, Closure $output = null)
+    protected function deploy($command, Closure $output = null, $silent = false)
     {
         $this->generateExcludesFile();
-        $outputHandler = $this->getOutputStreamHandler($output);
+        $outputHandler = $this->getOutputStreamHandler($output, $silent);
         $process = $this->getProcess($command);
         $process->run($outputHandler);
 
@@ -540,15 +552,18 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
 
     /**
      * Gets the to location for rsync for all hostnames (supports multiple hosts)
+     * Key is server name / url
      *
      * @return array
      */
     public function getTargetPaths()
     {
+        $paths = [];
         $server = $this->beam->getServer();
-        return array_map(function ($host) use ($server) {
-            return $this->buildPath($host, $server);
-        }, $this->beam->getHosts());
+        foreach ($this->beam->getHosts() as $host) {
+            $paths[$host] = $this->buildPath($host, $server);
+        }
+        return $paths;
     }
 
     /**
@@ -581,19 +596,16 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
      * Create a callback to handle the rsync process output
      *
      * @see setStreamHandler
-     * @param callable $callback
+     * @param Closure $callback
+     * @param bool    $silent Force stream handler to capture, but not output
      * @return callable
      */
-    protected function getOutputStreamHandler(Closure $callback = null)
+    protected function getOutputStreamHandler(Closure $callback = null, $silent = false)
     {
-        if (!$this->resultStreamHandler && !$callback) {
-            return null;
-        }
-
-        $streamHandler = $this->resultStreamHandler;
-        $that = $this;
-        return function ($type, $data = "\n") use ($streamHandler, $callback, $that) {
-
+        $streamHandler = $silent ? null : $this->resultStreamHandler;
+        $buffer = '';
+        $results = [];
+        return function ($type, $data = "\n") use (&$buffer, &$results, $streamHandler, $callback) {
             // Ignore error output
             if ($type === Process::ERR) {
                 return null;
@@ -604,27 +616,24 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             }
 
             // If a stream output handler is set, parse the partial change set
-            if ($streamHandler) {
-                static $buffer = '';
-                static $results = array();
+            $buffer .= $data;
+            $lastNewLine = strrpos($buffer, "\n");
+            if ($lastNewLine !== false) {
+                $data = substr($buffer, 0, $lastNewLine);
+                $buffer = substr($buffer, $lastNewLine);
 
-                $buffer .= $data;
+                $result = $this->formatOutput($data);
+                $results[] = $result;
 
-                $lastNewLine = strrpos($buffer, "\n");
-                if ($lastNewLine !== false) {
-                    $data = substr($buffer, 0, $lastNewLine);
-                    $buffer = substr($buffer, $lastNewLine);
-
-                    $result = $that->formatOutput($data);
-                    $results[] = $result;
-
+                // Pass through, unless silenced
+                if ($streamHandler) {
                     $streamHandler($result);
                 }
+            }
 
-                // Return the collected results when asked
-                if ($type === 'fetch') {
-                    return call_user_func_array('array_merge', $results);
-                }
+            // Return the collected results when asked
+            if ($type === 'fetch') {
+                return call_user_func_array('array_merge', $results);
             }
         };
     }
@@ -705,16 +714,20 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
      */
     protected function combineResultRows($left, $right, $config)
     {
-        // Get first item matching update type
+        // Build result object
+        $result = array_merge($left, $right);
+
+        // Get all distinct reasons
+        $result['reason'] = array_unique(array_merge($left['reason'], $right['reason']));
+
+        // Pick best update (first matching item in getUpdates())
         foreach ($config->getUpdates() as $update) {
-            if ($left['update'] === $update) {
-                return $left;
-            }
-            if ($right['update'] === $update) {
-                return $right;
+            if ($left['update'] === $update || $right['update'] === $update) {
+                $result['update'] = $update;
+                break;
             }
         }
 
-        return $left;
+        return $result;
     }
 }

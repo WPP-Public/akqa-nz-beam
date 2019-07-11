@@ -185,7 +185,10 @@ abstract class TransferCommand extends Command
                 $resultHelper = $this->deploymentResultHelper;
                 $beam->setResultStreamHandler(
                     function ($changes) use ($resultHelper, $output) {
-                        $resultHelper->outputChanges($output, new DeploymentResult($changes));
+                        $result = $changes instanceof DeploymentResult
+                            ? $changes
+                            : new DeploymentResult($changes);
+                        $resultHelper->outputChanges($output, $result);
                     }
                 );
             }
