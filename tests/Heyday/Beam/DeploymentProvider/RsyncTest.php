@@ -2,7 +2,10 @@
 
 namespace Heyday\Beam\DeploymentProvider;
 
+use Closure;
+use Heyday\Beam\Beam;
 use org\bovigo\vfs\vfsStream;
+use Symfony\Component\Process\Process;
 
 class RsyncTest extends \PHPUnit_Framework_TestCase
 {
@@ -18,21 +21,54 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
 //        );
     }
 
+    /**
+     * Shiv for deprecated getMock()
+     *
+     * @param string $originalClassName
+     * @param array  $methods
+     * @param array  $arguments
+     * @param string $mockClassName
+     * @param bool   $callOriginalConstructor
+     * @param bool   $callOriginalClone
+     * @param bool   $callAutoload
+     * @param bool   $cloneArguments
+     * @param bool   $callOriginalMethods
+     * @param null   $proxyTarget
+     * @return \PHPUnit_Framework_MockObject_MockObject
+     */
+    protected function getMock($originalClassName, $methods = [], array $arguments = [], $mockClassName = '', $callOriginalConstructor = true, $callOriginalClone = true, $callAutoload = true, $cloneArguments = false, $callOriginalMethods = false, $proxyTarget = null)
+    {
+        $mockObject = $this->getMockObjectGenerator()->getMock(
+            $originalClassName,
+            $methods,
+            $arguments,
+            $mockClassName,
+            $callOriginalConstructor,
+            $callOriginalClone,
+            $callAutoload,
+            $cloneArguments,
+            $callOriginalMethods,
+            $proxyTarget
+        );
+
+        $this->registerMockObject($mockObject);
+
+        return $mockObject;
+    }
+
     protected function getRsyncMock($methods = array(), $options = array())
     {
         return $this->getMock(
-            __NAMESPACE__ . '\Rsync',
+            Rsync::class,
             $methods,
-            array(
-                $options
-            )
+            [$options]
         );
     }
 
     protected function getBeamMock()
     {
         return $this->getMock(
-            'Heyday\Beam\Beam',
+            Beam::class,
             array(),
             array(),
             '',
@@ -67,9 +103,10 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
 
     public function testUp()
     {
-        $output = function () {};
+        $output = function () {
+        };
 
-        $rsync = $this->getRsyncMock(array('deploy', 'buildCommand', 'getTargetPath'));
+        $rsync = $this->getRsyncMock(array('deploy', 'buildCommand', 'getTargetPaths'));
 
         $rsync->expects($this->once())
             ->method('buildCommand')
@@ -89,8 +126,8 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue($this->getDeploymentResultMock()));
 
         $rsync->expects($this->once())
-            ->method('getTargetPath')
-            ->will($this->returnValue('topath'));
+            ->method('getTargetPaths')
+            ->will($this->returnValue(['topath']));
 
         $beamMock = $this->getBeamMock();
 
@@ -105,9 +142,10 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
 
     public function testUpDryrun()
     {
-        $output = function () {};
+        $output = function () {
+        };
 
-        $rsync = $this->getRsyncMock(array('deploy', 'buildCommand', 'getTargetPath'));
+        $rsync = $this->getRsyncMock(array('deploy', 'buildCommand', 'getTargetPaths'));
 
         $rsync->expects($this->once())
             ->method('buildCommand')
@@ -127,8 +165,8 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue($this->getDeploymentResultMock()));
 
         $rsync->expects($this->once())
-            ->method('getTargetPath')
-            ->will($this->returnValue('topath'));
+            ->method('getTargetPaths')
+            ->will($this->returnValue(['topath']));
 
         $beamMock = $this->getBeamMock();
 
@@ -143,7 +181,8 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
 
     public function testDown()
     {
-        $output = function () {};
+        $output = function () {
+        };
 
         $rsync = $this->getRsyncMock(array('deploy', 'buildCommand', 'getTargetPath'));
 
@@ -181,7 +220,8 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
 
     public function testDownDryrun()
     {
-        $output = function () {};
+        $output = function () {
+        };
 
         $rsync = $this->getRsyncMock(array('deploy', 'buildCommand', 'getTargetPath'));
 
@@ -219,11 +259,11 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
 
     public function testDeploy()
     {
-        $processStub = $this->getMock('Symfony\Component\Process\Process', array(), array(), '', false);
+        $processStub = $this->getMock(Process::class, array(), array(), '', false);
 
         $processStub->expects($this->once())
             ->method('run')
-            ->with($this->equalTo(null));
+            ->with($this->isInstanceOf(Closure::class));
 
         $processStub->expects($this->once())
             ->method('isSuccessful')
@@ -233,7 +273,7 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
             ->method('getOutput')
             ->will(
                 $this->returnValue(
-<<<OUTPUT
+                    <<<OUTPUT
 *deleting test1
 *deleting test2
 >fcsT.... test3
@@ -275,130 +315,123 @@ OUTPUT
             new DeploymentResult(
                 array(
                     array(
-                        'update' => 'deleted',
+                        'update'   => 'deleted',
                         'filename' => 'test1',
                         'filetype' => 'file',
-                        'reason' =>
-                        array (
-                           'missing',
-                        ),
+                        'reason'   =>
+                            array(
+                                'missing',
+                            ),
                     ),
-                    array (
-                        'update' => 'deleted',
+                    array(
+                        'update'   => 'deleted',
                         'filename' => 'test2',
                         'filetype' => 'file',
-                        'reason' =>
-                        array (
-                            'missing',
-                        ),
+                        'reason'   =>
+                            array(
+                                'missing',
+                            ),
                     ),
-                    array (
-                        'update' => 'received',
+                    array(
+                        'update'   => 'received',
                         'filetype' => 'file',
-                        'reason' =>
-                        array (
-                            'checksum',
-                            'size',
-                        ),
+                        'reason'   =>
+                            array(
+                                'checksum',
+                                'size',
+                            ),
                         'filename' => 'test3',
                     ),
-                    array (
-                        'update' => 'received',
+                    array(
+                        'update'   => 'received',
                         'filetype' => 'file',
-                        'reason' =>
-                        array (
-                            'checksum',
-                            'size',
-                        ),
+                        'reason'   =>
+                            array(
+                                'checksum',
+                                'size',
+                            ),
                         'filename' => 'test4',
                     ),
-                    array (
-                        'update' => 'received',
+                    array(
+                        'update'   => 'received',
                         'filetype' => 'file',
-                        'reason' =>
-                        array (
-                            'new',
-                        ),
+                        'reason'   =>
+                            array(
+                                'new',
+                            ),
                         'filename' => 'test5',
                     ),
-                    array (
-                        'update' => 'received',
+                    array(
+                        'update'   => 'received',
                         'filetype' => 'file',
-                        'reason' =>
-                        array (
-                            'new',
-                        ),
+                        'reason'   =>
+                            array(
+                                'new',
+                            ),
                         'filename' => 'test6',
                     ),
-                    array (
-                        'update' => 'received',
+                    array(
+                        'update'   => 'received',
                         'filetype' => 'file',
-                        'reason' =>
-                        array (
-                            'checksum',
-                            'size',
-                            'permissions',
-                            'owner',
-                            'group',
-                            'acl',
-                            'extended'
-                        ),
+                        'reason'   =>
+                            array(
+                                'checksum',
+                                'size',
+                                'permissions',
+                                'owner',
+                                'group',
+                                'acl',
+                                'extended'
+                            ),
                         'filename' => 'test7',
                     ),
-                    array (
-                        'update' => 'created',
+                    array(
+                        'update'   => 'created',
                         'filetype' => 'directory',
-                        'reason' =>
-                        array (
-                        ),
+                        'reason'   =>
+                            array(),
                         'filename' => 'test9',
                     ),
-                    array (
-                        'update' => 'sent',
+                    array(
+                        'update'   => 'sent',
                         'filetype' => 'file',
-                        'reason' =>
-                        array (
-                        ),
+                        'reason'   =>
+                            array(),
                         'filename' => 'test10',
                     ),
-                    array (
-                        'update' => 'attributes',
+                    array(
+                        'update'   => 'attributes',
                         'filetype' => 'file',
-                        'reason' =>
-                        array (
-                        ),
+                        'reason'   =>
+                            array(),
                         'filename' => 'test11',
                     ),
-                    array (
-                        'update' => 'link',
+                    array(
+                        'update'   => 'link',
                         'filetype' => 'file',
-                        'reason' =>
-                        array (
-                        ),
+                        'reason'   =>
+                            array(),
                         'filename' => 'test12',
                     ),
-                    array (
-                        'update' => 'sent',
+                    array(
+                        'update'   => 'sent',
                         'filetype' => 'symlink',
-                        'reason' =>
-                        array (
-                        ),
+                        'reason'   =>
+                            array(),
                         'filename' => 'test13',
                     ),
-                    array (
-                        'update' => 'sent',
+                    array(
+                        'update'   => 'sent',
                         'filetype' => 'device',
-                        'reason' =>
-                        array (
-                        ),
+                        'reason'   =>
+                            array(),
                         'filename' => 'test14',
                     ),
-                    array (
-                        'update' => 'sent',
+                    array(
+                        'update'   => 'sent',
                         'filetype' => 'special',
-                        'reason' =>
-                        array (
-                        ),
+                        'reason'   =>
+                            array(),
                         'filename' => 'test15',
                     ),
                 )
@@ -409,17 +442,18 @@ OUTPUT
             )
         );
     }
+
     /**
      * @expectedException \Heyday\Beam\Exception\RuntimeException
      * @expectedExceptionMessage Some error
      */
     public function testDeployException()
     {
-        $processStub = $this->getMock('Symfony\Component\Process\Process', array(), array(), '', false);
+        $processStub = $this->getMock(Process::class, array(), array(), '', false);
 
         $processStub->expects($this->once())
             ->method('run')
-            ->with($this->equalTo(null));
+            ->with($this->isInstanceOf(Closure::class));
 
         $processStub->expects($this->once())
             ->method('isSuccessful')
@@ -480,12 +514,16 @@ OUTPUT
             ->will(
                 $this->returnValue(
                     array(
-                        'user' => 'user',
-                        'host' => 'host',
+                        'user'    => 'user',
+                        'host'    => 'host',
                         'webroot' => 'webroot'
                     )
                 )
             );
+
+        $beamMock->expects($this->once())
+            ->method('getPrimaryHost')
+            ->will($this->returnValue('host'));
 
         $rsync->setBeam($beamMock);
 
@@ -626,7 +664,7 @@ OUTPUT
         );
 
         $beamMock->method('getServer')->will(
-            $this->returnCallback(function() use (&$server) {
+            $this->returnCallback(function () use (&$server) {
                 return $server;
             })
         );

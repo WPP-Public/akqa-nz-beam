@@ -122,6 +122,7 @@ abstract class TransferCommand extends Command
 
     /**
      * @inheritdoc
+     * @throws InvalidConfigurationException
      */
     protected function initialize(InputInterface $input, OutputInterface $output)
     {
@@ -139,6 +140,8 @@ abstract class TransferCommand extends Command
 
     /**
      * @param string $key - key from BeamConfiguration::$transferMethods
+     *
+     * @throws InvalidConfigurationException
      */
     protected function setTransferMethodByKey($key)
     {
@@ -151,6 +154,13 @@ abstract class TransferCommand extends Command
         );
     }
 
+    /**
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     * @return int|null|void
+     * @throws RuntimeException
+     * @throws \Exception
+     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         if (!$this->transferMethod) {
@@ -174,8 +184,11 @@ abstract class TransferCommand extends Command
             if ($doStreamResult) {
                 $resultHelper = $this->deploymentResultHelper;
                 $beam->setResultStreamHandler(
-                    function($changes) use ($resultHelper, $output) {
-                        $resultHelper->outputChanges($output, new DeploymentResult($changes));
+                    function ($changes) use ($resultHelper, $output) {
+                        $result = $changes instanceof DeploymentResult
+                            ? $changes
+                            : new DeploymentResult($changes);
+                        $resultHelper->outputChanges($output, $result);
                     }
                 );
             }
@@ -248,7 +261,7 @@ abstract class TransferCommand extends Command
 
                         // Run the deployment
                         try {
-                            $deploymentResult = $beam->doRun($deploymentResult, function() use ($progressHelper) {
+                            $deploymentResult = $beam->doRun($deploymentResult, function () use ($progressHelper) {
                                 $progressHelper->finish();
                             });
                             $this->deploymentResultHelper->outputChangesSummary($output, $deploymentResult);
@@ -295,6 +308,7 @@ abstract class TransferCommand extends Command
     /**
      * @param OutputInterface $output
      * @param Beam            $beam
+     * @throws \Heyday\Beam\Exception\InvalidArgumentException
      */
     protected function outputSummary(OutputInterface $output, Beam $beam)
     {
@@ -363,8 +377,8 @@ abstract class TransferCommand extends Command
     }
 
     /**
-     * @param Exception $exception
-     * @param InputInterface $input
+     * @param Exception       $exception
+     * @param InputInterface  $input
      * @param OutputInterface $output
      * @return bool
      */
@@ -395,8 +409,8 @@ abstract class TransferCommand extends Command
     }
 
     /**
-     * @param  OutputInterface  $output
-     * @param  DeploymentResult $deploymentResult
+     * @param ContentProgressHelper $progressHelper
+     * @param  DeploymentResult     $deploymentResult
      * @return callable
      */
     protected function getDeploymentOutputHandler(ContentProgressHelper $progressHelper, DeploymentResult $deploymentResult)
@@ -417,16 +431,16 @@ abstract class TransferCommand extends Command
 
             $filename = isset($deploymentResult[$steps]['filename']) ? $deploymentResult[$steps]['filename'] : '';
             $progressHelper->setContent($filename);
-            $progressHelper->advance($stepSize, $filename);
+            $progressHelper->advance($stepSize);
             $steps += $stepSize;
         };
     }
 
     /**
-     * @param InputInterface $input
+     * @param InputInterface   $input
      * @param  OutputInterface $output
-     * @param  string $questionText
-     * @param  string $default
+     * @param  string          $questionText
+     * @param  string          $default
      * @return mixed
      */
     protected function isOkay(

@@ -125,7 +125,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
             if ($config === null && json_last_error() !== JSON_ERROR_NONE) {
                 JsonConfigLoader::validateSyntax($json, $import);
             }
-            
+
             $configs[] = $config;
             $imported[] = $import;
 
@@ -171,7 +171,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
                     ->isRequired()
                     ->requiresAtLeastOneElement()
                     ->prototype('array')
-                        ->prototype('scalar')->end()
+                        ->prototype('variable')->end()
                     ->end()
                     ->validate()
                     ->always(
@@ -297,7 +297,10 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
         $node = $treeBuilder->root($name)
             ->children()
                 ->scalarNode('type')->isRequired()->end()
-                ->scalarNode('host')->isRequired()->end()
+                ->scalarNode('host')->end()
+                ->arrayNode('hosts')
+                    ->prototype('scalar')->end()
+                    ->end()
                 ->scalarNode('branch')->end();
 
         switch ($type) {

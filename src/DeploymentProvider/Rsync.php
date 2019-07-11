@@ -2,6 +2,8 @@
 
 namespace Heyday\Beam\DeploymentProvider;
 
+use Closure;
+use Heyday\Beam\Config\DeploymentResultConfiguration;
 use Heyday\Beam\Exception\RuntimeException;
 use Heyday\Beam\Utils;
 use Symfony\Component\Console\Helper\FormatterHelper;
@@ -24,7 +26,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     protected $options;
 
     /**
-     * @var \Closure
+     * @var Closure
      */
     protected $resultStreamHandler;
 
@@ -61,11 +63,12 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
                 'archive'       => true,
                 'compress'      => true,
                 'delay-updates' => true,
-                'args' => ''
+                'args'          => ''
             )
         );
         $this->options = $resolver->resolve($options);
     }
+
     /**
      * @inheritdoc
      */
@@ -99,44 +102,84 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             putenv("RSYNC_RSH=sshpass -e ssh");
         }
     }
+
     /**
-     * @{inheritDoc}
-     */
-    public function up(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
-    {
-        return $this->deploy(
-            $this->buildCommand(
-                $this->beam->getLocalPath(),
-                $this->getTargetPath(),
-                $dryrun
-            ),
-            $output
-        );
-    }
-    /**
-     * @{inheritDoc}
-     */
-    public function down(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
-    {
-        return $this->deploy(
-            $this->buildCommand(
-                $this->getTargetPath(),
-                $this->beam->getLocalPath(),
-                $dryrun
-            ),
-            $output
-        );
-    }
-    /**
-     * @param                    $command
-     * @param  callable          $output
+     * Beam up will beam to all target hosts
+     *
+     * @param Closure          $output
+     * @param bool             $dryrun
+     * @param DeploymentResult $deploymentResult
      * @return DeploymentResult
      * @throws RuntimeException
      */
-    protected function deploy($command, \Closure $output = null)
+    public function up(Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
+    {
+        /** @var DeploymentResult $mergedResult */
+        $mergedResult = null;
+        $results = [];
+        foreach ($this->getTargetPaths() as $server => $targetPath) {
+            $result = $this->deploy(
+                $this->buildCommand(
+                    $this->beam->getLocalPath(),
+                    $targetPath,
+                    $dryrun
+                ),
+                $output,
+                true // silence per-server output
+            );
+            $result->setName($server);
+            $results[] = $result;
+
+            // Merge all results
+            if (!$mergedResult) {
+                $mergedResult = $result;
+            } else {
+                $mergedResult = $this->combineResults($mergedResult, $result);
+            }
+        }
+
+        // Render merged output here
+        if ($this->resultStreamHandler) {
+            $handler = $this->resultStreamHandler;
+            $handler($mergedResult);
+        }
+
+        return $mergedResult;
+    }
+
+    /**
+     * Beam down only beams down from the master host
+     *
+     * @param Closure          $output
+     * @param bool             $dryrun
+     * @param DeploymentResult $deploymentResult
+     * @return DeploymentResult
+     * @throws RuntimeException
+     */
+    public function down(Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
+    {
+        return $this->deploy(
+            $this->buildCommand(
+                $this->getTargetPath(),
+                $this->beam->getLocalPath(),
+                $dryrun
+            ),
+            $output,
+            false
+        );
+    }
+
+    /**
+     * @param string  $command
+     * @param Closure $output
+     * @param bool    $silent
+     * @return DeploymentResult
+     * @throws RuntimeException
+     */
+    protected function deploy($command, Closure $output = null, $silent = false)
     {
         $this->generateExcludesFile();
-        $outputHandler = $this->getOutputStreamHandler($output);
+        $outputHandler = $this->getOutputStreamHandler($output, $silent);
         $process = $this->getProcess($command);
         $process->run($outputHandler);
 
@@ -157,6 +200,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             return new DeploymentResult($this->formatOutput($output));
         }
     }
+
     /**
      * Builds the rsync command based of current options
      * @param         $fromPath
@@ -184,7 +228,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
         if ($server['syncPermissions']) {
             $command[] = '--perms';
         }
-        
+
         if ($this->options['args'] !== '') {
             $command[] = $this->options['args'];
         }
@@ -325,6 +369,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
 
         return $steps;
     }
+
     /**
      * @param $line
      * @return array|bool
@@ -334,7 +379,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
         $change = array();
         $matches = array();
         if (1 !== preg_match(
-            '/
+                '/
                 (?:
                     (^\*\w+) # capture anything with a "*" then words e.g. "*deleting"
                     | # or
@@ -356,9 +401,9 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
                 [ ] # a space
                 (.*) # filename
             /x',
-            $line,
-            $matches
-        )) {
+                $line,
+                $matches
+            )) {
             return false;
         }
         if ($matches[1] == '*deleting') {
@@ -437,6 +482,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
 
         return $change;
     }
+
     /**
      * @param $output
      * @return array
@@ -456,6 +502,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
 
         return $changes;
     }
+
     /**
      * Generate the excludes file
      */
@@ -476,6 +523,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             implode(PHP_EOL, $excludes) . PHP_EOL
         );
     }
+
     /**
      * Get the path to the excludes file
      * @return string
@@ -487,6 +535,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             $this->beam->getLocalPathname()
         );
     }
+
     /**
      * Gets the to location for rsync
      *
@@ -496,18 +545,27 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     public function getTargetPath()
     {
         $server = $this->beam->getServer();
-        $hostPath = sprintf(
-            '%s:%s',
-            $server['host'],
-            $server['webroot']
-        );
+        $host = $this->beam->getPrimaryHost($server);
 
-        if (isset($server['user']) && $user = $server['user']) {
-            $hostPath = $user . '@' . $hostPath;
-        }
-
-        return $hostPath;
+        return $this->buildPath($host, $server);
     }
+
+    /**
+     * Gets the to location for rsync for all hostnames (supports multiple hosts)
+     * Key is server name / url
+     *
+     * @return array
+     */
+    public function getTargetPaths()
+    {
+        $paths = [];
+        $server = $this->beam->getServer();
+        foreach ($this->beam->getHosts() as $host) {
+            $paths[$host] = $this->buildPath($host, $server);
+        }
+        return $paths;
+    }
+
     /**
      * Return a string representation of the target
      * @return string
@@ -516,6 +574,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     {
         return $this->getTargetPath();
     }
+
     /**
      * @return mixed|null
      */
@@ -523,31 +582,30 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     {
         return null;
     }
+
     /**
      * Set a callback function to receive a stream of changes
-     * @param \Closure $callback function(array $array)
+     * @param Closure $callback function(array $array)
      */
-    public function setStreamHandler(\Closure $callback = null)
+    public function setStreamHandler(Closure $callback = null)
     {
         $this->resultStreamHandler = $callback;
     }
+
     /**
      * Create a callback to handle the rsync process output
      *
      * @see setStreamHandler
-     * @param callable $callback
+     * @param Closure $callback
+     * @param bool    $silent Force stream handler to capture, but not output
      * @return callable
      */
-    protected function getOutputStreamHandler(\Closure $callback = null)
+    protected function getOutputStreamHandler(Closure $callback = null, $silent = false)
     {
-        if (!$this->resultStreamHandler && !$callback) {
-            return null;
-        }
-
-        $streamHandler = $this->resultStreamHandler;
-        $that = $this;
-        return function ($type, $data = "\n") use ($streamHandler, $callback, $that) {
-
+        $streamHandler = $silent ? null : $this->resultStreamHandler;
+        $buffer = '';
+        $results = [];
+        return function ($type, $data = "\n") use (&$buffer, &$results, $streamHandler, $callback) {
             // Ignore error output
             if ($type === Process::ERR) {
                 return null;
@@ -558,30 +616,28 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             }
 
             // If a stream output handler is set, parse the partial change set
-            if ($streamHandler) {
-                static $buffer = '';
-                static $results = array();
+            $buffer .= $data;
+            $lastNewLine = strrpos($buffer, "\n");
+            if ($lastNewLine !== false) {
+                $data = substr($buffer, 0, $lastNewLine);
+                $buffer = substr($buffer, $lastNewLine);
 
-                $buffer .= $data;
+                $result = $this->formatOutput($data);
+                $results[] = $result;
 
-                $lastNewLine = strrpos($buffer, "\n");
-                if ($lastNewLine !== false) {
-                    $data = substr($buffer, 0, $lastNewLine);
-                    $buffer = substr($buffer, $lastNewLine);
-
-                    $result = $that->formatOutput($data);
-                    $results[] = $result;
-
+                // Pass through, unless silenced
+                if ($streamHandler) {
                     $streamHandler($result);
                 }
+            }
 
-                // Return the collected results when asked
-                if ($type === 'fetch') {
-                    return call_user_func_array('array_merge', $results);
-                }
+            // Return the collected results when asked
+            if ($type === 'fetch') {
+                return call_user_func_array('array_merge', $results);
             }
         };
     }
+
     /**
      * @param $command
      * @return Process
@@ -597,5 +653,91 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
         );
 
         return $process;
+    }
+
+    /** Helper to build a path based on a hostname and server config array
+     *
+     * @param string $host
+     * @param array  $server
+     * @return string
+     */
+    protected function buildPath($host, $server)
+    {
+        $hostPath = sprintf(
+            '%s:%s',
+            $host,
+            $server['webroot']
+        );
+
+        if (isset($server['user']) && $user = $server['user']) {
+            $hostPath = $user . '@' . $hostPath;
+        }
+
+        return $hostPath;
+    }
+
+    /**
+     * @param DeploymentResult $left
+     * @param DeploymentResult $right
+     * @return DeploymentResult
+     */
+    protected function combineResults($left, $right)
+    {
+        $result = [];
+        // Map left result by filename
+        foreach ($left as $leftItem) {
+            $result[$leftItem['filename']] = $leftItem;
+        }
+        // Merge in right item
+        foreach ($right as $rightItem) {
+            $filename = $rightItem['filename'];
+            if (isset($result[$filename])) {
+                $result[$filename] = $this->combineResultRows(
+                    $result[$filename],
+                    $rightItem,
+                    $right->getConfiguration()
+                );
+            } else {
+                $result[$filename] = $rightItem;
+            }
+        }
+        $result = new DeploymentResult(array_values($result));
+        $result->setNestedResults(array_merge(
+            $left->getNestedResults(),
+            $right->getNestedResults()
+        ));
+        return $result;
+    }
+
+    /**
+     * If multiple servers have different update type, pick the best one to display in the output log
+     *
+     * @param array                         $left
+     * @param array                         $right
+     * @param DeploymentResultConfiguration $config
+     * @return array
+     */
+    protected function combineResultRows($left, $right, $config)
+    {
+        // Build result object
+        $result = array_merge($left, $right);
+
+        // Get all distinct reasons
+        $result['reason'] = array_unique(array_merge($left['reason'], $right['reason']));
+
+        // Pick best update (first matching item in getUpdates())
+        foreach ($config->getUpdates() as $update) {
+            if ($left['update'] === $update || $right['update'] === $update) {
+                $result['update'] = $update;
+                break;
+            }
+        }
+
+        // Count number of nodes this item is changed on
+        $leftNodes = isset($left['nodes']) ? $left['nodes'] : 1;
+        $rightNodes = isset($right['nodes']) ? $right['nodes'] : 1;
+        $result['nodes'] = $leftNodes + $rightNodes;
+
+        return $result;
     }
 }

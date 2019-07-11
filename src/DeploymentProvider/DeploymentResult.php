@@ -16,17 +16,33 @@ class DeploymentResult extends \ArrayObject
      * @var
      */
     protected $updateCounts;
+
     /**
-     * @var
+     * @var DeploymentResultConfiguration
      */
     protected $configuration;
+
+    /**
+     * If result is tied to a specific node, name of this node
+     *
+     * @var string|null
+     */
+    protected $name = null;
+
+    /**
+     * Nested result items
+     *
+     * @var DeploymentResult[]
+     */
+    protected $nestedResults = [];
+
     /**
      * @param $result
      */
     public function __construct(array $result)
     {
         $processor = new Processor();
-        $this->result = $processor->processConfiguration(
+        $processor->processConfiguration(
             $this->configuration = new DeploymentResultConfiguration(),
             array(
                 $result
@@ -34,8 +50,9 @@ class DeploymentResult extends \ArrayObject
         );
         parent::__construct($result);
     }
+
     /**
-     * @param $type
+     * @param string $type
      * @return mixed
      * @throws InvalidArgumentException
      */
@@ -58,5 +75,51 @@ class DeploymentResult extends \ArrayObject
         }
 
         return $this->updateCounts[$type];
+    }
+
+    /**
+     * @return DeploymentResultConfiguration
+     */
+    public function getConfiguration()
+    {
+        return $this->configuration;
+    }
+
+    /**
+     * @param null|string $name
+     * @return DeploymentResult
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * Get all nested results
+     *
+     * @return DeploymentResult[]
+     */
+    public function getNestedResults()
+    {
+        return $this->nestedResults ?: [$this];
+    }
+
+    /**
+     * @param DeploymentResult[] $nestedResults
+     * @return DeploymentResult
+     */
+    public function setNestedResults($nestedResults)
+    {
+        $this->nestedResults = $nestedResults;
+        return $this;
     }
 }

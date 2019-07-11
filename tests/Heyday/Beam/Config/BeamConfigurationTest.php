@@ -85,6 +85,7 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                     'type' => 'rsync',
                     'sshpass' => false,
                     'syncPermissions' => false,
+                    'hosts' => [],
                 )
             ),
             $processedConfig['servers']
@@ -103,13 +104,14 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                         'live' => array(
                             'user' => 'test',
                             'host' => 'test',
-                            'webroot' => 'test'
+                            'webroot' => 'test',
+                            'hosts' => [],
                         )
                     )
                 )
             )
         );
-        
+
         $excludes = $reflection->getStaticProperties();
 
         $this->assertEquals(
@@ -121,7 +123,8 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                         'webroot' => 'test',
                         'type' => 'rsync',
                         'sshpass' => false,
-                        'syncPermissions' => true
+                        'syncPermissions' => true,
+                        'hosts' => [],
                     )
                 ),
                 'import' => array(),
@@ -237,7 +240,7 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
         file_put_contents($file2, json_encode($otherExternalConfig));
 
         $reflection = new \ReflectionClass('\Heyday\Beam\Config\BeamConfiguration');
-        
+
         $excludes = $reflection->getStaticProperties();
 
         $this->assertEquals(
@@ -288,6 +291,7 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                         'type' => 'rsync',
                         'sshpass' => false,
                         'syncPermissions' => true,
+                        'hosts' => [],
                     )
                 )
             ),
