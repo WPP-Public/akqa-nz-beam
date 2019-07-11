@@ -2,8 +2,10 @@
 
 namespace Heyday\Beam\DeploymentProvider;
 
+use Closure;
 use Heyday\Beam\Beam;
 use org\bovigo\vfs\vfsStream;
+use Symfony\Component\Process\Process;
 
 class RsyncTest extends \PHPUnit_Framework_TestCase
 {
@@ -257,11 +259,11 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
 
     public function testDeploy()
     {
-        $processStub = $this->getMock('Symfony\Component\Process\Process', array(), array(), '', false);
+        $processStub = $this->getMock(Process::class, array(), array(), '', false);
 
         $processStub->expects($this->once())
             ->method('run')
-            ->with($this->equalTo(null));
+            ->with($this->isInstanceOf(Closure::class));
 
         $processStub->expects($this->once())
             ->method('isSuccessful')
@@ -447,11 +449,11 @@ OUTPUT
      */
     public function testDeployException()
     {
-        $processStub = $this->getMock('Symfony\Component\Process\Process', array(), array(), '', false);
+        $processStub = $this->getMock(Process::class, array(), array(), '', false);
 
         $processStub->expects($this->once())
             ->method('run')
-            ->with($this->equalTo(null));
+            ->with($this->isInstanceOf(Closure::class));
 
         $processStub->expects($this->once())
             ->method('isSuccessful')
