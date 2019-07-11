@@ -90,6 +90,7 @@ class DeploymentResultConfiguration extends Configuration implements Configurati
                         ->end()
                     ->end()
                     ->scalarNode('filename')->isRequired()->end()
+                    ->scalarNode('nodes')->end()
                     ->scalarNode('localfilename')->end()
                 ->end();
 

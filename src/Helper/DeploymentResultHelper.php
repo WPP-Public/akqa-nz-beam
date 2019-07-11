@@ -3,6 +3,7 @@
 namespace Heyday\Beam\Helper;
 
 use Heyday\Beam\DeploymentProvider\DeploymentResult;
+use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Helper\FormatterHelper;
 use Symfony\Component\Console\Helper\Helper;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -48,19 +49,25 @@ class DeploymentResultHelper extends Helper
         DeploymentResult $deploymentResult,
         $type = false
     ) {
+        $totalNodes = count($deploymentResult->getNestedResults());
+        $output->getFormatter()->setStyle('count', new OutputFormatterStyle('cyan'));
         foreach ($deploymentResult as $change) {
-            if ($change['reason'] != array('time') && (!$type || $change['update'] === $type)) {
-                $output->writeLn(
-                    $this->formatterHelper->formatSection(
-                        $change['update'],
-                        $this->formatterHelper->formatSection(
-                            implode(',', $change['reason']),
-                            $change['filename'],
-                            'comment'
-                        ),
-                        $change['update'] === 'deleted' ? 'error' : 'info'
-                    )
+            if ($change['reason'] != ['time'] && (!$type || $change['update'] === $type)) {
+                // If changes made to multiple servers, show total of modified servers for this line item
+                $nodes = isset($change['nodes']) ? $change['nodes'] : 1;
+                $nodeCount = $totalNodes > 1
+                    ? "<count>{$nodes}/{$totalNodes}</count> "
+                    : '';
+
+                // Format
+                $message = $this->formatterHelper->formatSection(
+                    implode(',', $change['reason']),
+                    $nodeCount . $change['filename'],
+                    'comment'
                 );
+                $style = $change['update'] === 'deleted' ? 'error' : 'info';
+                $output->writeLn($this->formatterHelper->formatSection($change['update'], $message, $style));
+
             }
         }
     }

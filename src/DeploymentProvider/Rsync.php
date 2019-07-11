@@ -733,6 +733,11 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             }
         }
 
+        // Count number of nodes this item is changed on
+        $leftNodes = isset($left['nodes']) ? $left['nodes'] : 1;
+        $rightNodes = isset($right['nodes']) ? $right['nodes'] : 1;
+        $result['nodes'] = $leftNodes + $rightNodes;
+
         return $result;
     }
 }
