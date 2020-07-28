@@ -762,7 +762,7 @@ class Beam
 
             if ($command['tty']) {
 
-                passthru(sprintf('%s; %s',
+                passthru(sprintf('%s; %s 2>&1',
                     "cd {$this->getLocalPath()}",
                     $command['command']
                 ), $exit);

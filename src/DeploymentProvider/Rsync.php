@@ -117,6 +117,8 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
         /** @var DeploymentResult $mergedResult */
         $mergedResult = null;
         $results = [];
+        // silent per-server output when collating multiple streams
+        $silent = count($this->getTargetPaths()) > 1;
         foreach ($this->getTargetPaths() as $server => $targetPath) {
             $result = $this->deploy(
                 $this->buildCommand(
@@ -125,7 +127,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
                     $dryrun
                 ),
                 $output,
-                true // silence per-server output
+                $silent
             );
             $result->setName($server);
             $results[] = $result;
