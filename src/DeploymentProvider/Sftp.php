@@ -188,9 +188,9 @@ class Sftp extends ManualChecksum implements DeploymentProvider
             "The PHP '%s' extension is required to use SFTP deployment, but it is not loaded. (You may need to install it)."
         );
 
-        return array(
+        return [
             DeploymentProvider::LIMITATION_REMOTECOMMAND
-        );
+        ];
     }
 
     /**

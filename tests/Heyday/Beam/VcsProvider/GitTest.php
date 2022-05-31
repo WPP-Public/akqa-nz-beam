@@ -2,93 +2,56 @@
 
 namespace Heyday\Beam\VcsProvider;
 
+use Heyday\Beam\Exception\InvalidConfigurationException;
 use org\bovigo\vfs\vfsStream;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
+use Symfony\Component\Process\Process;
 
-class GitTest extends \PHPUnit_Framework_TestCase
+class GitTest extends TestCase
 {
     protected $gitMock;
 
-    /**
-     * Shiv for deprecated getMock()
-     *
-     * @param string $originalClassName
-     * @param array  $methods
-     * @param array  $arguments
-     * @param string $mockClassName
-     * @param bool   $callOriginalConstructor
-     * @param bool   $callOriginalClone
-     * @param bool   $callAutoload
-     * @param bool   $cloneArguments
-     * @param bool   $callOriginalMethods
-     * @param null   $proxyTarget
-     * @return \PHPUnit_Framework_MockObject_MockObject
-     */
-    protected function getMock($originalClassName, $methods = [], array $arguments = [], $mockClassName = '', $callOriginalConstructor = true, $callOriginalClone = true, $callAutoload = true, $cloneArguments = false, $callOriginalMethods = false, $proxyTarget = null)
+
+    protected function setUp(): void
     {
-        $mockObject = $this->getMockObjectGenerator()->getMock(
-            $originalClassName,
-            $methods,
-            $arguments,
-            $mockClassName,
-            $callOriginalConstructor,
-            $callOriginalClone,
-            $callAutoload,
-            $cloneArguments,
-            $callOriginalMethods,
-            $proxyTarget
-        );
-
-        $this->registerMockObject($mockObject);
-
-        return $mockObject;
-    }
-
-    protected function setUp()
-    {
-        $this->gitMock = $this->getMock(
-            __NAMESPACE__ . '\Git',
-            array(
-                'process',
-                'getUserIdentity'
-            ),
-            array(),
-            '',
-            false
-        );
+        $this->gitMock = $this->createPartialMock(__NAMESPACE__ . '\Git', [
+            'process',
+            'getUserIdentity'
+        ]);
     }
 
     public function testGetCurrentBranch()
     {
-        $processMock = $this->getMock(
-            'Symfony\Component\Process\Process',
-            array(),
-            array(),
+        /** @var MockObject */
+        $processMock = $this->createMock(
+            Process::class,
+            [],
+            [],
             '',
             false
         );
-        $processMock->expects($this->once())
-            ->method('getOutput')
-            ->will($this->returnValue(
+
+        $processMock->method('getOutput')->will($this->returnValue(
                 <<<OUTPUT
-   master
+master
 OUTPUT
             ));
 
         $this->gitMock->expects($this->once())
             ->method('process')
             ->with($this->equalTo('git rev-parse --abbrev-ref HEAD'))
-            ->will($this->returnValue($processMock));
+            ->willReturn($processMock);
 
         $this->assertEquals('master', $this->gitMock->getCurrentBranch());
-
     }
 
     public function testGetAvailableBranches()
     {
-        $processMock = $this->getMock(
+        $processMock = $this->createMock(
             'Symfony\Component\Process\Process',
-            array(),
-            array(),
+            [],
+            [],
             '',
             false
         );
@@ -111,13 +74,13 @@ OUTPUT
             );
 
         $this->assertEquals(
-            array(
+            [
                 'test',
                 'master',
                 'remotes/origin/HEAD',
                 'remotes/origin/test',
                 'remotes/origin/master'
-            ),
+            ],
             $this->gitMock->getAvailableBranches()
         );
 
@@ -128,9 +91,9 @@ OUTPUT
         vfsStream::setup(
             'root',
             0755,
-            array(
-                '.git' => array()
-            )
+            [
+                '.git' => []
+            ]
         );
         $git = new Git(vfsStream::url('root'));
         $this->assertTrue($git->exists());
@@ -143,11 +106,11 @@ OUTPUT
         vfsStream::setup(
             'root',
             0755,
-            array(
-                '.git' => array(
+            [
+                '.git' => [
                     'hello' => 'cscs'
-                )
-            )
+                ]
+            ]
         );
 
         $this->assertTrue(file_exists(vfsStream::url('root/.git/hello')));
@@ -163,14 +126,15 @@ OUTPUT
         $this->assertTrue(file_exists(vfsStream::url('root')));
     }
 
-    /**
-     * @expectedException \Heyday\Beam\Exception\InvalidConfigurationException
-     * @expectedExceptionMessage The git vcs provider can only update remotes
-     */
+
     public function testUpdateBranchException()
     {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage('The git vcs provider can only update remotes');
+
         $this->gitMock->updateBranch('master');
     }
+
 
     public function testUpdateBranch()
     {
@@ -183,10 +147,11 @@ OUTPUT
 
     public function testGetLog()
     {
-        $processMock = $this->getMock(
+        /** @var MockObject */
+        $processMock = $this->createMock(
             'Symfony\Component\Process\Process',
-            array(),
-            array(),
+            [],
+            [],
             '',
             false
         );

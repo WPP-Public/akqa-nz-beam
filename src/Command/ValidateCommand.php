@@ -36,13 +36,13 @@ class ValidateCommand extends Command
             $configPath = $this->getConfigPath($input);
 
             $output->writeln(
-                array(
+                [
                     $this->formatterHelper->formatSection(
                         'info',
                         "Schema valid in <comment>$configPath</comment>",
                         'info'
                     )
-                )
+                ]
             );
 
         } catch (\Exception $e) {

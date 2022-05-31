@@ -2,14 +2,16 @@
 
 namespace Heyday\Beam\Config;
 
-class ConfigurationTest extends \PHPUnit_Framework_TestCase
+use PHPUnit\Framework\TestCase;
+
+class ConfigurationTest extends TestCase
 {
     /**
      * @var Configuration
      */
     protected $object;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->object = $this->getMockForAbstractClass('Heyday\Beam\Config\Configuration');
     }
@@ -19,10 +21,10 @@ class ConfigurationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(
             "'test1', 'test2'",
             $this->object->getFormattedOptions(
-                array(
+                [
                     'test1',
                     'test2'
-                )
+                ]
             )
         );
     }

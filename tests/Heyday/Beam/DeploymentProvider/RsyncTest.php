@@ -4,88 +4,45 @@ namespace Heyday\Beam\DeploymentProvider;
 
 use Closure;
 use Heyday\Beam\Beam;
+use Heyday\Beam\Exception\RuntimeException;
 use org\bovigo\vfs\vfsStream;
+use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\Process\Process;
+use PHPUnit\Framework\TestCase;
 
-class RsyncTest extends \PHPUnit_Framework_TestCase
+class RsyncTest extends TestCase
 {
     /**
-     * Sets up the fixture, for example, opens a network connection.
-     * This method is called before a test is executed.
+     * @return MockObject
      */
-    protected function setUp()
+    protected function getRsyncMock($methods = [])
     {
-//        $this->validOptions = array(
-//            'checksum' => true,
-//            'delete'
-//        );
+        return $this->createPartialMock(
+            Rsync::class,
+            $methods
+        );
     }
 
     /**
-     * Shiv for deprecated getMock()
-     *
-     * @param string $originalClassName
-     * @param array  $methods
-     * @param array  $arguments
-     * @param string $mockClassName
-     * @param bool   $callOriginalConstructor
-     * @param bool   $callOriginalClone
-     * @param bool   $callAutoload
-     * @param bool   $cloneArguments
-     * @param bool   $callOriginalMethods
-     * @param null   $proxyTarget
-     * @return \PHPUnit_Framework_MockObject_MockObject
+     * @return MockObject
      */
-    protected function getMock($originalClassName, $methods = [], array $arguments = [], $mockClassName = '', $callOriginalConstructor = true, $callOriginalClone = true, $callAutoload = true, $cloneArguments = false, $callOriginalMethods = false, $proxyTarget = null)
+    protected function getBeamMock($methods = [])
     {
-        $mockObject = $this->getMockObjectGenerator()->getMock(
-            $originalClassName,
-            $methods,
-            $arguments,
-            $mockClassName,
-            $callOriginalConstructor,
-            $callOriginalClone,
-            $callAutoload,
-            $cloneArguments,
-            $callOriginalMethods,
-            $proxyTarget
-        );
-
-        $this->registerMockObject($mockObject);
-
-        return $mockObject;
-    }
-
-    protected function getRsyncMock($methods = array(), $options = array())
-    {
-        return $this->getMock(
-            Rsync::class,
-            $methods,
-            [$options]
-        );
-    }
-
-    protected function getBeamMock()
-    {
-        return $this->getMock(
+        return $this->createPartialMock(
             Beam::class,
-            array(),
-            array(),
-            '',
-            false
+            $methods
         );
     }
 
-    protected function getDeploymentResultMock($result = array())
+
+    /**
+     * @return MockObject
+     */
+    protected function getDeploymentResultMock()
     {
-        return $this->getMock(
-            'Heyday\Beam\DeploymentProvider\DeploymentResult',
-            array(),
-            array(
-                $result
-            )
-        );
+        return $this->createMock(DeploymentResult::class);
     }
+
 
     protected function getAccessibleMethod($methodName)
     {
@@ -97,7 +54,7 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
 
     public function testConstruct()
     {
-        $rsync = new Rsync(array());
+        $rsync = new Rsync([]);
         $this->assertInstanceOf('Heyday\Beam\DeploymentProvider\Rsync', $rsync);
     }
 
@@ -106,7 +63,7 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
         $output = function () {
         };
 
-        $rsync = $this->getRsyncMock(array('deploy', 'buildCommand', 'getTargetPaths'));
+        $rsync = $this->getRsyncMock(['deploy', 'buildCommand', 'getTargetPaths']);
 
         $rsync->expects($this->once())
             ->method('buildCommand')
@@ -125,11 +82,10 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
             )
             ->will($this->returnValue($this->getDeploymentResultMock()));
 
-        $rsync->expects($this->once())
-            ->method('getTargetPaths')
+        $rsync->method('getTargetPaths')
             ->will($this->returnValue(['topath']));
 
-        $beamMock = $this->getBeamMock();
+        $beamMock = $this->getBeamMock(['getLocalPath']);
 
         $beamMock->expects($this->once())
             ->method('getLocalPath')
@@ -145,7 +101,7 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
         $output = function () {
         };
 
-        $rsync = $this->getRsyncMock(array('deploy', 'buildCommand', 'getTargetPaths'));
+        $rsync = $this->getRsyncMock(['deploy', 'buildCommand', 'getTargetPaths']);
 
         $rsync->expects($this->once())
             ->method('buildCommand')
@@ -164,11 +120,12 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
             )
             ->will($this->returnValue($this->getDeploymentResultMock()));
 
-        $rsync->expects($this->once())
-            ->method('getTargetPaths')
+        $rsync->method('getTargetPaths')
             ->will($this->returnValue(['topath']));
 
-        $beamMock = $this->getBeamMock();
+        $beamMock = $this->getBeamMock([
+            'getLocalPath',
+        ]);
 
         $beamMock->expects($this->once())
             ->method('getLocalPath')
@@ -184,7 +141,7 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
         $output = function () {
         };
 
-        $rsync = $this->getRsyncMock(array('deploy', 'buildCommand', 'getTargetPath'));
+        $rsync = $this->getRsyncMock(['deploy', 'buildCommand', 'getTargetPath']);
 
         $rsync->expects($this->once())
             ->method('buildCommand')
@@ -207,7 +164,9 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
             ->method('getTargetPath')
             ->will($this->returnValue('topath'));
 
-        $beamMock = $this->getBeamMock();
+        $beamMock = $this->getBeamMock([
+            'getLocalPath'
+        ]);
 
         $beamMock->expects($this->once())
             ->method('getLocalPath')
@@ -223,7 +182,7 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
         $output = function () {
         };
 
-        $rsync = $this->getRsyncMock(array('deploy', 'buildCommand', 'getTargetPath'));
+        $rsync = $this->getRsyncMock(['deploy', 'buildCommand', 'getTargetPath']);
 
         $rsync->expects($this->once())
             ->method('buildCommand')
@@ -246,7 +205,9 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
             ->method('getTargetPath')
             ->will($this->returnValue('topath'));
 
-        $beamMock = $this->getBeamMock();
+        $beamMock = $this->getBeamMock([
+            'getLocalPath'
+        ]);
 
         $beamMock->expects($this->once())
             ->method('getLocalPath')
@@ -259,7 +220,8 @@ class RsyncTest extends \PHPUnit_Framework_TestCase
 
     public function testDeploy()
     {
-        $processStub = $this->getMock(Process::class, array(), array(), '', false);
+        /** @var MockObject */
+        $processStub = $this->createMock(Process::class, [], [], '', false);
 
         $processStub->expects($this->once())
             ->method('run')
@@ -297,10 +259,10 @@ OUTPUT
 
 
         $rsync = $this->getRsyncMock(
-            array(
+            [
                 'generateExcludesFile',
                 'getProcess'
-            )
+            ]
         );
 
         $rsync->expects($this->once())
@@ -313,68 +275,68 @@ OUTPUT
 
         $this->assertEquals(
             new DeploymentResult(
-                array(
-                    array(
+                [
+                    [
                         'update'   => 'deleted',
                         'filename' => 'test1',
                         'filetype' => 'file',
                         'reason'   =>
-                            array(
+                            [
                                 'missing',
-                            ),
-                    ),
-                    array(
+                            ],
+                    ],
+                    [
                         'update'   => 'deleted',
                         'filename' => 'test2',
                         'filetype' => 'file',
                         'reason'   =>
-                            array(
+                            [
                                 'missing',
-                            ),
-                    ),
-                    array(
+                            ],
+                    ],
+                    [
                         'update'   => 'received',
                         'filetype' => 'file',
                         'reason'   =>
-                            array(
+                            [
                                 'checksum',
                                 'size',
-                            ),
+                            ],
                         'filename' => 'test3',
-                    ),
-                    array(
+                    ],
+                    [
                         'update'   => 'received',
                         'filetype' => 'file',
                         'reason'   =>
-                            array(
+                            [
                                 'checksum',
                                 'size',
-                            ),
+                            ],
                         'filename' => 'test4',
-                    ),
-                    array(
+                    ],
+                    [
                         'update'   => 'received',
                         'filetype' => 'file',
                         'reason'   =>
-                            array(
+                            [
                                 'new',
-                            ),
+                            ],
                         'filename' => 'test5',
-                    ),
-                    array(
+                    ],
+                    [
                         'update'   => 'received',
                         'filetype' => 'file',
                         'reason'   =>
-                            array(
+                            [
                                 'new',
-                            ),
+                            ],
                         'filename' => 'test6',
-                    ),
-                    array(
+                    ],
+                    [
                         'update'   => 'received',
                         'filetype' => 'file',
                         'reason'   =>
-                            array(
+                            [
                                 'checksum',
                                 'size',
                                 'permissions',
@@ -382,59 +344,59 @@ OUTPUT
                                 'group',
                                 'acl',
                                 'extended'
-                            ),
+                            ],
                         'filename' => 'test7',
-                    ),
-                    array(
+                    ],
+                    [
                         'update'   => 'created',
                         'filetype' => 'directory',
                         'reason'   =>
-                            array(),
+                            [],
                         'filename' => 'test9',
-                    ),
-                    array(
+                    ],
+                    [
                         'update'   => 'sent',
                         'filetype' => 'file',
                         'reason'   =>
-                            array(),
+                            [],
                         'filename' => 'test10',
-                    ),
-                    array(
+                    ],
+                    [
                         'update'   => 'attributes',
                         'filetype' => 'file',
                         'reason'   =>
-                            array(),
+                            [],
                         'filename' => 'test11',
-                    ),
-                    array(
+                    ],
+                    [
                         'update'   => 'link',
                         'filetype' => 'file',
                         'reason'   =>
-                            array(),
+                            [],
                         'filename' => 'test12',
-                    ),
-                    array(
+                    ],
+                    [
                         'update'   => 'sent',
                         'filetype' => 'symlink',
                         'reason'   =>
-                            array(),
+                            [],
                         'filename' => 'test13',
-                    ),
-                    array(
+                    ],
+                    [
                         'update'   => 'sent',
                         'filetype' => 'device',
                         'reason'   =>
-                            array(),
+                            [],
                         'filename' => 'test14',
-                    ),
-                    array(
+                    ],
+                    [
                         'update'   => 'sent',
                         'filetype' => 'special',
                         'reason'   =>
-                            array(),
+                            [],
                         'filename' => 'test15',
-                    ),
-                )
+                    ],
+                ]
             ),
             $this->getAccessibleMethod('deploy')->invoke(
                 $rsync,
@@ -443,13 +405,14 @@ OUTPUT
         );
     }
 
-    /**
-     * @expectedException \Heyday\Beam\Exception\RuntimeException
-     * @expectedExceptionMessage Some error
-     */
+
     public function testDeployException()
     {
-        $processStub = $this->getMock(Process::class, array(), array(), '', false);
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Some error');
+
+        /** @var MockObject */
+        $processStub = $this->createMock(Process::class, [], [], '', false);
 
         $processStub->expects($this->once())
             ->method('run')
@@ -465,10 +428,10 @@ OUTPUT
 
 
         $rsync = $this->getRsyncMock(
-            array(
+            [
                 'generateExcludesFile',
                 'getProcess'
-            )
+            ]
         );
 
         $rsync->expects($this->once())
@@ -487,9 +450,11 @@ OUTPUT
 
     public function testGetExcludesPath()
     {
-        $rsync = new Rsync(array());
+        $rsync = new Rsync([]);
 
-        $beamMock = $this->getBeamMock();
+        $beamMock = $this->getBeamMock([
+            'getLocalPathname'
+        ]);
 
         $beamMock->expects($this->once())
             ->method('getLocalPathname')
@@ -505,19 +470,22 @@ OUTPUT
 
     public function testGetTargetPath()
     {
-        $rsync = new Rsync(array());
+        $rsync = new Rsync([]);
 
-        $beamMock = $this->getBeamMock();
+        $beamMock = $this->getBeamMock([
+            'getServer',
+            'getPrimaryHost'
+        ]);
 
         $beamMock->expects($this->once())
             ->method('getServer')
             ->will(
                 $this->returnValue(
-                    array(
+                    [
                         'user'    => 'user',
                         'host'    => 'host',
                         'webroot' => 'webroot'
-                    )
+                    ]
                 )
             );
 
@@ -538,19 +506,22 @@ OUTPUT
         vfsStream::setup(
             'root',
             0755,
-            array()
+            []
         );
 
-        $beamMock = $this->getBeamMock();
+        $beamMock = $this->getBeamMock([
+            'getConfig',
+            'hasPath'
+        ]);
 
         $beamMock->expects($this->once())
             ->method('getConfig')
             ->will(
                 $this->returnValue(
-                    array(
+                    [
                         'test',
                         'test2'
-                    )
+                    ]
                 )
             );
 
@@ -561,9 +532,9 @@ OUTPUT
             );
 
         $rsync = $this->getRsyncMock(
-            array(
+            [
                 'getExcludesPath'
-            )
+            ]
         );
 
         $rsync->expects($this->once())
@@ -590,19 +561,23 @@ OUTPUT
         vfsStream::setup(
             'root',
             0755,
-            array()
+            []
         );
 
-        $beamMock = $this->getBeamMock();
+        $beamMock = $this->getBeamMock([
+            'getConfig',
+            'hasPath',
+            'getOption'
+        ]);
 
         $beamMock->expects($this->once())
             ->method('getConfig')
             ->will(
                 $this->returnValue(
-                    array(
+                    [
                         'test',
                         'test2'
-                    )
+                    ]
                 )
             );
 
@@ -620,9 +595,9 @@ OUTPUT
             );
 
         $rsync = $this->getRsyncMock(
-            array(
+            [
                 'getExcludesPath'
-            )
+            ]
         );
 
         $rsync->expects($this->once())
@@ -642,16 +617,19 @@ OUTPUT
     public function testBuildCommand()
     {
         $rsync = $this->getRsyncMock(
-            array(
+            [
                 'getExcludesPath'
-            )
+            ]
         );
 
         $rsync->expects($this->atLeastOnce())
             ->method('getExcludesPath')
             ->will($this->returnValue('/test'));
 
-        $beamMock = $this->getBeamMock();
+        $beamMock = $this->getBeamMock([
+            'hasPath',
+            'getServer'
+        ]);
 
         $beamMock->expects($this->atLeastOnce())
             ->method('hasPath')
@@ -659,9 +637,9 @@ OUTPUT
                 $this->returnValue(false)
             );
 
-        $server = array(
+        $server = [
             'syncPermissions' => false
-        );
+        ];
 
         $beamMock->method('getServer')->will(
             $this->returnCallback(function () use (&$server) {
@@ -696,14 +674,13 @@ OUTPUT
 
         // Pretend to be an old version of rsync to output pre-3.0.1 compatible options
         $rsync = $this->getRsyncMock(
-            array(
+            [
                 'getExcludesPath',
                 'getRsyncVersion'
-            ),
-            array(
-                'delete' => true
-            )
+            ]
         );
+
+        $rsync->setOption('delete', true);
 
         $rsync->expects($this->atLeastOnce())
             ->method('getExcludesPath')
@@ -724,14 +701,13 @@ OUTPUT
 
         // Pretend to be the minimum rsync version required for --delete-delay to work
         $rsync = $this->getRsyncMock(
-            array(
+            [
                 'getExcludesPath',
                 'getRsyncVersion'
-            ),
-            array(
-                'delete' => true
-            )
+            ]
         );
+
+        $rsync->setOption('delete', true);
 
         $rsync->method('getRsyncVersion')->willReturn('3.0.0');
         $rsync->method('getExcludesPath')->will($this->returnValue('/test'));
@@ -749,7 +725,11 @@ OUTPUT
 
     public function testGetRsyncVersion()
     {
-        $rsync = $this->getRsyncMock();
+        $rsync = $this->getRsyncMock([
+            'getRsyncVersion'
+        ]);
+
+        $rsync->method('getRsyncVersion')->willReturn('3.0.0');
 
         $version = $this->getAccessibleMethod('getRsyncVersion')
             ->invoke($rsync);

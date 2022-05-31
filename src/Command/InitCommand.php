@@ -46,24 +46,24 @@ class InitCommand extends SymfonyCommand
 
         }
 
-        $template = array(
-            'exclude' => array(
-                'patterns' => array(),
-            ),
-            'servers' => array(
-                's1'   => array(
+        $template = [
+            'exclude' => [
+                'patterns' => [],
+            ],
+            'servers' => [
+                's1'   => [
                     'user'    => '',
                     'host'    => '',
                     'webroot' => '',
-                ),
-                'live' => array(
+                ],
+                'live' => [
                     'user'    => '',
                     'host'    => '',
                     'webroot' => '',
                     'branch'  => 'remotes/origin/master'
-                )
-            ),
-        );
+                ]
+            ],
+        ];
 
         // Save template
         file_put_contents('beam.json', json_encode($template, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));

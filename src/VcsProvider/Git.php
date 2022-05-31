@@ -39,11 +39,13 @@ class Git implements GitLikeVcsProvider
     public function getAvailableBranches()
     {
         $process = $this->process('git branch -a');
-        $matches = array();
+        $matches = [];
         preg_match_all('/[^\n](?:[\s\*]*)([^\s]*)(?:.*)/', $process->getOutput(), $matches);
 
         return $matches[1];
     }
+
+
     /**
      * @{inheritDoc}
      */
@@ -51,6 +53,8 @@ class Git implements GitLikeVcsProvider
     {
         return file_exists($this->srcdir . DIRECTORY_SEPARATOR . '.git');
     }
+
+
     /**
      * @{inheritDoc}
      */
@@ -70,6 +74,8 @@ class Git implements GitLikeVcsProvider
             )
         );
     }
+
+
     /**
      * @{inheritDoc}
      */
@@ -82,38 +88,44 @@ class Git implements GitLikeVcsProvider
         // TODO: Replace with git fetch --all ?
         $this->process(sprintf('git remote update --prune %s', $parts[0]));
     }
+
+
     /**
      * A helper method that returns a process with some defaults
-     * @param $command
+     *
+     * @param string|string[] $command
      * @throws RuntimeException
      * @return Process
      */
-    protected function process($command)
+    public function process($command): Process
     {
         $process = $this->getProcess($command);
         $process->run();
+
         if (!$process->isSuccessful()) {
             throw new RuntimeException($process->getErrorOutput());
         }
 
         return $process;
     }
+
+
     /**
-     * @param $command
+     * @param string $command
      * @return Process
      */
-    protected function getProcess($command)
+    public function getProcess($command): Process
     {
-        return new Process(
-            $command,
-            $this->srcdir
-        );
+        return Process::fromShellCommandline($command, $this->srcdir);
     }
+
+
     /**
-     * @param $ref
-     * @return mixed
+     * @param string $ref
+     *
+     * @return string
      */
-    public function getLog($ref)
+    public function getLog($ref): string
     {
         $process = $this->process(
             sprintf(
@@ -129,27 +141,33 @@ class Git implements GitLikeVcsProvider
             $process->getOutput()
         );
     }
+
+
     /**
-     * @param $branch
+     * @param string $branch
      * @return bool
      */
-    public function isRemote($branch)
+    public function isRemote($branch): bool
     {
         return (bool) $this->getRemoteName($branch);
     }
+
+
     /**
-     * @param $branch
+     * @param string $branch
      * @return array|bool
      */
     public function getRemoteName($branch)
     {
-        $matches = array();
+        $matches = [];
         if (1 === preg_match('{^remotes/(.+)/(.+)}', $branch, $matches)) {
             return array_slice($matches, 1);
         } else {
             return false;
         }
     }
+
+
     /**
      * @param $ref
      * @return bool

@@ -1,10 +1,10 @@
 <?php
 
 
-$files = array(
+$files = [
     __DIR__ . '/../vendor/autoload.php',
     __DIR__ . '/../../../autoload.php'
-);
+];
 
 $filename = null;
 foreach ($files as $file) {

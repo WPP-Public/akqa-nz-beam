@@ -18,30 +18,30 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
     /**
      * @var array
      */
-    public static $transferMethods = array(
+    public static $transferMethods = [
         'rsync' => '\Heyday\Beam\TransferMethod\RsyncTransferMethod',
         'ftp' => '\Heyday\Beam\TransferMethod\FtpTransferMethod',
         'sftp' => '\Heyday\Beam\TransferMethod\SftpTransferMethod',
-    );
+    ];
     /**
      * @var array
      */
-    protected $phases = array(
+    protected $phases = [
         'pre',
         'post'
-    );
+    ];
     /**
      * @var array
      */
-    protected $locations = array(
+    protected $locations = [
         'local',
         'target'
-    );
+    ];
     /**
      * Patterns that should not be transferred
      * @var array
      */
-    protected static $defaultExcludes = array(
+    protected static $defaultExcludes = [
         '*~',
         '.DS_Store',
         'beam.json',
@@ -52,7 +52,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
         '.gitmodules',
         '.hg/',
         '.hgignore',
-    );
+    ];
 
     /**
      * Validate user input against a config
@@ -63,19 +63,15 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
     {
         $resolver = new OptionsResolver();
         $resolver->setRequired(
-            array(
+            [
                 'target'
-            )
-        )->setAllowedValues(
-            array(
-                'target' => array_keys($config['servers'])
-            )
-        );
+            ]
+        )->setAllowedValues('target', array_keys($config['servers']));
 
         $resolver->resolve(
-            array(
+            [
                 'target' => $input->getArgument('target')
-            )
+            ]
         );
     }
     /**
@@ -90,7 +86,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
             $configs = BeamConfiguration::loadImports($config['import']);
             array_unshift($configs, $config);
         } else {
-            $configs = array($config);
+            $configs = [$config];
         }
 
         $processor = new Processor();
@@ -107,9 +103,9 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
      * @param array $imported - list of files/urls already loaded
      * @return array
      */
-    public static function loadImports(array $imports, array &$imported = array())
+    public static function loadImports(array $imports, array &$imported = [])
     {
-        $configs = array();
+        $configs = [];
 
         foreach ($imports as $import) {
 
@@ -158,8 +154,8 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
      */
     public function getConfigTreeBuilder()
     {
-        $treeBuilder = new TreeBuilder();
-        $rootNode = $treeBuilder->root('beam');
+        $treeBuilder = new TreeBuilder('beam');
+        $rootNode = $treeBuilder->getRootNode();
         $self = $this;
 
         $rootNode
@@ -268,9 +264,9 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
      */
     public function buildExcludes($value)
     {
-        $value =  $value ? $value : array(
-            'patterns' => array()
-        );
+        $value =  $value ? $value : [
+            'patterns' => []
+        ];
 
         return array_merge(static::$defaultExcludes, $value['patterns']);
     }
@@ -282,8 +278,8 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
     public function getServerTypeTree($name, $type)
     {
         $name = str_replace('.', '_', $name);
-        $typeTreeBuilder = new TreeBuilder();
-        $typeTreeBuilder->root($name)
+        $typeTreeBuilder = new TreeBuilder($name);
+        $typeTreeBuilder->getRootNode()
             ->children()
                 ->enumNode('type')
                 ->values(array_keys(static::$transferMethods))->isRequired()
@@ -291,10 +287,10 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
             ->end();
 
         $typeTree = $typeTreeBuilder->buildTree();
-        $typeTree->finalize($typeTree->normalize(array('type' => $type)));
+        $typeTree->finalize($typeTree->normalize(['type' => $type]));
 
-        $treeBuilder = new TreeBuilder();
-        $node = $treeBuilder->root($name)
+        $treeBuilder = new TreeBuilder($name);
+        $node = $treeBuilder->getRootNode()
             ->children()
                 ->scalarNode('type')->isRequired()->end()
                 ->scalarNode('host')->end()

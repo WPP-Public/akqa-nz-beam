@@ -18,13 +18,13 @@ class Utils
      */
     public static function getFilesFromDirectory(\Closure $condition, $dir)
     {
-        $files = array();
+        $files = [];
         $iterator = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($dir),
             \RecursiveIteratorIterator::CHILD_FIRST
         );
         foreach ($iterator as $file) {
-            if (!in_array($file->getBasename(), array('.', '..')) && ($file->isFile() || $file->isLink()) && $condition(
+            if (!in_array($file->getBasename(), ['.', '..']) && ($file->isFile() || $file->isLink()) && $condition(
                 $file
             )
             ) {
@@ -103,10 +103,10 @@ class Utils
                     $pattern = '*' . $pattern;
                 }
             } elseif ($pattern[0] !== '/') {
-                $pattern = array(
+                $pattern = [
                     '*/' . $pattern,
                     '*/' . $pattern . '/*'
-                );
+                ];
             }
 
             foreach ((array) $pattern as $subpattern) {
@@ -134,7 +134,7 @@ class Utils
      */
     public static function checksumsFromFiles(array $files, $dir)
     {
-        $checksums = array();
+        $checksums = [];
         foreach ($files as $file) {
             $path = $file->getPathname();
             $checksums[Utils::getRelativePath($dir, $path)] = md5_file($path);
@@ -175,8 +175,9 @@ class Utils
         if (!defined('PHP_WINDOWS_VERSION_BUILD')
             && !preg_match('/^.+:\/\/.+/', $location)) {
             try {
-                $process = new Process('rm -rf '. escapeshellarg($location));
+                $process = Process::fromShellCommandline('rm -rf '. escapeshellarg($location));
                 $process->run();
+
                 return;
             } catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
                 // Removal using rm failed. Since this may have been a problem
@@ -185,13 +186,12 @@ class Utils
         }
 
         if (file_exists($location)) {
-
             $iterator = new \RecursiveIteratorIterator(
                 new \RecursiveDirectoryIterator($location),
                 \RecursiveIteratorIterator::CHILD_FIRST
             );
             foreach ($iterator as $file) {
-                if (in_array($file->getBasename(), array('.', '..'))) {
+                if (in_array($file->getBasename(), ['.', '..'])) {
                     continue;
                 } elseif ($file->isFile() || $file->isLink()) {
                     unlink($file->getPathname());
@@ -250,11 +250,11 @@ class Utils
 
         $process = proc_open(
             "$whereIsCommand $command",
-            array(
-                0 => array("pipe", "r"), //STDIN
-                1 => array("pipe", "w"), //STDOUT
-                2 => array("pipe", "w"), //STDERR
-            ),
+            [
+                0 => ["pipe", "r"], //STDIN
+                1 => ["pipe", "w"], //STDOUT
+                2 => ["pipe", "w"], //STDERR
+            ],
             $pipes
         );
         if ($process !== false) {

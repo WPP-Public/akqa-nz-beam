@@ -42,12 +42,13 @@ class DeploymentResult extends \ArrayObject
     public function __construct(array $result)
     {
         $processor = new Processor();
+        $this->configuration = new DeploymentResultConfiguration();
+
         $processor->processConfiguration(
-            $this->configuration = new DeploymentResultConfiguration(),
-            array(
-                $result
-            )
+            $this->configuration,
+            $result
         );
+
         parent::__construct($result);
     }
 
