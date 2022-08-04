@@ -15,7 +15,7 @@ class JsonConfigLoader extends FileLoader
     /**
      * @var array
      */
-    protected $locateCache = array();
+    protected $locateCache = [];
 
     /**
      * Validate the syntax of a JSON string

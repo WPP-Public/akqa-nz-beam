@@ -23,7 +23,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     /**
      * @var array
      */
-    protected $options;
+    protected $options = [];
 
     /**
      * @var Closure
@@ -37,37 +37,46 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     {
         $resolver = new OptionsResolver();
         $resolver->setDefined(
-            array(
+            [
                 'checksum',
                 'delete',
                 'archive',
                 'compress',
                 'delay-updates',
                 'args'
-            )
+            ]
         );
-        $resolver->setAllowedTypes(
-            array(
-                'checksum'      => 'bool',
-                'delete'        => 'bool',
-                'archive'       => 'bool',
-                'compress'      => 'bool',
-                'delay-updates' => 'bool',
-                'args'          => 'string'
-            )
-        );
+
+        $resolver->setAllowedTypes('checksum', 'bool');
+        $resolver->setAllowedTypes('delete', 'bool');
+        $resolver->setAllowedTypes('archive', 'bool');
+        $resolver->setAllowedTypes('compress', 'bool');
+        $resolver->setAllowedTypes('delay-updates', 'bool');
+        $resolver->setAllowedTypes('args', 'string');
+
+
         $resolver->setDefaults(
-            array(
+            [
                 'checksum'      => true,
                 'delete'        => false,
                 'archive'       => true,
                 'compress'      => true,
                 'delay-updates' => true,
                 'args'          => ''
-            )
+            ]
         );
+
         $this->options = $resolver->resolve($options);
     }
+
+
+    public function setOption($option, $value)
+    {
+        $this->options[$option] = $value;
+
+        return $this;
+    }
+
 
     /**
      * @inheritdoc
@@ -178,11 +187,12 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
      * @return DeploymentResult
      * @throws RuntimeException
      */
-    protected function deploy($command, Closure $output = null, $silent = false)
+    public function deploy($command, Closure $output = null, $silent = false)
     {
         $this->generateExcludesFile();
         $outputHandler = $this->getOutputStreamHandler($output, $silent);
         $process = $this->getProcess($command);
+
         $process->run($outputHandler);
 
         if (!$process->isSuccessful()) {
@@ -199,6 +209,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             return new DeploymentResult($outputHandler('fetch'));
         } else {
             $output = $process->getOutput();
+
             return new DeploymentResult($this->formatOutput($output));
         }
     }
@@ -210,35 +221,35 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
      * @param  bool   $dryrun
      * @return string
      */
-    protected function buildCommand($fromPath, $toPath, $dryrun = false)
+    public function buildCommand($fromPath, $toPath, $dryrun = false)
     {
         $server = $this->beam->getServer();
 
         $flags = 'rlD'; // recursion, links, devices, specials
 
-        $command = array(
-            array(
+        $command = [
+            [
                 'rsync %s/ %s',
                 $fromPath,
                 $toPath
-            ),
+            ],
             '-' . $flags,
             '--itemize-changes'
-        );
+        ];
 
         // Sync permissions if enabled for the target
         if ($server['syncPermissions']) {
             $command[] = '--perms';
         }
 
-        if ($this->options['args'] !== '') {
+        if (!empty($this->options['args'])) {
             $command[] = $this->options['args'];
         }
 
         if ($this->beam->hasPath()) {
             $paths = $this->beam->getOption('path');
-            $excludes = array();
-            $includes = array();
+            $excludes = [];
+            $includes = [];
 
             foreach ($paths as $path) {
                 $steps = $this->parsePathSteps($path);
@@ -257,46 +268,50 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             $excludes[] = '/*';
 
             foreach ($includes as $include) {
-                $command[] = array(
+                $command[] = [
                     '--include="%s"',
                     $include
-                );
+                ];
             }
 
             foreach ($excludes as $exclude) {
-                $command[] = array(
+                $command[] = [
                     '--exclude="%s"',
                     $exclude
-                );
+                ];
             }
         }
 
         if ($dryrun) {
             $command[] = '--dry-run';
         }
-        if ($this->options['checksum']) {
+
+        if (!isset($this->options['checksum']) || $this->options['checksum']) {
             $command[] = '--checksum';
         } else {
             $command[] = '--size-only';
         }
-        if ($this->options['delete']) {
+
+        if (isset($this->options['delete']) && $this->options['delete']) {
             $command[] = '--delete';
         }
-        if ($this->options['compress']) {
+
+        if (!isset($this->options['compress']) || $this->options['compress']) {
             $command[] = '--compress';
         }
-        if ($this->options['delay-updates']) {
+
+        if (!isset($this->options['delay-updates']) || $this->options['delay-updates']) {
             $command[] = '--delay-updates';
 
-            if ($this->options['delete']) {
+            if (isset($this->options['delete']) && $this->options['delete']) {
                 $command[] = $this->rsyncVersionCompare('>=', '3.0.0') ? '--delete-delay' : '--delete-after';
             }
         }
 
-        $command[] = array(
+        $command[] = [
             '--exclude-from="%s"',
             $this->getExcludesPath()
-        );
+        ];
 
         foreach ($command as $key => $part) {
             if (is_array($part)) {
@@ -313,9 +328,9 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
      * @return string
      * @throws RuntimeException
      */
-    protected function getRsyncVersion()
+    public function getRsyncVersion(): string
     {
-        $process = new Process('rsync --version');
+        $process = new Process(['rsync', '--version']);
         $process->run();
 
         list($version) = sscanf($process->getOutput(), 'rsync version %s');
@@ -358,7 +373,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
      */
     protected function parsePathSteps($path)
     {
-        $steps = array();
+        $steps = [];
         $folders = explode('/', $path);
 
         $partialPath = '';
@@ -378,8 +393,8 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
      */
     protected function parseLine($line)
     {
-        $change = array();
-        $matches = array();
+        $change = [];
+        $matches = [];
         if (1 !== preg_match(
                 '/
                 (?:
@@ -412,7 +427,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             $change['update'] = 'deleted';
             $change['filename'] = $matches[5];
             $change['filetype'] = preg_match('/\/$/', $matches[5]) ? 'directory' : 'file';
-            $change['reason'] = array('missing');
+            $change['reason'] = ['missing'];
         } else {
             switch ($matches[2]) {
                 case '<':
@@ -448,7 +463,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
                     $change['filetype'] = 'special';
                     break;
             }
-            $reason = array();
+            $reason = [];
             if ($matches[4][0] == 'c') {
                 $reason[] = 'checksum';
             } elseif ($matches[4][0] == '+') {
@@ -475,7 +490,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             if (isset($matches[4][8]) && $matches[4][8] == 'x') {
                 $reason[] = 'extended';
             }
-            if ($reason === array('time') || (!count($reason) && $matches[4][2] == 'T')) {
+            if ($reason === ['time'] || (!count($reason) && $matches[4][2] == 'T')) {
                 return false;
             }
             $change['reason'] = $reason;
@@ -491,7 +506,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
      */
     public function formatOutput($output)
     {
-        $changes = array();
+        $changes = [];
         foreach (explode(PHP_EOL, $output) as $line) {
             $line = trim($line);
             if ($line !== '') {
@@ -508,9 +523,10 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     /**
      * Generate the excludes file
      */
-    protected function generateExcludesFile()
+    public function generateExcludesFile()
     {
         $excludes = $this->beam->getConfig('exclude');
+
         if ($this->beam->hasPath()) {
             $idx = array_search(
                 $this->beam->getOption('path'),
@@ -520,6 +536,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
                 unset($excludes[$idx]);
             }
         }
+
         file_put_contents(
             $this->getExcludesPath(),
             implode(PHP_EOL, $excludes) . PHP_EOL
@@ -528,9 +545,10 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
 
     /**
      * Get the path to the excludes file
+     *
      * @return string
      */
-    protected function getExcludesPath()
+    public function getExcludesPath(): string
     {
         return sprintf(
             '/tmp/%s.excludes',
@@ -620,6 +638,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             // If a stream output handler is set, parse the partial change set
             $buffer .= $data;
             $lastNewLine = strrpos($buffer, "\n");
+
             if ($lastNewLine !== false) {
                 $data = substr($buffer, 0, $lastNewLine);
                 $buffer = substr($buffer, $lastNewLine);
@@ -641,23 +660,18 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     }
 
     /**
-     * @param $command
+     * @param string $command
      * @return Process
      */
-    protected function getProcess($command)
+    public function getProcess($command): Process
     {
-        $process = new Process(
-            $command,
-            null,
-            null,
-            null,
-            null
-        );
+        $process = Process::fromShellCommandline($command);
 
         return $process;
     }
 
-    /** Helper to build a path based on a hostname and server config array
+    /**
+     * Helper to build a path based on a hostname and server config array
      *
      * @param string $host
      * @param array  $server
@@ -703,6 +717,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
                 $result[$filename] = $rightItem;
             }
         }
+
         $result = new DeploymentResult(array_values($result));
         $result->setNestedResults(array_merge(
             $left->getNestedResults(),

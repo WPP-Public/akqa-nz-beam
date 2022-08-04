@@ -30,7 +30,7 @@ class ValueInterpolator
      * @param string $vcsReference - commit reference to use when retrieving information from the VCS
      * @param array $extraReplacements - array of tokens to provide replacement for
      */
-    public function __construct(GitLikeVcsProvider $vcs, $vcsReference, array $extraReplacements = array())
+    public function __construct(GitLikeVcsProvider $vcs, $vcsReference, array $extraReplacements = [])
     {
         $this->vcs = $vcs;
         $this->ref = $vcsReference;
@@ -68,7 +68,7 @@ class ValueInterpolator
         $vcs = $this->vcs;
         $ref = $this->ref;
 
-        $interpolations = array(
+        $interpolations = [
             '%%branch%%' => function() use ($vcs, $ref) {
                 return $vcs->getBranchForReference($ref);
             },
@@ -86,7 +86,7 @@ class ValueInterpolator
                 return $vcs->getUserIdentity();
             },
             '%%username%%' => get_current_user(),
-        );
+        ];
 
         foreach ($this->extraReplacements as $token => $value) {
             $interpolations["%%$token%%"] = $value;
@@ -105,8 +105,8 @@ class ValueInterpolator
      */
     protected function getInterpolationsWithCaching()
     {
-        $callbacks = array();
-        $cache = array();
+        $callbacks = [];
+        $cache = [];
 
         foreach ($this->getInterpolations() as $token => $value) {
             $callbacks[$token] = function() use ($token, $value, &$cache) {

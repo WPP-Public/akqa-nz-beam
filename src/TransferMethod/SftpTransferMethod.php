@@ -21,7 +21,7 @@ class SftpTransferMethod extends TransferMethod
 
     public function getInputDefinition()
     {
-        return new InputDefinition(array(
+        return new InputDefinition([
             new InputOption(
                 'full',
                 'f',
@@ -34,7 +34,7 @@ class SftpTransferMethod extends TransferMethod
                 InputOption::VALUE_NONE,
                 'Don\'t delete extraneous files on the target'
             )
-        ));
+        ]);
     }
     /**
      * @inheritdoc

@@ -21,7 +21,7 @@ class FtpTransferMethod extends TransferMethod
 
     public function getInputDefinition()
     {
-        return new InputDefinition(array(
+        return new InputDefinition([
             new InputOption(
                 'full',
                 'f',
@@ -46,7 +46,7 @@ class FtpTransferMethod extends TransferMethod
                 InputOption::VALUE_NONE,
                 'Use ssl (ftps)'
             )
-        ));
+        ]);
     }
     /**
      * @inheritdoc

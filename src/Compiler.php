@@ -19,7 +19,7 @@ class Compiler
      * @var string
      */
     private $pharFile;
-    
+
     /**
      * @var string
      */
@@ -34,7 +34,7 @@ class Compiler
      * @var
      */
     private $vendorDir;
-    
+
     /**
      * @var
      */
@@ -49,8 +49,8 @@ class Compiler
      * @var int
      */
     private $compression;
-    
-    private $classMap = array();
+
+    private $classMap = [];
 
     /**
      * @param int $chmod
@@ -67,7 +67,7 @@ class Compiler
         );
         $this->vendorDir = $this->rootDir.'/vendor';
         $this->chmod = $chmod;
-        if (!in_array($compression, array(Phar::GZ, Phar::NONE))) {
+        if (!in_array($compression, [Phar::GZ, Phar::NONE])) {
             throw new InvalidArgumentException("Unknown compression type");
         }
         if (!Phar::canCompress($compression)) {
@@ -85,16 +85,16 @@ class Compiler
         if (!file_exists($this->rootDir . '/composer.lock')) {
             throw new RuntimeException("Composer dependencies not installed");
         }
-        
+
         echo $this->runCommand('phpunit', "Unit tests failed, check that phpunit is installed", true)->getOutput();
-        
+
         $process = $this->runCommand(
             'git log --pretty="%H" -n1 HEAD',
             "Can't run git log. You must ensure to run compile from composer git repository clone and that git binary is available."
         );
-        
+
         $this->version = trim($process->getOutput());
-        
+
         try {
             $this->version = trim($this->runCommand('git describe --tags HEAD', 'Failed'));
         } catch (RuntimeException $e) {}
@@ -135,10 +135,10 @@ class Compiler
         foreach ($finder as $file) {
             $this->addFile($phar, $file);
         }
-        
+
         // Add autoloader
         $this->addAutoloader($phar);
-        
+
         // Add runner
         $phar->addFromString(
             'bin/beam',
@@ -148,7 +148,7 @@ class Compiler
                 php_strip_whitespace($this->rootDir . '/bin/beam')
             )
         );
-        
+
         $phar->compressFiles($this->compression);
 
         // Stubs
@@ -172,7 +172,7 @@ class Compiler
         $tokens   = token_get_all($content);
         $T_TRAIT  = version_compare(PHP_VERSION, '5.4', '<') ? -1 : T_TRAIT;
 
-        $classes = array();
+        $classes = [];
 
         $namespace = '';
         for ($i = 0, $max = count($tokens); $i < $max; $i++) {
@@ -189,7 +189,7 @@ class Compiler
                     $namespace = '';
                     // If there is a namespace, extract it
                     while (($t = $tokens[++$i]) && is_array($t)) {
-                        if (in_array($t[0], array(T_STRING, T_NS_SEPARATOR))) {
+                        if (in_array($t[0], [T_STRING, T_NS_SEPARATOR])) {
                             $namespace .= $t[1];
                         }
                     }
@@ -240,7 +240,7 @@ require_once __DIR__ . '/composer/ClassLoader.php';
 return \$loader;
 PHP
         );
-        
+
         $this->addFile($phar, new SplFileInfo($this->vendorDir."/composer/ClassLoader.php"));
     }
 
@@ -288,7 +288,8 @@ EOF;
      */
     private function runCommand($cmd, $failedMessage, $outputError = false)
     {
-        $process = new Process($cmd, $this->rootDir);
+        $process = Process::fromShellCommandline($cmd, $this->rootDir);
+
         if ($process->run() !== 0) {
             if ($outputError) {
                 echo $process->getErrorOutput();

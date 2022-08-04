@@ -35,7 +35,7 @@ class Ftp extends ManualChecksum
     /**
      * @var array
      */
-    protected $listCache = array();
+    protected $listCache = [];
     /**
      * @return resource
      * @throws RuntimeException
@@ -161,7 +161,7 @@ class Ftp extends ManualChecksum
         $parts = explode('/', $path);
 
         // Step backwards through the path to see where to start making directories
-        $createDirs = array();
+        $createDirs = [];
         for ($i = count($parts); $i >= 0; $i--) {
             $exists = $this->exists(
                 $path = implode('/', array_slice($parts, 0, $i))
@@ -240,7 +240,7 @@ class Ftp extends ManualChecksum
         $parent = dirname($path);
 
         if (!isset($this->listCache[$parent])) {
-            $this->listCache[$parent] = array('.', '..');
+            $this->listCache[$parent] = ['.', '..'];
         }
 
         $this->listCache[$parent][] = basename($path);

@@ -13,6 +13,7 @@ use Heyday\Beam\Helper\DeploymentResultHelper;
 use Heyday\Beam\Helper\YesNoQuestion;
 use Heyday\Beam\TransferMethod\TransferMethod;
 use Heyday\Beam\Utils;
+use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputArgument;
@@ -157,7 +158,7 @@ abstract class TransferCommand extends Command
     /**
      * @param InputInterface  $input
      * @param OutputInterface $output
-     * @return int|null|void
+     * @return int
      * @throws RuntimeException
      * @throws \Exception
      */
@@ -185,10 +186,12 @@ abstract class TransferCommand extends Command
                 $resultHelper = $this->deploymentResultHelper;
                 $beam->setResultStreamHandler(
                     function ($changes) use ($resultHelper, $output) {
-                        $result = $changes instanceof DeploymentResult
-                            ? $changes
-                            : new DeploymentResult($changes);
-                        $resultHelper->outputChanges($output, $result);
+                        if (!empty($changes)) {
+                            $result = $changes instanceof DeploymentResult
+                                ? $changes
+                                : new DeploymentResult($changes);
+                            $resultHelper->outputChanges($output, $result);
+                        }
                     }
                 );
             }
@@ -246,7 +249,7 @@ abstract class TransferCommand extends Command
                         }
 
                         // Create a progress bar
-                        $progressHelper = new ContentProgressHelper($output);
+                        $progressHelper = ContentProgressHelper::setupBar(new ProgressBar($output));
 
                         // Set the output handler for displaying the progress bar etc
                         $beam->setOption(
@@ -303,6 +306,7 @@ abstract class TransferCommand extends Command
             }
         }
 
+        return 0;
     }
 
     /**
@@ -340,7 +344,7 @@ abstract class TransferCommand extends Command
         }
 
         $output->writeln(
-            array(
+            [
                 $this->formatterHelper->formatSection(
                     'warn',
                     $action,
@@ -356,7 +360,7 @@ abstract class TransferCommand extends Command
                     $toMessage,
                     'comment'
                 )
-            )
+            ]
         );
 
         if ($beam->hasPath()) {
@@ -401,22 +405,23 @@ abstract class TransferCommand extends Command
                 $output,
                 $question
             ),
-            array(
+            [
                 'y',
                 'yes'
-            )
+            ]
         );
     }
 
     /**
-     * @param ContentProgressHelper $progressHelper
+     * @param ProgressBar $progressHelper
      * @param  DeploymentResult     $deploymentResult
      * @return callable
      */
-    protected function getDeploymentOutputHandler(ContentProgressHelper $progressHelper, DeploymentResult $deploymentResult)
+    protected function getDeploymentOutputHandler(ProgressBar $progressHelper, DeploymentResult $deploymentResult)
     {
         $count = count($deploymentResult);
 
+        // Find terminal width
         return function ($stepSize = 1) use (
             $deploymentResult,
             $progressHelper,
@@ -425,12 +430,14 @@ abstract class TransferCommand extends Command
             static $steps = 0;
             if ($steps === 0) {
                 // Start the progress bar
-                $progressHelper->setAutoWidth($count);
+                $maxValueText = $count;
+                $cols = exec('tput cols');
+                $progressHelper->setBarWidth($cols - (strlen($maxValueText) * 2 + 18));
                 $progressHelper->start($count);
             }
 
             $filename = isset($deploymentResult[$steps]['filename']) ? $deploymentResult[$steps]['filename'] : '';
-            $progressHelper->setContent($filename);
+            ContentProgressHelper::setContent($progressHelper, $filename);
             $progressHelper->advance($stepSize);
             $steps += $stepSize;
         };
@@ -510,7 +517,7 @@ abstract class TransferCommand extends Command
         if (!$this->transferMethod) {
             try {
                 if (!$input) {
-                    $args = array_diff($_SERVER['argv'], array('--help', '-h'));
+                    $args = array_diff($_SERVER['argv'], ['--help', '-h']);
                     array_shift($args);
 
                     $input = new ArgvInput($args, $this->getDefinition());

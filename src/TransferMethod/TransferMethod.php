@@ -59,11 +59,11 @@ abstract class TransferMethod
      */
     public function getOptions(InputInterface $input, OutputInterface $output, $srcDir)
     {
-        $options = array(
+        $options = [
             'direction' => $this->direction,
             'target'    => $input->getArgument('target'),
             'srcdir'    => $srcDir
-        );
+        ];
 
         if ($input->getOption('ref')) {
             $options['ref'] = $input->getOption('ref');
@@ -164,10 +164,10 @@ abstract class TransferMethod
                     $output,
                     $question
                 ),
-                array(
+                [
                     'y',
                     'yes'
-                )
+                ]
             );
         };
     }

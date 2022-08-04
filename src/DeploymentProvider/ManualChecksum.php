@@ -78,7 +78,7 @@ abstract class ManualChecksum extends Deployment implements DeploymentProvider
 
         if (null === $deploymentResult) {
 
-            $result = array();
+            $result = [];
 
             if ($this->fullmode) {
                 foreach ($localchecksums as $targetpath => $checksum) {
@@ -87,13 +87,13 @@ abstract class ManualChecksum extends Deployment implements DeploymentProvider
                     if ($this->force) {
                         // skip checking the remote server completely and rely
                         // on sending the file
-                        $result[] = array(
+                        $result[] = [
                             'update'        => 'sent',
                             'filename'      => $targetpath,
                             'localfilename' => $path,
                             'filetype'      => 'file',
-                            'reason'        => array('forced')
-                        );
+                            'reason'        => ['forced']
+                        ];
                     } else {
                         if ($this->exists($targetpath)) {
                             if (
@@ -101,30 +101,30 @@ abstract class ManualChecksum extends Deployment implements DeploymentProvider
                                 isset($targetchecksums[$targetpath]) &&
                                 $targetchecksums[$targetpath] !== $localchecksums[$targetpath]
                             ) {
-                                $result[] = array(
+                                $result[] = [
                                     'update'        => 'sent',
                                     'filename'      => $targetpath,
                                     'localfilename' => $path,
                                     'filetype'      => 'file',
-                                    'reason'        => array('checksum')
-                                );
+                                    'reason'        => ['checksum']
+                                ];
                             } elseif ($this->size($targetpath) !== filesize($path)) {
-                                $result[] = array(
+                                $result[] = [
                                     'update'        => 'sent',
                                     'filename'      => $targetpath,
                                     'localfilename' => $path,
                                     'filetype'      => 'file',
-                                    'reason'        => array('size')
-                                );
+                                    'reason'        => ['size']
+                                ];
                             }
                         } else {
-                            $result[] = array(
+                            $result[] = [
                                 'update'        => 'created',
                                 'filename'      => $targetpath,
                                 'localfilename' => $path,
                                 'filetype'      => 'file',
-                                'reason'        => array('missing')
-                            );
+                                'reason'        => ['missing']
+                            ];
                         }
                     }
                 }
@@ -136,34 +136,34 @@ abstract class ManualChecksum extends Deployment implements DeploymentProvider
 
                 foreach (array_diff_assoc($localchecksums, $targetchecksums) as $path => $checksum) {
                     if (isset($targetchecksums[$path])) {
-                        $result[] = array(
+                        $result[] = [
                             'update'        => 'sent',
                             'filename'      => $path,
                             'localfilename' => $dir . '/' . $path,
                             'filetype'      => 'file',
-                            'reason'        => array('checksum')
-                        );
+                            'reason'        => ['checksum']
+                        ];
                     } else {
-                        $result[] = array(
+                        $result[] = [
                             'update'        => 'created',
                             'filename'      => $path,
                             'localfilename' => $dir . '/' . $path,
                             'filetype'      => 'file',
-                            'reason'        => array('missing')
-                        );
+                            'reason'        => ['missing']
+                        ];
                     }
                 }
             }
 
             if ($targetchecksums && $this->delete) {
                 foreach (array_diff_key($targetchecksums, $localchecksums) as $path => $checksum) {
-                    $result[] = array(
+                    $result[] = [
                         'update'        => 'deleted',
                         'filename'      => $path,
                         'localfilename' => $dir . '/' . $path,
                         'filetype'      => 'file',
-                        'reason'        => array('missing')
-                    );
+                        'reason'        => ['missing']
+                    ];
                 }
             }
 
@@ -252,9 +252,9 @@ abstract class ManualChecksum extends Deployment implements DeploymentProvider
      */
     public function getLimitations()
     {
-        return array(
+        return [
             DeploymentProvider::LIMITATION_REMOTECOMMAND
-        );
+        ];
     }
     /**
      * @param $targetpath
@@ -300,7 +300,7 @@ abstract class ManualChecksum extends Deployment implements DeploymentProvider
     protected function getAllowedFiles($dir)
     {
         if ($this->beam->hasPath()) {
-            $files = array();
+            $files = [];
             foreach ($this->beam->getOption('path') as $path) {
                 $matchedFiles = Utils::getAllowedFilesFromDirectory(
                     $this->beam->getConfig('exclude'),

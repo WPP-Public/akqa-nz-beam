@@ -97,7 +97,7 @@ class Beam
         // Prevent a server with empty options being used
         $server = $this->getServer();
 
-        $emptyKeys = array();
+        $emptyKeys = [];
         if (empty($server['webroot'])) {
             $emptyKeys[] = 'webroot';
         }
@@ -229,17 +229,17 @@ class Beam
         if (!$this->isPrepared() && !$this->isWorkingCopy() && !$this->isDown()) {
             $this->runOutputHandler(
                 $this->options['outputhandler'],
-                array(
+                [
                     'Preparing local deploy path'
-                )
+                ]
             );
 
             if ($this->isTargetLockedRemote()) {
                 $this->runOutputHandler(
                     $this->options['outputhandler'],
-                    array(
+                    [
                         'Updating remote branch'
-                    )
+                    ]
                 );
 
                 $this->getVCSProvider()->updateBranch($this->options['ref']);
@@ -247,9 +247,9 @@ class Beam
 
             $this->runOutputHandler(
                 $this->options['outputhandler'],
-                array(
+                [
                     'Exporting ref'
-                )
+                ]
             );
             $this->getVCSProvider()->exportRef(
                 $this->options['ref'],
@@ -336,9 +336,9 @@ class Beam
         $this->options = $this->getOptionsResolver()->resolve(
             array_merge(
                 $this->options,
-                array(
+                [
                     $key => $value
-                )
+                ]
             )
         );
     }
@@ -474,10 +474,8 @@ class Beam
         return $this->isServerLocked() ? $server['branch'] : false;
     }
 
-    /**
-     * @return string
-     */
-    protected function getLocalPathFolder()
+
+    public function getLocalPathFolder(): string
     {
         return dirname($this->options['srcdir']);
     }
@@ -489,9 +487,9 @@ class Beam
      * @param  int     $timeout
      * @return Process
      */
-    protected function getProcess($commandline, $cwd = null, $timeout = null)
+    public function getProcess($commandline, $cwd = null, $timeout = null): Process
     {
-        return new Process(
+        return Process::fromShellCommandline(
             $commandline,
             $cwd ? $cwd : $this->options['srcdir'],
             null,
@@ -635,9 +633,9 @@ class Beam
         if (count($commands)) {
             $this->runOutputHandler(
                 $this->options['outputhandler'],
-                array(
+                [
                     $message
-                )
+                ]
             );
             foreach ($commands as $command) {
                 $this->$method($command);
@@ -652,7 +650,7 @@ class Beam
      */
     protected function getFilteredCommands($phase, $location)
     {
-        $commands = array();
+        $commands = [];
         foreach ($this->config['commands'] as $command) {
             if ($command['phase'] !== $phase) {
                 continue;
@@ -702,10 +700,10 @@ class Beam
     {
         $this->runOutputHandler(
             $this->options['outputhandler'],
-            array(
+            [
                 $command['command'],
                 'command:target'
-            )
+            ]
         );
 
         $server = $this->getServer();
@@ -719,13 +717,13 @@ class Beam
         );
 
         foreach ($this->getHosts() as $host) {
-            $args = array(
+            $args = [
                 // SSHPASS is set in \Heyday\Beam\DeploymentProvider\Rsync
                 getenv('SSHPASS') === false ? 'ssh' : 'sshpass -e ssh',
                 $command['tty'] ? '-t' : '',
                 $userComponent . $host,
                 escapeshellcmd($remoteCmd)
-            );
+            ];
 
             $command['command'] = implode(' ', $args);
 
@@ -741,10 +739,10 @@ class Beam
     {
         $this->runOutputHandler(
             $this->options['outputhandler'],
-            array(
+            [
                 $command['command'],
                 'command:local'
-            )
+            ]
         );
 
         $this->doExecCommand($command, $this->options['localcommandoutputhandler']);
@@ -832,9 +830,9 @@ class Beam
         $vcs = $this->getVCSProvider();
 
         if ($vcs instanceof GitLikeVcsProvider) {
-            $interpolator = new ValueInterpolator($vcs, $this->getOption('ref'), array(
+            $interpolator = new ValueInterpolator($vcs, $this->getOption('ref'), [
                 'target' => $this->getOption('target')
-            ));
+            ]);
             return $interpolator->process($config);
         } else {
             throw new Exception('Config interpolation is only possible using a Git-like VCS');
@@ -851,14 +849,14 @@ class Beam
     {
         $resolver = new OptionsResolver();
         $resolver->setRequired(
-            array(
+            [
                 'direction',
                 'target',
                 'srcdir',
                 'deploymentprovider'
-            )
+            ]
         )->setDefined(
-            array(
+            [
                 'ref',
                 'path',
                 'dry-run',
@@ -870,20 +868,20 @@ class Beam
                 'localcommandoutputhandler',
                 'targetcommandoutputhandler',
                 'outputhandler'
-            )
+            ]
         )->setAllowedValues(
             'direction',
-            array('up', 'down')
+            ['up', 'down']
         )->setAllowedValues(
             'target',
             array_keys($this->config['servers'])
         )->setDefaults(
-            array(
+            [
                 'ref'                        => '',
-                'path'                       => array(),
+                'path'                       => [],
                 'dry-run'                    => false,
                 'working-copy'               => false,
-                'command-tags'               => array(),
+                'command-tags'               => [],
                 'vcsprovider'                => function (Options $options) {
                     return new Git($options['srcdir']);
                 },
@@ -893,7 +891,7 @@ class Beam
                 'targetcommandoutputhandler' => null,
                 'commandprompthandler'       => null,
                 'commandfailurehandler'      => null
-            )
+            ]
         )
             ->setAllowedTypes('ref', 'string')
             ->setAllowedTypes('srcdir', 'string')
@@ -921,7 +919,7 @@ class Beam
     {
         $that = $this;
 
-        return array(
+        return [
             'ref'                        => function (Options $options, $value) {
                 return trim($value);
             },
@@ -980,7 +978,7 @@ class Beam
 
                 return $value;
             }
-        );
+        ];
     }
 
     /**

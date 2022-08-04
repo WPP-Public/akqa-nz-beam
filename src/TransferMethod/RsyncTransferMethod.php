@@ -27,7 +27,7 @@ class RsyncTransferMethod extends TransferMethod
 
     public function getInputDefinition()
     {
-        return new InputDefinition(array(
+        return new InputDefinition([
             new InputOption(
                 'no-checksum',
                 '',
@@ -58,7 +58,7 @@ class RsyncTransferMethod extends TransferMethod
                 InputOption::VALUE_REQUIRED,
                 'Additional arguments for rsync'
             )
-        ));
+        ]);
     }
 
     /**
@@ -68,13 +68,13 @@ class RsyncTransferMethod extends TransferMethod
     {
         $options = parent::getOptions($input, $output, $srcDir);
         $options['deploymentprovider'] = $this->deploymentProvider = new Rsync(
-            array(
+            [
                 'checksum'      => !$input->getOption('no-checksum'),
                 'delete'        => !$input->getOption('no-delete'),
                 'compress'      => !$input->getOption('no-compress'),
                 'delay-updates' => !$input->getOption('no-delay-updates'),
                 'args'          => $input->getOption('args') ?: ''
-            )
+            ]
         );
 
         return $options;

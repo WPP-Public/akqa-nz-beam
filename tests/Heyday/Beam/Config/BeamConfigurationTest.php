@@ -4,67 +4,70 @@ namespace Heyday\Beam\Config;
 
 use org\bovigo\vfs\vfsStream;
 use Symfony\Component\Config\Definition\Processor;
+use PHPUnit\Framework\TestCase;
 
-class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
+class BeamConfigurationTest extends TestCase
 {
     protected $config;
-    protected function setUp()
+
+    protected function setUp(): void
     {
         vfsStream::setup();
         $this->config = new BeamConfiguration();
     }
+
     public function testProcess()
     {
         $processor = new Processor();
         $processedConfig = $processor->processConfiguration(
             $this->config,
-            array(
-                array(
-                    'commands' => array(
-                        array(
+            [
+                [
+                    'commands' => [
+                        [
                             'command' => 'test',
                             'phase' => 'pre',
                             'location' => 'target',
-                            'servers' => array(
+                            'servers' => [
                                 'live'
-                            )
-                        )
-                    ),
-                    'exclude' => array(
-                        'patterns' => array(
+                            ]
+                        ]
+                    ],
+                    'exclude' => [
+                        'patterns' => [
                             'test',
                             'hello'
-                        )
-                    ),
-                    'servers' => array(
-                        'live' => array(
+                        ]
+                    ],
+                    'servers' => [
+                        'live' => [
                             'user' => 'test',
                             'host' => 'test',
                             'webroot' => 'test',
                             'branch' => 'test',
                             'syncPermissions' => false,
-                        )
-                    )
-                )
-            )
+                        ]
+                    ]
+                ]
+            ]
         );
 
         $this->assertTrue(isset($processedConfig['commands']));
 
         $this->assertEquals(
-            array(
-                array(
+            [
+                [
                     'command' => 'test',
                     'phase' => 'pre',
                     'location' => 'target',
-                    'servers' => array(
+                    'servers' => [
                         'live'
-                    ),
+                    ],
                     'required' => false,
                     'tag' => false,
                     'tty' => false
-                )
-            ),
+                ]
+            ],
             $processedConfig['commands']
         );
 
@@ -76,8 +79,8 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue(isset($processedConfig['servers']));
 
         $this->assertEquals(
-            array(
-                'live' => array(
+            [
+                'live' => [
                     'user' => 'test',
                     'host' => 'test',
                     'webroot' => 'test',
@@ -86,8 +89,8 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                     'sshpass' => false,
                     'syncPermissions' => false,
                     'hosts' => [],
-                )
-            ),
+                ]
+            ],
             $processedConfig['servers']
         );
     }
@@ -98,26 +101,26 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
         $processor = new Processor();
         $processedConfig = $processor->processConfiguration(
             $this->config,
-            array(
-                array(
-                    'servers' => array(
-                        'live' => array(
+            [
+                [
+                    'servers' => [
+                        'live' => [
                             'user' => 'test',
                             'host' => 'test',
                             'webroot' => 'test',
                             'hosts' => [],
-                        )
-                    )
-                )
-            )
+                        ]
+                    ]
+                ]
+            ]
         );
 
         $excludes = $reflection->getStaticProperties();
 
         $this->assertEquals(
-            array(
-                'servers' => array(
-                    'live' => array(
+            [
+                'servers' => [
+                    'live' => [
                         'user' => 'test',
                         'host' => 'test',
                         'webroot' => 'test',
@@ -125,37 +128,37 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                         'sshpass' => false,
                         'syncPermissions' => true,
                         'hosts' => [],
-                    )
-                ),
-                'import' => array(),
-                'commands' => array(),
+                    ]
+                ],
+                'import' => [],
+                'commands' => [],
                 'exclude' => $excludes['defaultExcludes']
-            ),
+            ],
             $processedConfig
         );
     }
 
     public function testLoadImports()
     {
-        $externalConfig = array(
-            'exclude' => array(
-                'patterns' => array(
+        $externalConfig = [
+            'exclude' => [
+                'patterns' => [
                     '/secret/files/',
                     '.htaccess',
                     '_*/'
-                )
-            )
-        );
+                ]
+            ]
+        ];
 
-        $otherExternalConfig = array(
-            'commands' => array(
-                array(
+        $otherExternalConfig = [
+            'commands' => [
+                [
                     'command' => 'echo Hello World',
                     'phase' => 'pre',
                     'location' => 'local'
-                )
-            )
-        );
+                ]
+            ]
+        ];
 
         $file1 = vfsStream::url('root/some-beam-config.json');
         $file2 = vfsStream::url('root/some-other-beam-config.json');
@@ -163,12 +166,12 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
         file_put_contents($file1, json_encode($externalConfig));
         file_put_contents($file2, json_encode($otherExternalConfig));
 
-        $loaded = BeamConfiguration::loadImports(array($file1, $file2));
+        $loaded = BeamConfiguration::loadImports([$file1, $file2]);
 
-        $this->assertEquals(array(
+        $this->assertEquals([
                 $externalConfig,
                 $otherExternalConfig
-            ),
+            ],
             $loaded,
             'Beam config imports were not loaded correctly'
         );
@@ -182,59 +185,59 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
         $file1 = vfsStream::url('root/external-config-1.json');
         $file2 = vfsStream::url('root/external-config-2.json');
 
-        $config = array(
-            'import' => array(
+        $config = [
+            'import' => [
                 $file1,
-            ),
-            'commands' => array(
-                array(
+            ],
+            'commands' => [
+                [
                     'command' => 'test',
                     'phase' => 'pre',
                     'location' => 'target',
-                    'servers' => array(
+                    'servers' => [
                         'live'
-                    )
-                )
-            ),
-            'exclude' => array(
-                'patterns' => array(
+                    ]
+                ]
+            ],
+            'exclude' => [
+                'patterns' => [
                     'test',
                     'hello'
-                )
-            ),
-            'servers' => array(
-                'live' => array(
+                ]
+            ],
+            'servers' => [
+                'live' => [
                     'user' => 'test',
                     'host' => 'test',
                     'webroot' => 'test',
                     'branch' => 'test'
-                )
-            )
-        );
+                ]
+            ]
+        ];
 
-        $externalConfig = array(
-            'import' => array(
+        $externalConfig = [
+            'import' => [
                 $file2
-            ),
-            'exclude' => array(
-                'patterns' => array(
+            ],
+            'exclude' => [
+                'patterns' => [
                     '/secret/files/',
                     '.htaccess',
                     '_*/',
                     'SUPER_FILE_3000'
-                )
-            )
-        );
+                ]
+            ]
+        ];
 
-        $otherExternalConfig = array(
-            'commands' => array(
-                array(
+        $otherExternalConfig = [
+            'commands' => [
+                [
                     'command' => 'echo Hello World',
                     'phase' => 'pre',
                     'location' => 'local'
-                )
-            )
-        );
+                ]
+            ]
+        ];
 
         file_put_contents($file1, json_encode($externalConfig));
         file_put_contents($file2, json_encode($otherExternalConfig));
@@ -244,46 +247,46 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
         $excludes = $reflection->getStaticProperties();
 
         $this->assertEquals(
-            array(
-                'import' => array(
+            [
+                'import' => [
                     $file1,
                     $file2
-                ),
-                'commands' => array(
-                    array(
+                ],
+                'commands' => [
+                    [
                         'command' => 'test',
                         'phase' => 'pre',
                         'location' => 'target',
-                        'servers' => array(
+                        'servers' => [
                             'live'
-                        ),
+                        ],
                         'tag' => false,
                         'tty' => false,
                         'required' => false
-                    ),
-                    array(
+                    ],
+                    [
                         'command' => 'echo Hello World',
                         'phase' => 'pre',
                         'location' => 'local',
-                        'servers' => array(),
+                        'servers' => [],
                         'tag' => false,
                         'tty' => false,
                         'required' => false
-                    )
-                ),
+                    ]
+                ],
                 'exclude' => array_merge(
                     $excludes['defaultExcludes'],
-                    array(
+                    [
                         'test',
                         'hello',
                         '/secret/files/',
                         '.htaccess',
                         '_*/',
                         'SUPER_FILE_3000'
-                    )
+                    ]
                 ),
-                'servers' => array(
-                    'live' => array(
+                'servers' => [
+                    'live' => [
                         'user' => 'test',
                         'host' => 'test',
                         'webroot' => 'test',
@@ -292,9 +295,9 @@ class BeamConfigurationTest extends \PHPUnit_Framework_TestCase
                         'sshpass' => false,
                         'syncPermissions' => true,
                         'hosts' => [],
-                    )
-                )
-            ),
+                    ]
+                ]
+            ],
             BeamConfiguration::parseConfig($config),
             'Beam config did not parse correctly'
         );

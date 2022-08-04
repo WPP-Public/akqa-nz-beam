@@ -60,7 +60,7 @@ class BeamCompletionCommand extends CompletionCommand
 
         // Add argument handlers
         $handler->addHandlers(
-            array(
+            [
                 new Completion(
                     Completion::ALL_COMMANDS,
                     'target',
@@ -73,12 +73,12 @@ class BeamCompletionCommand extends CompletionCommand
                         }
                     }
                 )
-            )
+            ]
         );
 
         // Add option handlers
         $handler->addHandlers(
-            array(
+            [
                 new Completion(
                     Completion::ALL_COMMANDS,
                     'ref',
@@ -101,7 +101,7 @@ class BeamCompletionCommand extends CompletionCommand
 
                         if (isset($config['commands']) && is_array($config['commands'])) {
 
-                            $tags = array();
+                            $tags = [];
                             foreach ($config['commands'] as $command) {
                                 if (isset($command['tag'])) {
                                     $tags[] = $command['tag'];
@@ -117,7 +117,7 @@ class BeamCompletionCommand extends CompletionCommand
                     'path',
                     Completion::TYPE_OPTION
                 )
-            )
+            ]
         );
 
         return $handler->runCompletion();
@@ -148,7 +148,7 @@ class BeamCompletionCommand extends CompletionCommand
     protected function getFileLocator()
     {
         $path = getcwd();
-        $paths = array();
+        $paths = [];
 
         while ($path !== end($paths)) {
             $paths[] = $path;

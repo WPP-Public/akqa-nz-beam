@@ -41,7 +41,7 @@ abstract class Command extends BaseCommand
     {
         if (null === $this->jsonConfigLoader) {
             $path = $path ?: getcwd();
-            $paths = array();
+            $paths = [];
 
             while ($path !== end($paths)) {
                 $paths[] = $path;

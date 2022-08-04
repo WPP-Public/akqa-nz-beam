@@ -14,7 +14,7 @@ class DeploymentResultConfiguration extends Configuration implements Configurati
     /**
      * @var array
      */
-    protected $reasons = array(
+    protected $reasons = [
         'checksum',
         'new',
         'size',
@@ -26,39 +26,39 @@ class DeploymentResultConfiguration extends Configuration implements Configurati
         'extended',
         'missing',
         'forced'
-    );
+    ];
     /**
      * @var array
      */
-    protected $filetypes = array(
+    protected $filetypes = [
         'file',
         'directory',
         'symlink',
         'device',
         'special'
-    );
+    ];
 
     /**
      * @var array
      */
-    protected $updates = array(
+    protected $updates = [
         'deleted',
         'sent',
         'received',
         'created',
         'link',
         'attributes'
-    );
+    ];
+
     /**
      * @return TreeBuilder
      */
     public function getConfigTreeBuilder()
     {
-        $treeBuilder = new TreeBuilder();
-        $rootNode = $treeBuilder->root('deploymentresult');
+        $treeBuilder = new TreeBuilder('deploymentresult');
+        $rootNode = $treeBuilder->getRootNode();
 
         $rootNode
-            ->prototype('array')
                 ->children()
                     ->scalarNode('update')->isRequired()
                         ->validate()

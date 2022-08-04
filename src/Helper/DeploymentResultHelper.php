@@ -79,13 +79,13 @@ class DeploymentResultHelper extends Helper
     public function outputChangesSummary(OutputInterface $output, DeploymentResult $deploymentResult)
     {
         foreach ($deploymentResult->getNestedResults() as $result) {
-            $totals = array(
+            $totals = [
                 'sent'       => 0,
                 'received'   => 0,
                 'created'    => 0,
                 'deleted'    => 0,
                 'attributes' => 0
-            );
+            ];
 
             foreach ($result as $change) {
                 $totals[$change['update']]++;
