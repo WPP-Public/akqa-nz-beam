@@ -2,30 +2,16 @@
     "name": "heyday/beam",
     "description": "A utility for deploying files to servers",
     "minimum-stability": "stable",
-    "authors": [
-        {
-            "name": "Shane Garelja",
-            "email": "shane@heyday.co.nz"
-        },
-        {
-            "name": "Cam Spiers",
-            "email": "cameron@heyday.co.nz"
-        },
-        {
-            "name": "Stephen Holdaway",
-            "email": "stephen.holdaway@heyday.co.nz"
-        }
-    ],
     "config": {
         "platform": {
-            "php": "7.4"
+            "php": "8.2"
         }
     },
     "provide": {
         "ext-ssh2": "*"
     },
     "require": {
-        "php": ">=7.4",
+        "php": ">=8",
         "symfony/console": "^5.4.9",
         "symfony/process": "^5.4.8",
         "symfony/options-resolver": "^5.4.3",
