@@ -32,14 +32,17 @@ abstract class TransferCommand extends Command
      * @var TransferMethod
      */
     protected $transferMethod;
+
     /**
      * @var array
      */
     protected $config;
+
     /**
      * @var \Heyday\Beam\Helper\DeploymentResultHelper
      */
     protected $deploymentResultHelper;
+
     /**
      * @var QuestionHelper
      */
@@ -292,7 +295,6 @@ abstract class TransferCommand extends Command
                 // Output a summary
                 $this->deploymentResultHelper->outputChangesSummary($output, $changedFiles);
             }
-
         } catch (\Exception $e) {
 
             if ($output->getVerbosity() === OutputInterface::VERBOSITY_VERBOSE) {
@@ -498,9 +500,10 @@ abstract class TransferCommand extends Command
      *
      * @inheritdoc
      */
-    public function getSynopsis($short = false)
+    public function getSynopsis($short = false): string
     {
         $this->guessTarget();
+
         return parent::getSynopsis($short);
     }
 

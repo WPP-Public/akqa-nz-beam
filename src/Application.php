@@ -3,9 +3,9 @@
 namespace Heyday\Beam;
 
 use Heyday\Beam\Command;
-use Heyday\Beam\Helper;
 use Symfony\Component\Console\Application as BaseApplication;
 use Symfony\Component\Console\Helper\HelperSet;
+use Symfony\Component\Console\Input\InputDefinition;
 
 /**
  * Class Application
@@ -24,7 +24,7 @@ class Application extends BaseApplication
      * Set the default commands
      * @return array
      */
-    protected function getDefaultCommands()
+    protected function getDefaultCommands(): array
     {
         $commands = parent::getDefaultCommands();
 
@@ -38,21 +38,21 @@ class Application extends BaseApplication
 
         return $commands;
     }
-    
+
     /**
      * @return InputDefinition
      */
-    protected function getDefaultInputDefinition()
+    protected function getDefaultInputDefinition(): InputDefinition
     {
         $definition = parent::getDefaultInputDefinition();
-        
+
         $options = $definition->getOptions();
-        
+
         if (isset($options['no-interaction'])) {
             unset($options['no-interaction']);
             $definition->setOptions($options);
         }
-        
+
         return $definition;
     }
 
@@ -60,7 +60,7 @@ class Application extends BaseApplication
      * Return the default helper set
      * @return \Symfony\Component\Console\Helper\HelperSet
      */
-    protected function getDefaultHelperSet()
+    protected function getDefaultHelperSet(): HelperSet
     {
         return new HelperSet();
     }

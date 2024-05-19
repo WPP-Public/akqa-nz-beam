@@ -86,7 +86,7 @@ class Compiler
             throw new RuntimeException("Composer dependencies not installed");
         }
 
-        echo $this->runCommand('phpunit', "Unit tests failed, check that phpunit is installed", true)->getOutput();
+        echo $this->runCommand('./vendor/bin/phpunit', "Unit tests failed, check that phpunit is installed", true)->getOutput();
 
         $process = $this->runCommand(
             'git log --pretty="%H" -n1 HEAD',
@@ -96,7 +96,7 @@ class Compiler
         $this->version = trim($process->getOutput());
 
         try {
-            $this->version = trim($this->runCommand('git describe --tags HEAD', 'Failed'));
+            $this->version = trim($this->runCommand('git describe --tags HEAD', 'Failed')->getOutput());
         } catch (RuntimeException $e) {}
 
         // Remove previously compiled file

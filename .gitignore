@@ -4,3 +4,4 @@ beam.phar
 beam.phar.version
 /makefile
 /Makefile
+.phpunit.result.cache
