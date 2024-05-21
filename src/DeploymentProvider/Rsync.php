@@ -129,12 +129,13 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
         // silent per-server output when collating multiple streams
         $silent = count($this->getTargetPaths()) > 1;
         foreach ($this->getTargetPaths() as $server => $targetPath) {
+            $command = $this->buildCommand(
+                $this->beam->getLocalPath(),
+                $targetPath,
+                $dryrun
+            );
             $result = $this->deploy(
-                $this->buildCommand(
-                    $this->beam->getLocalPath(),
-                    $targetPath,
-                    $dryrun
-                ),
+                $command,
                 $output,
                 $silent
             );
@@ -396,7 +397,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
         $change = [];
         $matches = [];
         if (1 !== preg_match(
-                '/
+            '/
                 (?:
                     (^\*\w+) # capture anything with a "*" then words e.g. "*deleting"
                     | # or
@@ -418,9 +419,9 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
                 [ ] # a space
                 (.*) # filename
             /x',
-                $line,
-                $matches
-            )) {
+            $line,
+            $matches
+        )) {
             return false;
         }
         if ($matches[1] == '*deleting') {
