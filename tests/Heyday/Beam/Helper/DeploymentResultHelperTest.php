@@ -23,8 +23,7 @@ class DeploymentResultHelperTest extends TestCase
     }
 
     /**
-     * @covers Heyday\Beam\Helper\DeploymentResultHelper::getName
-     * @todo   Implement testGetName().
+     *
      */
     public function testGetName()
     {

@@ -83,13 +83,13 @@ class RsyncTest extends TestCase
             ->will($this->returnValue($this->getDeploymentResultMock()));
 
         $rsync->method('getTargetPaths')
-            ->will($this->returnValue(['topath']));
+            ->willReturn(['topath']);
 
         $beamMock = $this->getBeamMock(['getLocalPath']);
 
         $beamMock->expects($this->once())
             ->method('getLocalPath')
-            ->will($this->returnValue('frompath'));
+            ->willReturn('frompath');
 
         $rsync->setBeam($beamMock);
 
