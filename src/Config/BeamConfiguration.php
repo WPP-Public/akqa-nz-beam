@@ -128,7 +128,6 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
             if (isset($config['import'])) {
                 $configs = array_merge($configs, self::loadImports($config['import'], $imported));
             }
-
         }
 
         return $configs;
@@ -160,100 +159,100 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
 
         $rootNode
             ->children()
-                ->arrayNode('import')
-                    ->prototype('scalar')->end()
-                ->end()
-                ->arrayNode('servers')
-                    ->isRequired()
-                    ->requiresAtLeastOneElement()
-                    ->prototype('array')
-                        ->prototype('variable')->end()
-                    ->end()
-                    ->validate()
-                    ->always(
-                        function ($v) use ($self) {
-                            foreach ($v as $name => $config) {
-                                if (empty($config['type'])) {
-                                    $config['type'] = 'rsync';
-                                }
-                                $configTree = $self->getServerTypeTree($name, $config['type']);
-                                $v[$name] = $configTree->finalize($configTree->normalize($config));
-                            }
-
-                            return $v;
-                        }
-                    )
-                    ->end()
-                ->end()
-                ->arrayNode('commands')
-                    ->prototype('array')
-                        ->children()
-                            ->scalarNode('command')->isRequired()->end()
-                            ->scalarNode('phase')
-                                ->isRequired()
-                                ->validate()
-                                    ->ifNotInArray($this->phases)
-                                    ->thenInvalid(
-                                        'Phase "%s" is not valid, options are: ' .
-                                            $this->getFormattedOptions($this->phases)
-                                    )
-                                ->end()
-                            ->end()
-                            ->scalarNode('location')
-                                ->isRequired()
-                                ->validate()
-                                    ->ifNotInArray($this->locations)
-                                    ->thenInvalid(
-                                        'Location "%s" is not valid, options are: ' .
-                                            $this->getFormattedOptions($this->locations)
-                                    )
-                                ->end()
-                            ->end()
-                            ->arrayNode('servers')
-                                ->prototype('scalar')->end()
-                            ->end()
-                            ->scalarNode('required')->defaultFalse()->end()
-                            ->scalarNode('tag')->defaultFalse()->end()
-                            ->scalarNode('tty')->defaultFalse()->end()
-                        ->end()
-                    ->end()
-                ->end()
-                ->arrayNode('exclude')
-                    ->children()
-                        ->arrayNode('patterns')
-                            ->prototype('scalar')->end()
-                        ->end()
-                    ->end()
-                    ->validate()
-                        ->always(
-                            function ($v) use ($self) {
-                                return $self->buildExcludes($v);
-                            }
-                        )
-                    ->end()
-                ->end()
+            ->arrayNode('import')
+            ->prototype('scalar')->end()
+            ->end()
+            ->arrayNode('servers')
+            ->isRequired()
+            ->requiresAtLeastOneElement()
+            ->prototype('array')
+            ->prototype('variable')->end()
             ->end()
             ->validate()
-                ->always(
-                    function ($v) use ($self) {
-                        foreach ($v['commands'] as $commandName => $command) {
-                            foreach ($command['servers'] as $server) {
-                                if (!isset($v['servers'][$server])) {
-                                    throw new InvalidConfigurationException(
-                                        "Command \"{$commandName}\" references an invalid server, options are: " .
-                                            $self->getFormattedOptions(array_keys($v['servers']))
-                                    );
-                                }
+            ->always(
+                function ($v) use ($self) {
+                    foreach ($v as $name => $config) {
+                        if (empty($config['type'])) {
+                            $config['type'] = 'rsync';
+                        }
+                        $configTree = $self->getServerTypeTree($name, $config['type']);
+                        $v[$name] = $configTree->finalize($configTree->normalize($config));
+                    }
+
+                    return $v;
+                }
+            )
+            ->end()
+            ->end()
+            ->arrayNode('commands')
+            ->prototype('array')
+            ->children()
+            ->scalarNode('command')->isRequired()->end()
+            ->scalarNode('phase')
+            ->isRequired()
+            ->validate()
+            ->ifNotInArray($this->phases)
+            ->thenInvalid(
+                'Phase "%s" is not valid, options are: ' .
+                    $this->getFormattedOptions($this->phases)
+            )
+            ->end()
+            ->end()
+            ->scalarNode('location')
+            ->isRequired()
+            ->validate()
+            ->ifNotInArray($this->locations)
+            ->thenInvalid(
+                'Location "%s" is not valid, options are: ' .
+                    $this->getFormattedOptions($this->locations)
+            )
+            ->end()
+            ->end()
+            ->arrayNode('servers')
+            ->prototype('scalar')->end()
+            ->end()
+            ->scalarNode('required')->defaultFalse()->end()
+            ->scalarNode('tag')->defaultFalse()->end()
+            ->scalarNode('tty')->defaultFalse()->end()
+            ->end()
+            ->end()
+            ->end()
+            ->arrayNode('exclude')
+            ->children()
+            ->arrayNode('patterns')
+            ->prototype('scalar')->end()
+            ->end()
+            ->end()
+            ->validate()
+            ->always(
+                function ($v) use ($self) {
+                    return $self->buildExcludes($v);
+                }
+            )
+            ->end()
+            ->end()
+            ->end()
+            ->validate()
+            ->always(
+                function ($v) use ($self) {
+                    foreach ($v['commands'] as $commandName => $command) {
+                        foreach ($command['servers'] as $server) {
+                            if (!isset($v['servers'][$server])) {
+                                throw new InvalidConfigurationException(
+                                    "Command \"{$commandName}\" references an invalid server, options are: " .
+                                        $self->getFormattedOptions(array_keys($v['servers']))
+                                );
                             }
                         }
-
-                        if (!isset($v['exclude'])) {
-                            $v['exclude'] = $self->buildExcludes(false);
-                        }
-
-                        return $v;
                     }
-                )
+
+                    if (!isset($v['exclude'])) {
+                        $v['exclude'] = $self->buildExcludes(false);
+                    }
+
+                    return $v;
+                }
+            )
             ->end();
 
         return $treeBuilder;
@@ -281,9 +280,9 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
         $typeTreeBuilder = new TreeBuilder($name);
         $typeTreeBuilder->getRootNode()
             ->children()
-                ->enumNode('type')
-                ->values(array_keys(static::$transferMethods))->isRequired()
-                ->end()
+            ->enumNode('type')
+            ->values(array_keys(static::$transferMethods))->isRequired()
+            ->end()
             ->end();
 
         $typeTree = $typeTreeBuilder->buildTree();
@@ -292,12 +291,12 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
         $treeBuilder = new TreeBuilder($name);
         $node = $treeBuilder->getRootNode()
             ->children()
-                ->scalarNode('type')->isRequired()->end()
-                ->scalarNode('host')->end()
-                ->arrayNode('hosts')
-                    ->prototype('scalar')->end()
-                    ->end()
-                ->scalarNode('branch')->end();
+            ->scalarNode('type')->isRequired()->end()
+            ->scalarNode('host')->end()
+            ->arrayNode('hosts')
+            ->prototype('scalar')->end()
+            ->end()
+            ->scalarNode('branch')->end();
 
         switch ($type) {
             case 'sftp':
@@ -327,15 +326,16 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
             case 'rsync':
                 $node->scalarNode('webroot')
                     ->isRequired()
-                        ->validate()
-                        ->always(
-                            function ($v) {
-                                return rtrim($v, '/');
-                            }
-                        )->end()
-                        ->end()
+                    ->validate()
+                    ->always(
+                        function ($v) {
+                            return rtrim($v, '/');
+                        }
+                    )->end()
+                    ->end()
                     ->scalarNode('user')->end()
                     ->scalarNode('syncPermissions')->defaultTrue()->end()
+                    ->scalarNode('timeout')->end()
                     ->scalarNode('sshpass')->defaultFalse()->end();
                 break;
         }

@@ -309,6 +309,13 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             }
         }
 
+        if (isset($this->options['timeout'])) {
+            $command[] = '--timeout=' . $this->options['timeout'];
+        } elseif (isset($server['timeout'])) {
+            $command[] = '--timeout=' . $server['timeout'];
+        }
+
+
         $command[] = [
             '--exclude-from="%s"',
             $this->getExcludesPath()
