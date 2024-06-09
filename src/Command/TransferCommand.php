@@ -189,7 +189,10 @@ abstract class TransferCommand extends Command
                 $resultHelper = $this->deploymentResultHelper;
                 $beam->setResultStreamHandler(
                     function ($changes) use ($resultHelper, $output) {
-                        if (!empty($changes)) {
+                        // show the calleee
+                        $func = trim(debug_backtrace()[1]['function']);
+
+                        if (!empty($changes) && ($func == 'up' || $func == 'down')) {
                             $result = $changes instanceof DeploymentResult
                                 ? $changes
                                 : new DeploymentResult($changes);
@@ -201,6 +204,7 @@ abstract class TransferCommand extends Command
 
             // Prompt the user with the affected files and a confirmation dialog
             if (!$input->getOption('no-prompt')) {
+
                 $output->writeln(
                     $this->formatterHelper->formatSection(
                         'info',

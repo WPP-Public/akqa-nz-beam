@@ -157,7 +157,6 @@ class Beam
                     "Commands are to run on the location 'target' but the deployment provider '{$server['type']}' cannot execute remote commands."
                 );
             }
-
         }
     }
 
@@ -489,6 +488,10 @@ class Beam
      */
     public function getProcess($commandline, $cwd = null, $timeout = null): Process
     {
+        if (!$timeout) {
+            $timeout = 3600;
+        }
+
         return Process::fromShellCommandline(
             $commandline,
             $cwd ? $cwd : $this->options['srcdir'],
@@ -760,7 +763,8 @@ class Beam
 
             if ($command['tty']) {
 
-                passthru(sprintf('%s; %s 2>&1',
+                passthru(sprintf(
+                    '%s; %s 2>&1',
                     "cd {$this->getLocalPath()}",
                     $command['command']
                 ), $exit);
@@ -771,7 +775,7 @@ class Beam
             } else {
                 $process = $this->getProcess(
                     $command['command'],
-                    $this->getLocalPath()
+                    $this->getLocalPath(),
                 );
 
                 $this->runProcess(
@@ -784,7 +788,6 @@ class Beam
             if (!$this->promptCommandFailureContinue($command, $exception, $process)) {
                 exit(1);
             }
-
         }
     }
 

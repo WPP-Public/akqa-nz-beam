@@ -51,6 +51,7 @@ class DeploymentResultHelper extends Helper
     ) {
         $totalNodes = count($deploymentResult->getNestedResults());
         $output->getFormatter()->setStyle('count', new OutputFormatterStyle('cyan'));
+
         foreach ($deploymentResult as $change) {
             if ($change['reason'] != ['time'] && (!$type || $change['update'] === $type)) {
                 // If changes made to multiple servers, show total of modified servers for this line item
@@ -67,7 +68,6 @@ class DeploymentResultHelper extends Helper
                 );
                 $style = $change['update'] === 'deleted' ? 'error' : 'info';
                 $output->writeLn($this->formatterHelper->formatSection($change['update'], $message, $style));
-
             }
         }
     }

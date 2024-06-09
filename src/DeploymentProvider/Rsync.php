@@ -26,6 +26,11 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     protected $options = [];
 
     /**
+     * @var int
+     */
+    protected $timeout = 300;
+
+    /**
      * @var Closure
      */
     protected $resultStreamHandler;
@@ -652,8 +657,8 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
                 $buffer = substr($buffer, $lastNewLine);
 
                 $result = $this->formatOutput($data);
-                $results[] = $result;
 
+                $results[] = $result;
                 // Pass through, unless silenced
                 if ($streamHandler) {
                     $streamHandler($result);
@@ -673,7 +678,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
      */
     public function getProcess($command): Process
     {
-        $process = Process::fromShellCommandline($command);
+        $process = Process::fromShellCommandline($command, null, null, null, $this->timeout);
 
         return $process;
     }
