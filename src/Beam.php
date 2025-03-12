@@ -279,7 +279,8 @@ class Beam
             $path = $this->options['srcdir'];
         } else {
             $path = sprintf(
-                '/tmp/%s',
+                '%s/%s',
+                $this->getTempDir(),
                 $this->getLocalPathname()
             );
         }
@@ -288,6 +289,11 @@ class Beam
             '%s',
             $path
         );
+    }
+
+    public function getTempDir(): string
+    {
+        return $this->options['tmpdir'] ? rtrim($this->options['tmpdir'], '/') : '/tmp';
     }
 
     /**
@@ -863,6 +869,7 @@ class Beam
                 'ref',
                 'path',
                 'dry-run',
+                'tmpdir',
                 'working-copy',
                 'command-tags',
                 'vcsprovider',
@@ -882,6 +889,7 @@ class Beam
             [
                 'ref'                        => '',
                 'path'                       => [],
+                'tmpdir'                     => '/tmp',
                 'dry-run'                    => false,
                 'working-copy'               => false,
                 'command-tags'               => [],
@@ -899,6 +907,7 @@ class Beam
             ->setAllowedTypes('ref', 'string')
             ->setAllowedTypes('srcdir', 'string')
             ->setAllowedTypes('dry-run', 'bool')
+            ->setAllowedTypes('tmpdir', 'string')
             ->setAllowedTypes('working-copy', 'bool')
             ->setAllowedTypes('command-tags', 'array')
             ->setAllowedTypes('vcsprovider', __NAMESPACE__ . '\VcsProvider\VcsProvider')

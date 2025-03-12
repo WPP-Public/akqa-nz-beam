@@ -564,7 +564,8 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     public function getExcludesPath(): string
     {
         return sprintf(
-            '/tmp/%s.excludes',
+            '%s/%s.excludes',
+            $this->beam->getLocalPath(),
             $this->beam->getLocalPathname()
         );
     }
