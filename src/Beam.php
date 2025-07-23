@@ -298,6 +298,10 @@ class Beam
 
     public function getTempDir(): string
     {
+        if (!isset($this->options['tmpdir'])) {
+            return '/tmp';
+        }
+
         return $this->options['tmpdir'] ? rtrim($this->options['tmpdir'], '/') : '/tmp';
     }
 
@@ -367,6 +371,10 @@ class Beam
      */
     public function isUp()
     {
+        if (!isset($this->options['direction'])) {
+            return false;
+        }
+
         return $this->options['direction'] === 'up';
     }
 
@@ -376,6 +384,10 @@ class Beam
      */
     public function isDown()
     {
+        if (!isset($this->options['direction'])) {
+            return false;
+        }
+
         return $this->options['direction'] === 'down';
     }
 

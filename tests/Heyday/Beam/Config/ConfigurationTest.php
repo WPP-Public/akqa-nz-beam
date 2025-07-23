@@ -13,7 +13,9 @@ class ConfigurationTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->object = $this->getMockForAbstractClass('Heyday\Beam\Config\Configuration');
+        $this->object = new class extends Configuration {
+            // This concrete test double class provides access to the abstract class methods
+        };
     }
 
     public function testGetFormattedOptions()
