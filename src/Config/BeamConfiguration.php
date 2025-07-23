@@ -23,6 +23,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
         'ftp' => '\Heyday\Beam\TransferMethod\FtpTransferMethod',
         'sftp' => '\Heyday\Beam\TransferMethod\SftpTransferMethod',
     ];
+
     /**
      * @var array
      */
@@ -30,6 +31,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
         'pre',
         'post'
     ];
+
     /**
      * @var array
      */
@@ -153,13 +155,14 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
     public function getConfigTreeBuilder(): \Symfony\Component\Config\Definition\Builder\TreeBuilder
     {
         $treeBuilder = new TreeBuilder('beam');
+        /** @var \Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition $rootNode */
         $rootNode = $treeBuilder->getRootNode();
         $self = $this;
 
         $rootNode
             ->children()
             ->arrayNode('import')
-            ->prototype('scalar')->end()
+            ->scalarPrototype()->end()
             ->end()
             ->arrayNode('servers')
             ->isRequired()
@@ -277,7 +280,9 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
     {
         $name = str_replace('.', '_', $name);
         $typeTreeBuilder = new TreeBuilder($name);
-        $typeTreeBuilder->getRootNode()
+        /** @var \Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition $typeRootNode */
+        $typeRootNode = $typeTreeBuilder->getRootNode();
+        $typeRootNode
             ->children()
             ->enumNode('type')
             ->values(array_keys(static::$transferMethods))->isRequired()
@@ -288,7 +293,9 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
         $typeTree->finalize($typeTree->normalize(['type' => $type]));
 
         $treeBuilder = new TreeBuilder($name);
-        $node = $treeBuilder->getRootNode()
+        /** @var \Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition $rootNode */
+        $rootNode = $treeBuilder->getRootNode();
+        $node = $rootNode
             ->children()
             ->scalarNode('type')->isRequired()->end()
             ->scalarNode('host')->end()

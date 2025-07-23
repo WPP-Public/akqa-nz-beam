@@ -15,42 +15,21 @@ use SplFileInfo;
  */
 class Compiler
 {
-    /**
-     * @var string
-     */
-    private $pharFile;
+    private string $pharFile;
 
-    /**
-     * @var string
-     */
-    private $pharPath;
+    private string $pharPath;
 
-    /**
-     * @var string
-     */
-    private $rootDir;
+    private string $rootDir;
 
-    /**
-     * @var
-     */
-    private $vendorDir;
+    private string $vendorDir;
 
-    /**
-     * @var
-     */
-    private $version;
+    private string $version;
 
-    /**
-     * @var int
-     */
-    private $chmod;
+    private int $chmod;
 
-    /**
-     * @var int
-     */
-    private $compression;
+    private int $compression;
 
-    private $classMap = [];
+    private array $classMap = [];
 
     /**
      * @param int $chmod
@@ -75,18 +54,18 @@ class Compiler
         }
         $this->compression = $compression;
     }
+
     /**
-     * @param  string            $pharFile
-     * @return string
      * @throws RuntimeException
      */
-    public function compile()
+    public function compile(): string
     {
         if (!file_exists($this->rootDir . '/composer.lock')) {
             throw new RuntimeException("Composer dependencies not installed");
         }
 
-        echo $this->runCommand('./vendor/bin/phpunit', "Unit tests failed, check that phpunit is installed", true)->getOutput();
+        echo $this->runCommand(
+            './vendor/bin/phpunit', "Unit tests failed, check that phpunit is installed", true)->getOutput();
 
         $process = $this->runCommand(
             'git log --pretty="%H" -n1 HEAD',
@@ -105,7 +84,7 @@ class Compiler
             unlink($this->pharFile);
         }
 
-        $phar = new Phar($this->pharPath, null, $this->pharFile);
+        $phar = new Phar($this->pharPath, 0, $this->pharFile);
         $phar->setSignatureAlgorithm(Phar::SHA1);
         $phar->startBuffering();
 
@@ -161,14 +140,16 @@ class Compiler
         file_put_contents('beam.phar.version', trim($this->version));
 
         chmod($this->pharFile, $this->chmod);
+
+        return $this->pharFile;
     }
 
     /**
      * Copied from Symfony
-     * @param $content
+     * @param string $content
      * @return array
      */
-    private function getClassesFromContent($content)
+    private function getClassesFromContent(string $content): array
     {
         $tokens   = token_get_all($content);
         $T_TRAIT  = version_compare(PHP_VERSION, '5.4', '<') ? -1 : T_TRAIT;
@@ -229,18 +210,12 @@ class Compiler
         }
         $map .= ')';
 
-        $phar->addFromString(
-            'vendor/autoload.php',
-            <<<PHP
-<?php
-require_once __DIR__ . '/composer/ClassLoader.php';
-\$dir = dirname(__DIR__);
-\$loader = new Composer\Autoload\ClassLoader;
-\$loader->addClassMap($map);
-\$loader->register(true);
-return \$loader;
-    PHP
-        );
+        // phpcs:disable
+        $template = file_get_contents($this->rootDir . '/templates/autoloader.php');
+        $content = str_replace('$map', $map, $template);
+
+        $phar->addFromString('vendor/autoload.php', $content);
+        // phpcs:enable
 
         $this->addFile($phar, new SplFileInfo($this->vendorDir . "/composer/ClassLoader.php"));
     }
@@ -266,18 +241,10 @@ return \$loader;
         }
     }
 
-    /**
-     * @return string
-     */
-    private function getStub()
+
+    private function getStub(): string
     {
-        return <<<'EOF'
-#!/usr/bin/env php
-<?php
-Phar::mapPhar('beam.phar');
-require 'phar://beam.phar/bin/beam';
-__HALT_COMPILER();
-EOF;
+        return file_get_contents($this->rootDir . '/templates/stub.php');
     }
 
     /**

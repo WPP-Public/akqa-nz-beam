@@ -17,25 +17,13 @@ use Symfony\Component\Console\Question\Question;
  */
 abstract class ManualChecksum extends Deployment implements DeploymentProvider
 {
-    /**
-     * @var bool
-     */
-    protected $fullmode;
+    protected bool $fullMode = false;
 
-    /**
-     * @var bool
-     */
-    protected $delete;
+    protected bool $delete = false;
 
-    /**
-     * @var
-     */
-    protected $server;
+    protected ?array $server;
 
-    /**
-     * @var bool
-     */
-    protected $force;
+    protected bool $force = false;
 
     /**
      * @param bool $fullmode
@@ -43,17 +31,17 @@ abstract class ManualChecksum extends Deployment implements DeploymentProvider
      */
     public function __construct($fullmode = false, $delete = false, $force = false)
     {
-        $this->fullmode = $fullmode;
+        $this->fullMode = $fullmode;
         $this->delete = $delete;
         $this->force = $force;
     }
 
     /**
-     * @param $key
+     * @param string $key
      * @throws InvalidConfigurationException
      * @return mixed
      */
-    protected function getConfig($key)
+    protected function getConfig(string $key)
     {
         if (null === $this->server) {
             $this->server = $this->beam->getServer();
@@ -62,25 +50,25 @@ abstract class ManualChecksum extends Deployment implements DeploymentProvider
         return $this->server[$key];
     }
     /**
-     * @param callable         $output
-     * @param bool             $dryrun
-     * @param DeploymentResult $deploymentResult
+     * @param \Closure|null $output
+     * @param bool $dryrun
+     * @param DeploymentResult|null $deploymentResult
      * @return DeploymentResult
      * @throws RuntimeException
      */
-    public function up(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
+    public function up(?\Closure $output = null, $dryrun = false, ?DeploymentResult $deploymentResult = null)
     {
         $dir = $this->beam->getLocalPath();
 
         $files = $this->getAllowedFiles($dir);
-        $localchecksums = Utils::checksumsFromFiles($files, $dir);
-        $targetchecksums = $this->getTargetChecksums();
+        $localChecksums = Utils::checksumsFromFiles($files, $dir);
+        $targetChecksums = $this->getTargetChecksums();
 
         if (null === $deploymentResult) {
             $result = [];
 
-            if ($this->fullmode) {
-                foreach ($localchecksums as $targetpath => $checksum) {
+            if ($this->fullMode) {
+                foreach ($localChecksums as $targetpath => $checksum) {
                     $path = $dir . '/' . $targetpath;
 
                     if ($this->force) {
@@ -96,9 +84,9 @@ abstract class ManualChecksum extends Deployment implements DeploymentProvider
                     } else {
                         if ($this->exists($targetpath)) {
                             if (
-                                $targetchecksums &&
-                                isset($targetchecksums[$targetpath]) &&
-                                $targetchecksums[$targetpath] !== $localchecksums[$targetpath]
+                                $targetChecksums &&
+                                isset($targetChecksums[$targetpath]) &&
+                                $targetChecksums[$targetpath] !== $localChecksums[$targetpath]
                             ) {
                                 $result[] = [
                                     'update'        => 'sent',
@@ -128,12 +116,12 @@ abstract class ManualChecksum extends Deployment implements DeploymentProvider
                     }
                 }
             } else {
-                if (!$targetchecksums) {
+                if (!$targetChecksums) {
                     throw new RuntimeException('No checksums file found on target. Use --full mode without checksums.');
                 }
 
-                foreach (array_diff_assoc($localchecksums, $targetchecksums) as $path => $checksum) {
-                    if (isset($targetchecksums[$path])) {
+                foreach (array_diff_assoc($localChecksums, $targetChecksums) as $path => $checksum) {
+                    if (isset($targetChecksums[$path])) {
                         $result[] = [
                             'update'        => 'sent',
                             'filename'      => $path,
@@ -153,8 +141,8 @@ abstract class ManualChecksum extends Deployment implements DeploymentProvider
                 }
             }
 
-            if ($targetchecksums && $this->delete) {
-                foreach (array_diff_key($targetchecksums, $localchecksums) as $path => $checksum) {
+            if ($targetChecksums && $this->delete) {
+                foreach (array_diff_key($targetChecksums, $localChecksums) as $path => $checksum) {
                     $result[] = [
                         'update'        => 'deleted',
                         'filename'      => $path,
@@ -191,9 +179,9 @@ abstract class ManualChecksum extends Deployment implements DeploymentProvider
                 'checksums.json.gz',
                 Utils::checksumsToGz(
                     $this->beam->hasPath() ? array_merge(
-                        $targetchecksums,
-                        $localchecksums
-                    ) : $localchecksums
+                        $targetChecksums,
+                        $localChecksums
+                    ) : $localChecksums
                 )
             );
         }
@@ -234,21 +222,20 @@ abstract class ManualChecksum extends Deployment implements DeploymentProvider
     }
 
     /**
-     * @param  callable          $output
-     * @param  bool              $dryrun
-     * @param  DeploymentResult  $deploymentResult
+     * @param  \Closure|null $output
+     * @param  bool $dryrun
+     * @param DeploymentResult|null $deploymentResult
      * @throws RuntimeException
      * @return mixed
      */
-    public function down(\Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
+    public function down(?\Closure $output = null, $dryrun = false, ?DeploymentResult $deploymentResult = null)
     {
         // TODO: Implement down() method.
         throw new RuntimeException('Not implemented');
     }
-    /**
-     * @return array
-     */
-    public function getLimitations()
+
+
+    public function getLimitations(): array
     {
         return [
             DeploymentProvider::LIMITATION_REMOTECOMMAND
@@ -259,43 +246,50 @@ abstract class ManualChecksum extends Deployment implements DeploymentProvider
      * @param $content
      * @return mixed
      */
-    abstract protected function writeContent($targetpath, $content);
+    abstract protected function writeContent(string $targetpath, $content);
+
     /**
      * @param $localpath
      * @param $targetpath
      * @return mixed
      */
-    abstract protected function write($localpath, $targetpath);
+    abstract protected function write(string $localpath, string $targetpath);
+
     /**
      * @param $path
      * @return mixed
      */
-    abstract protected function read($path);
+    abstract protected function read(string $path);
+
     /**
      * @param $path
      * @return mixed
      */
-    abstract protected function exists($path);
+    abstract protected function exists(string $path);
+
     /**
      * @param $path
      * @return mixed
      */
-    abstract protected function mkdir($path);
+    abstract protected function mkdir(string $path);
+
     /**
      * @param $path
      * @return mixed
      */
-    abstract protected function size($path);
+    abstract protected function size(string $path);
+
     /**
      * @param $path
      * @return mixed
      */
-    abstract protected function delete($path);
+    abstract protected function delete(string $path);
+
     /**
      * @param $dir
      * @return array
      */
-    protected function getAllowedFiles($dir)
+    protected function getAllowedFiles(string $dir): array
     {
         if ($this->beam->hasPath()) {
             $files = [];
@@ -316,10 +310,9 @@ abstract class ManualChecksum extends Deployment implements DeploymentProvider
 
         return $files;
     }
-    /**
-     * @return array
-     */
-    protected function getTargetChecksums()
+
+
+    protected function getTargetChecksums(): array
     {
         if ($this->exists('checksums.json.gz')) {
             $targetchecksums = Utils::checksumsFromGz($this->read('checksums.json.gz'));
@@ -331,5 +324,7 @@ abstract class ManualChecksum extends Deployment implements DeploymentProvider
                 );
             }
         }
+
+        return [];
     }
 }

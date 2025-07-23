@@ -12,11 +12,11 @@ use Symfony\Component\Process\Process;
 class Utils
 {
     /**
-     * @param  callable $condition
-     * @param           $dir
+     * @param  \Closure $condition
+     * @param  string   $dir
      * @return array
      */
-    public static function getFilesFromDirectory(\Closure $condition, $dir)
+    public static function getFilesFromDirectory(\Closure $condition, string $dir): array
     {
         $files = [];
         $iterator = new \RecursiveIteratorIterator(
@@ -37,10 +37,10 @@ class Utils
     }
     /**
      * @param $excludes
-     * @param $dir
+     * @param string $dir
      * @return array
      */
-    public static function getAllowedFilesFromDirectory(array $excludes, $dir)
+    public static function getAllowedFilesFromDirectory(array $excludes, string $dir): array
     {
         return Utils::getFilesFromDirectory(
             function ($file) use ($excludes, $dir) {

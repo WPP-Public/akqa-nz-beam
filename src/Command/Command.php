@@ -20,8 +20,9 @@ abstract class Command extends BaseCommand
      * @var \Symfony\Component\Console\Helper\FormatterHelper
      */
     protected $formatterHelper;
+
     /**
-     * @var
+     * @var JsonConfigLoader|null
      */
     protected $jsonConfigLoader;
     /**

@@ -13,9 +13,9 @@ use PHPUnit\Framework\TestCase;
 class RsyncTest extends TestCase
 {
     /**
-     * @return MockObject
+     * @return MockObject&Rsync
      */
-    protected function getRsyncMock($methods = [])
+    protected function getRsyncMock(array $methods = []): MockObject
     {
         return $this->createPartialMock(
             Rsync::class,
@@ -24,9 +24,9 @@ class RsyncTest extends TestCase
     }
 
     /**
-     * @return MockObject
+     * @return MockObject&Beam
      */
-    protected function getBeamMock($methods = [])
+    protected function getBeamMock(array $methods = []): MockObject
     {
         return $this->createPartialMock(
             Beam::class,
@@ -36,9 +36,9 @@ class RsyncTest extends TestCase
 
 
     /**
-     * @return MockObject
+     * @return MockObject&DeploymentResult
      */
-    protected function getDeploymentResultMock()
+    protected function getDeploymentResultMock(): MockObject
     {
         return $this->createMock(DeploymentResult::class);
     }
@@ -129,7 +129,7 @@ class RsyncTest extends TestCase
 
         $beamMock->expects($this->once())
             ->method('getLocalPath')
-            ->will($this->returnValue('frompath'));
+            ->willReturn('frompath');
 
         $rsync->setBeam($beamMock);
 
@@ -170,10 +170,9 @@ class RsyncTest extends TestCase
 
         $beamMock->expects($this->once())
             ->method('getLocalPath')
-            ->will($this->returnValue('frompath'));
+            ->willReturn('frompath');
 
         $rsync->setBeam($beamMock);
-
         $rsync->down($output);
     }
 
@@ -191,7 +190,7 @@ class RsyncTest extends TestCase
                 $this->equalTo('frompath'),
                 $this->equalTo(true)
             )
-            ->will($this->returnValue('test command'));
+            ->willReturn('test command');
 
         $rsync->expects($this->once())
             ->method('deploy')
@@ -199,11 +198,11 @@ class RsyncTest extends TestCase
                 $this->equalTo('test command'),
                 $this->equalTo($output)
             )
-            ->will($this->returnValue($this->getDeploymentResultMock()));
+            ->willReturn($this->getDeploymentResultMock());
 
         $rsync->expects($this->once())
             ->method('getTargetPath')
-            ->will($this->returnValue('topath'));
+            ->willReturn('topath');
 
         $beamMock = $this->getBeamMock([
             'getLocalPath'
@@ -211,7 +210,7 @@ class RsyncTest extends TestCase
 
         $beamMock->expects($this->once())
             ->method('getLocalPath')
-            ->will($this->returnValue('frompath'));
+            ->willReturn('frompath');
 
         $rsync->setBeam($beamMock);
 
@@ -220,8 +219,7 @@ class RsyncTest extends TestCase
 
     public function testDeploy()
     {
-        /** @var MockObject */
-        $processStub = $this->createMock(Process::class, [], [], '', false);
+        $processStub = $this->createMock(Process::class);
 
         $processStub->expects($this->once())
             ->method('run')
@@ -229,13 +227,12 @@ class RsyncTest extends TestCase
 
         $processStub->expects($this->once())
             ->method('isSuccessful')
-            ->will($this->returnValue(true));
+            ->willReturn(true);
 
         $processStub->expects($this->once())
             ->method('getOutput')
-            ->will(
-                $this->returnValue(
-                    <<<OUTPUT
+            ->willReturn(
+                <<<OUTPUT
 *deleting test1
 *deleting test2
 >fcsT.... test3
@@ -254,7 +251,6 @@ hf....... test12
 <f..T.... test16
 >f..T.... test17
 OUTPUT
-                )
             );
 
 
@@ -268,7 +264,7 @@ OUTPUT
         $rsync->expects($this->once())
             ->method('getProcess')
             ->with($this->equalTo('test command'))
-            ->will($this->returnValue($processStub));
+            ->willReturn($processStub);
 
         $rsync->expects($this->once())
             ->method('generateExcludesFile');
@@ -411,8 +407,7 @@ OUTPUT
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Some error');
 
-        /** @var MockObject */
-        $processStub = $this->createMock(Process::class, [], [], '', false);
+        $processStub = $this->createMock(Process::class);
 
         $processStub->expects($this->once())
             ->method('run')
@@ -420,11 +415,11 @@ OUTPUT
 
         $processStub->expects($this->once())
             ->method('isSuccessful')
-            ->will($this->returnValue(false));
+            ->willReturn(false);
 
         $processStub->expects($this->once())
             ->method('getErrorOutput')
-            ->will($this->returnValue('Some error'));
+            ->willReturn('Some error');
 
 
         $rsync = $this->getRsyncMock(
@@ -437,7 +432,7 @@ OUTPUT
         $rsync->expects($this->once())
             ->method('getProcess')
             ->with($this->equalTo('test command'))
-            ->will($this->returnValue($processStub));
+            ->willReturn($processStub);
 
         $rsync->expects($this->once())
             ->method('generateExcludesFile');
@@ -458,7 +453,7 @@ OUTPUT
 
         $beamMock->expects($this->exactly(2))
             ->method('getLocalPathname')
-            ->will($this->returnValue('test'));
+            ->willReturn('test');
 
         $rsync->setBeam($beamMock);
 
@@ -479,19 +474,17 @@ OUTPUT
 
         $beamMock->expects($this->once())
             ->method('getServer')
-            ->will(
-                $this->returnValue(
-                    [
-                        'user'    => 'user',
-                        'host'    => 'host',
-                        'webroot' => 'webroot'
-                    ]
-                )
+            ->willReturn(
+                [
+                    'user'    => 'user',
+                    'host'    => 'host',
+                    'webroot' => 'webroot'
+                ]
             );
 
         $beamMock->expects($this->once())
             ->method('getPrimaryHost')
-            ->will($this->returnValue('host'));
+            ->willReturn('host');
 
         $rsync->setBeam($beamMock);
 
@@ -516,20 +509,16 @@ OUTPUT
 
         $beamMock->expects($this->once())
             ->method('getConfig')
-            ->will(
-                $this->returnValue(
-                    [
-                        'test',
-                        'test2'
-                    ]
-                )
+            ->willReturn(
+                [
+                    'test',
+                    'test2'
+                ]
             );
 
         $beamMock->expects($this->once())
             ->method('hasPath')
-            ->will(
-                $this->returnValue(false)
-            );
+            ->willReturn(false);
 
         $rsync = $this->getRsyncMock(
             [
@@ -539,7 +528,7 @@ OUTPUT
 
         $rsync->expects($this->once())
             ->method('getExcludesPath')
-            ->will($this->returnValue(vfsStream::url('root/excludes')));
+            ->willReturn(vfsStream::url('root/excludes'));
 
         $rsync->setBeam($beamMock);
 
@@ -572,27 +561,21 @@ OUTPUT
 
         $beamMock->expects($this->once())
             ->method('getConfig')
-            ->will(
-                $this->returnValue(
-                    [
-                        'test',
-                        'test2'
-                    ]
-                )
+            ->willReturn(
+                [
+                    'test',
+                    'test2'
+                ]
             );
 
         $beamMock->expects($this->once())
             ->method('hasPath')
-            ->will(
-                $this->returnValue(true)
-            );
+            ->willReturn(true);
 
         $beamMock->expects($this->once())
             ->method('getOption')
             ->with($this->equalTo('path'))
-            ->will(
-                $this->returnValue('test')
-            );
+            ->willReturn('test');
 
         $rsync = $this->getRsyncMock(
             [
@@ -602,7 +585,7 @@ OUTPUT
 
         $rsync->expects($this->once())
             ->method('getExcludesPath')
-            ->will($this->returnValue(vfsStream::url('root/excludes')));
+            ->willReturn(vfsStream::url('root/excludes'));
 
         $rsync->setBeam($beamMock);
 
@@ -624,7 +607,7 @@ OUTPUT
 
         $rsync->expects($this->atLeastOnce())
             ->method('getExcludesPath')
-            ->will($this->returnValue('/test'));
+            ->willReturn('/test');
 
         $beamMock = $this->getBeamMock([
             'hasPath',
@@ -633,19 +616,15 @@ OUTPUT
 
         $beamMock->expects($this->atLeastOnce())
             ->method('hasPath')
-            ->will(
-                $this->returnValue(false)
-            );
+            ->willReturn(false);
 
         $server = [
             'syncPermissions' => false
         ];
 
-        $beamMock->method('getServer')->will(
-            $this->returnCallback(function () use (&$server) {
-                return $server;
-            })
-        );
+        $beamMock->method('getServer')->willReturnCallback(function () use (&$server) {
+            return $server;
+        });
 
         $rsync->setBeam($beamMock);
 
@@ -691,7 +670,7 @@ OUTPUT
 
         $rsync->expects($this->atLeastOnce())
             ->method('getExcludesPath')
-            ->will($this->returnValue('/test'));
+            ->willReturn('/test');
 
         $rsync->setBeam($beamMock);
 
@@ -721,7 +700,7 @@ OUTPUT
         $rsync->setOption('delete', true);
 
         $rsync->method('getRsyncVersion')->willReturn('3.0.0');
-        $rsync->method('getExcludesPath')->will($this->returnValue('/test'));
+        $rsync->method('getExcludesPath')->willReturn('/test');
         $rsync->setBeam($beamMock);
 
         $this->assertEquals(

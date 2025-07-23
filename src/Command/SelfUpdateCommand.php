@@ -14,11 +14,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class SelfUpdateCommand extends SymfonyCommand
 {
-    /**
-     * Configure the commands options
-     * @return null
-     */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName('self-update')
@@ -34,16 +30,18 @@ class SelfUpdateCommand extends SymfonyCommand
                 null,
                 InputOption::VALUE_REQUIRED,
                 'The host to download from',
-                'http://getbeam.io'
+                'https://getbeam.io'
             );
     }
+
+
     /**
      * @param  InputInterface    $input
      * @param  OutputInterface   $output
      * @throws RuntimeException
-     * @return void
+     * @return int
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $host = rtrim($input->getOption('host'), '/');
         $url = "$host/beam.phar";
@@ -90,5 +88,7 @@ class SelfUpdateCommand extends SymfonyCommand
         } else {
             $output->writeln('You are already using the latest version');
         }
+
+        return 0;
     }
 }

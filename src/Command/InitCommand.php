@@ -29,9 +29,9 @@ class InitCommand extends SymfonyCommand
     /**
      * @param InputInterface  $input
      * @param OutputInterface $output
-     * @return int|null|void
+     * @return int
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
 
         // Check a beam.json file doesn't already exist
@@ -40,7 +40,7 @@ class InitCommand extends SymfonyCommand
                 "<error>Error: beam.json file already exists in this directory, use '-r (or --replace)'
                 flag to overwrite file</error>"
             );
-            exit;
+            return 1;
         }
 
         $template = [
@@ -69,5 +69,7 @@ class InitCommand extends SymfonyCommand
             "<info>Success: beam.json file saved to " . getcwd() .
             "/beam.json - be sure to check the file before using it</info>"
         );
+
+        return 0;
     }
 }

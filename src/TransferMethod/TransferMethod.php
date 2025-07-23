@@ -183,7 +183,7 @@ abstract class TransferMethod
         $questionHelper = $this->questionHelper;
         $formatterHelper = $this->formatterHelper;
 
-        return function ($command, \Exception $exception, Process $process = null)
+        return function ($command, \Exception $exception, ?Process $process = null)
  use ($input, $output, $questionHelper, $formatterHelper) {
 
             // Ensure the output of the failed command is shown

@@ -19,7 +19,7 @@ class UpCommand extends TransferCommand
     /**
      * @return string
      */
-    protected function getDirection()
+    protected function getDirection(): string
     {
         return 'up';
     }

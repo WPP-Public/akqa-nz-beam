@@ -12,15 +12,9 @@ use Symfony\Component\Config\Definition\Processor;
  */
 class DeploymentResult extends \ArrayObject
 {
-    /**
-     * @var
-     */
-    protected $updateCounts;
+    protected ?array $updateCounts = null;
 
-    /**
-     * @var DeploymentResultConfiguration
-     */
-    protected $configuration;
+    protected DeploymentResultConfiguration $configuration;
 
     /**
      * If result is tied to a specific node, name of this node

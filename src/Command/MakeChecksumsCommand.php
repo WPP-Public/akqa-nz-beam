@@ -39,9 +39,9 @@ class MakeChecksumsCommand extends Command
     /**
      * @param  InputInterface  $input
      * @param  OutputInterface $output
-     * @return int|null|void
+     * @return int
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $path = realpath($input->getOption('path'));
 
@@ -58,5 +58,7 @@ class MakeChecksumsCommand extends Command
             $jsonfile . '.gz',
             Utils::checksumsToGz($checksums)
         );
+
+        return 0;
     }
 }

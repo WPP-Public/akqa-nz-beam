@@ -15,10 +15,6 @@ composer install
 php ./bin/installer
 ```
 
-## Updating
-
-    $ beam self-update
-
 ## Configuration
 
 Beam requires a config file named `beam.json` to know where to sync your files.
@@ -90,23 +86,11 @@ schemes](http://www.hardened-php.net/suhosin/configuration.html#suhosin.executor
 To fix this, open your `php.ini` (ensure it is your cli one) and make sure that
 `suhosin.executor.include.whitelist=phar` is present.
 
-### IRC
-
-Help is available at `#beam` on freenode.
-
-## Contributing
-
-This project follows the standards defined in:
-
-* [PSR-0](http://www.php-fig.org/psr/0/)
-* [PSR-1](http://www.php-fig.org/psr/1/)
-* [PSR-2](http://www.php-fig.org/psr/2/)
-
-
 ## Unit testing
 
-    $ composer install
-    $ phpunit
+```sh
+composer run test
+```
 
 # License
 

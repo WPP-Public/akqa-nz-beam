@@ -15,6 +15,7 @@ class DownCommand extends TransferCommand
             ->setName('down')
             ->setDescription('Transfer from a server');
     }
+
     /**
      * @return string
      */

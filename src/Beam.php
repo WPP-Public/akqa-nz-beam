@@ -167,7 +167,7 @@ class Beam
 
     /**
      * @param \Heyday\Beam\DeploymentProvider\DeploymentResult $deploymentResult
-     * @param \Closure
+     * @param \Closure|null $deploymentCallback
      * @return mixed
      * @throws Exception
      * @throws \Exception
@@ -385,6 +385,10 @@ class Beam
      */
     public function isWorkingCopy()
     {
+        if (!isset($this->options['working-copy'])) {
+            return false;
+        }
+
         return $this->options['working-copy'];
     }
 
@@ -432,9 +436,8 @@ class Beam
      * Get the server config we are deploying to.
      *
      * This method is guaranteed to to return a server due to the options resolver and config
-     * @return mixed
      */
-    public function getServer()
+    public function getServer(): array
     {
         return $this->config['servers'][$this->options['target']];
     }
@@ -445,7 +448,7 @@ class Beam
      * @param array|null $server Optional server config
      * @return array|string[]
      */
-    public function getHosts($server = null)
+    public function getHosts($server = null): array
     {
         if (!$server) {
             $server = $this->getServer();
@@ -570,7 +573,7 @@ class Beam
      * DeploymentProvider\ResultStream interface.
      * @throws InvalidArgumentException
      */
-    public function setResultStreamHandler(\Closure $handler = null)
+    public function setResultStreamHandler(?\Closure $handler = null)
     {
         $this->getOption('deploymentprovider')->setStreamHandler($handler);
     }
@@ -578,10 +581,10 @@ class Beam
     /**
      * A helper method that runs a process and checks its success, erroring if it failed
      * @param  Process  $process
-     * @param  callable $output
+     * @param  \Closure|null $output
      * @throws RuntimeException
      */
-    protected function runProcess(Process $process, \Closure $output = null)
+    protected function runProcess(Process $process, ?\Closure $output = null)
     {
         $process->run($output);
         if (!$process->isSuccessful()) {
@@ -801,13 +804,10 @@ class Beam
     }
 
     /**
-     * @param                                    $command
-     * @param                                    $exception
-     * @param \Symfony\Component\Process\Process $process
      * @throws RuntimeException
      * @return mixed
      */
-    protected function promptCommandFailureContinue($command, $exception, Process $process = null)
+    protected function promptCommandFailureContinue($command, $exception, ?Process $process = null)
     {
         if (!is_callable($this->options['commandfailurehandler'])) {
             throw $exception;
@@ -1001,6 +1001,14 @@ class Beam
      */
     protected function hasRemoteCommands()
     {
+        if (!isset($this->config['commands'])) {
+            return false;
+        }
+
+        if (!is_array($this->config['commands'])) {
+            return false;
+        }
+
         foreach ($this->config['commands'] as $command) {
             if ($command['location'] === 'target') {
                 if (empty($command['tag'])) {

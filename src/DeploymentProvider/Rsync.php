@@ -94,7 +94,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             $questionHelper = new QuestionHelper();
             $serverName = $this->beam->getOption('target');
 
-            if (!Utils::command_exists('sshpass')) {
+            if (!Utils::commandExists('sshpass')) {
                 throw new RuntimeException(sprintf(
                     "%s is configured to use sshpass but the sshpass program wasn't found on your path.",
                     $serverName
@@ -123,15 +123,15 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     /**
      * Beam up will beam to all target hosts
      *
-     * @param Closure          $output
-     * @param bool             $dryrun
-     * @param DeploymentResult $deploymentResult
+     * @param \Closure|null $output
+     * @param bool $dryrun
+     * @param DeploymentResult|null $deploymentResult
      * @return DeploymentResult
      * @throws RuntimeException
      */
-    public function up(Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
+    public function up(?\Closure $output = null, $dryrun = false, ?DeploymentResult $deploymentResult = null)
     {
-        /** @var DeploymentResult $mergedResult */
+        /** @var DeploymentResult|null $mergedResult */
         $mergedResult = null;
         $results = [];
         // silent per-server output when collating multiple streams
@@ -170,13 +170,13 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     /**
      * Beam down only beams down from the master host
      *
-     * @param Closure          $output
-     * @param bool             $dryrun
-     * @param DeploymentResult $deploymentResult
+     * @param \Closure|null $output
+     * @param bool $dryrun
+     * @param DeploymentResult|null $deploymentResult
      * @return DeploymentResult
      * @throws RuntimeException
      */
-    public function down(Closure $output = null, $dryrun = false, DeploymentResult $deploymentResult = null)
+    public function down(?\Closure $output = null, $dryrun = false, ?DeploymentResult $deploymentResult = null)
     {
         return $this->deploy(
             $this->buildCommand(
@@ -191,12 +191,12 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
 
     /**
      * @param string  $command
-     * @param Closure $output
+     * @param \Closure|null $output
      * @param bool    $silent
      * @return DeploymentResult
      * @throws RuntimeException
      */
-    public function deploy($command, Closure $output = null, $silent = false)
+    public function deploy($command, ?\Closure $output = null, $silent = false)
     {
         $this->generateExcludesFile();
         $outputHandler = $this->getOutputStreamHandler($output, $silent);
@@ -373,14 +373,15 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
 
     /**
      * Return if the sshpass program is to be used
-     * @return bool
      */
-    protected function isUsingSshPass()
+    protected function isUsingSshPass(): bool
     {
         if ($this->beam) {
             $server = $this->beam->getServer();
             return $server['sshpass'];
         }
+
+        return false;
     }
 
     /**
@@ -581,7 +582,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
      * Takes the form: "user@host:path"
      * @return string
      */
-    public function getTargetPath()
+    public function getTargetPath(): string
     {
         $server = $this->beam->getServer();
         $host = $this->beam->getPrimaryHost($server);
@@ -595,7 +596,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
      *
      * @return array
      */
-    public function getTargetPaths()
+    public function getTargetPaths(): array
     {
         $paths = [];
         $server = $this->beam->getServer();
@@ -609,37 +610,36 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
      * Return a string representation of the target
      * @return string
      */
-    public function getTargetAsText()
+    public function getTargetAsText(): string
     {
         return $this->getTargetPath();
     }
 
-    /**
-     * @return mixed|null
-     */
-    public function getLimitations()
+    public function getLimitations(): array
     {
-        return null;
+        return [];
     }
 
     /**
      * Set a callback function to receive a stream of changes
-     * @param Closure $callback function(array $array)
+     * @param \Closure|null $callback function(array $array)
      */
-    public function setStreamHandler(Closure $callback = null)
+    public function setStreamHandler(?\Closure $callback = null): self
     {
         $this->resultStreamHandler = $callback;
+
+        return $this;
     }
 
     /**
      * Create a callback to handle the rsync process output
      *
      * @see setStreamHandler
-     * @param Closure $callback
+     * @param \Closure|null $callback
      * @param bool    $silent Force stream handler to capture, but not output
      * @return callable
      */
-    protected function getOutputStreamHandler(Closure $callback = null, $silent = false)
+    protected function getOutputStreamHandler(?\Closure $callback = null, $silent = false)
     {
         $streamHandler = $silent ? null : $this->resultStreamHandler;
         $buffer = '';

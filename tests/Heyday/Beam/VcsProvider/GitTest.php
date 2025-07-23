@@ -4,7 +4,6 @@ namespace Heyday\Beam\VcsProvider;
 
 use Heyday\Beam\Exception\InvalidConfigurationException;
 use org\bovigo\vfs\vfsStream;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
@@ -23,13 +22,8 @@ class GitTest extends TestCase
 
     public function testGetCurrentBranch()
     {
-        /** @var MockObject */
         $processMock = $this->createMock(
-            Process::class,
-            [],
-            [],
-            '',
-            false
+            Process::class
         );
 
         $processMock->method('getOutput')->willReturn(
@@ -49,11 +43,7 @@ OUTPUT
     public function testGetAvailableBranches()
     {
         $processMock = $this->createMock(
-            'Symfony\Component\Process\Process',
-            [],
-            [],
-            '',
-            false
+            Process::class
         );
         $processMock->expects($this->once())
             ->method('getOutput')
@@ -144,13 +134,8 @@ OUTPUT
 
     public function testGetLog()
     {
-        /** @var MockObject */
         $processMock = $this->createMock(
-            'Symfony\Component\Process\Process',
-            [],
-            [],
-            '',
-            false
+            Process::class
         );
         $processMock->expects($this->once())
             ->method('getOutput')

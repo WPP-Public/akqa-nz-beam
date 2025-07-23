@@ -345,7 +345,7 @@ class BeamTest extends TestCase
         $vcsProvider->expects($this->once())
             ->method('isRemote')
             ->with($this->equalTo('remotes/origin/master'))
-            ->will($this->returnValue(true));
+            ->willReturn(true);
 
         $beam = new Beam(
             [
@@ -401,7 +401,6 @@ class BeamTest extends TestCase
         $beam = new Beam(
             $this->validConfig,
             $this->validOptions,
-            $this->getVcsProviderStub()
         );
         $this->assertFalse($beam->hasPath());
         $beam = new Beam(

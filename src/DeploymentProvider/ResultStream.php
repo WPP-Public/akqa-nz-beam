@@ -6,7 +6,7 @@ interface ResultStream
 {
     /**
      * Set a callback function to receive a stream of changes
-     * @param \Closure $callback function(array $array)
+     * @param \Closure|null $callback function(array $array)
      */
-    public function setStreamHandler(\Closure $callback = null);
+    public function setStreamHandler(?\Closure $callback = null): self;
 }

@@ -135,7 +135,9 @@ abstract class TransferCommand extends Command
 
         // Set transfer method from config
         if ($target = $input->getArgument('target')) {
-            $method = isset($this->config['servers'][$target]['type']) ? $this->config['servers'][$target]['type'] : 'rsync';
+            $method = isset($this->config['servers'][$target]['type'])
+                ? $this->config['servers'][$target]['type']
+                : 'rsync';
             $this->setTransferMethodByKey($method);
         }
 

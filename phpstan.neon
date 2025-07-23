@@ -2,6 +2,8 @@ parameters:
     level: 4
     treatPhpDocTypesAsCertain: false
     paths:
-        - app/src
-    ignoreErrors:
-        - '#has no type specified#'
+        - ./src
+        - ./tests
+
+includes:
+    - phpstan-baseline.neon

@@ -44,7 +44,7 @@ class JsonConfigLoader extends FileLoader
      * @throws InvalidConfigurationException
      * @return array
      */
-    public function load($resource, $type = null)
+    public function load($resource, $type = null): array
     {
         $path =  $this->locate($resource);
         $json = file_get_contents($path);
@@ -79,7 +79,7 @@ class JsonConfigLoader extends FileLoader
      *
      * @return Boolean true if this class supports the given resource, false otherwise
      */
-    public function supports($resource, $type = null)
+    public function supports($resource, $type = null): bool
     {
         return is_string($resource) && 'json' === pathinfo(
             $resource,

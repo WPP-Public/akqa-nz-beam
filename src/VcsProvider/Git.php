@@ -13,30 +13,21 @@ use Symfony\Component\Process\Process;
  */
 class Git implements GitLikeVcsProvider
 {
-    /**
-     * @var
-     */
-    protected $srcdir;
-    /**
-     * @param $srcdir
-     */
-    public function __construct($srcdir)
+    protected ?string $srcdir = null;
+
+    public function __construct(string $srcdir)
     {
         $this->srcdir = $srcdir;
     }
-    /**
-     * @{inheritDoc}
-     */
-    public function getCurrentBranch()
+
+    public function getCurrentBranch(): string
     {
         $process = $this->process('git rev-parse --abbrev-ref HEAD');
 
         return trim($process->getOutput());
     }
-    /**
-     * @{inheritDoc}
-     */
-    public function getAvailableBranches()
+
+    public function getAvailableBranches(): array
     {
         $process = $this->process('git branch -a');
         $matches = [];
@@ -45,20 +36,12 @@ class Git implements GitLikeVcsProvider
         return $matches[1];
     }
 
-
-    /**
-     * @{inheritDoc}
-     */
-    public function exists()
+    public function exists(): bool
     {
         return file_exists($this->srcdir . DIRECTORY_SEPARATOR . '.git');
     }
 
-
-    /**
-     * @{inheritDoc}
-     */
-    public function exportRef($branch, $location)
+    public function exportRef(string $branch, string $location): void
     {
         // Clean up previous deployment
         Utils::removeDirectory($location);
@@ -76,10 +59,7 @@ class Git implements GitLikeVcsProvider
     }
 
 
-    /**
-     * @{inheritDoc}
-     */
-    public function updateBranch($branch)
+    public function updateBranch(string $branch): void
     {
         $parts = $this->getRemoteName($branch);
         if (!$parts) {
@@ -179,10 +159,10 @@ class Git implements GitLikeVcsProvider
 
 
     /**
-     * @param $ref
+     * @param string $ref
      * @return bool
      */
-    public function isValidRef($ref)
+    public function isValidRef(string $ref): bool
     {
         $process = $this->process(
             sprintf(
@@ -191,8 +171,10 @@ class Git implements GitLikeVcsProvider
             )
         );
 
-        return $process->getExitCode() == 0;
+        return $process->getExitCode() === 0;
     }
+
+
     /**
      * Get the identity of a user as defined in the git config
      * This is the name the git uses to identify a user in commits.
@@ -202,7 +184,7 @@ class Git implements GitLikeVcsProvider
      *
      * @return string
      */
-    public function getUserIdentity()
+    public function getUserIdentity(): string
     {
         $identity = false;
 
@@ -211,7 +193,7 @@ class Git implements GitLikeVcsProvider
             $identity = trim($process->getOutput());
 
             if (!$identity || $process->getExitCode() > 0) {
-                return false;
+                return '';
             }
 
             $process = $this->process('git config --get user.email');
@@ -272,6 +254,7 @@ class Git implements GitLikeVcsProvider
         ));
 
         $lines = explode("\n", trim($process->getOutput()));
+        $branch = '';
 
         foreach ($lines as $index => $line) {
             // Prefer the current branch

@@ -17,14 +17,9 @@ use Ssh\SshConfigFileConfiguration;
  */
 class Sftp extends ManualChecksum implements DeploymentProvider
 {
-    /**
-     * @var
-     */
-    protected $sftp;
-    /**
-     * @var
-     */
-    protected $targetPath;
+    protected ?\Ssh\Sftp $sftp = null;
+
+    protected ?string $targetPath = null;
 
     /**
      * @return \Ssh\Sftp
@@ -54,13 +49,12 @@ class Sftp extends ManualChecksum implements DeploymentProvider
                     $server['host']
                 );
 
-                $session = new Session(
-                    $configuration,
-                    $configuration->getAuthentication(
-                        null,
-                        $server['user']
-                    )
+                $auth = $configuration->getAuthentication(
+                    null,
+                    $server['user']
                 );
+
+                $session = new Session($configuration, $auth);
             }
 
             $this->sftp = $session->getSftp();
@@ -72,7 +66,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
     /**
      * @{inheritDoc}
      */
-    protected function writeContent($targetpath, $content)
+    protected function writeContent(string $targetpath, $content)
     {
         $this->getSftp()->write(
             $this->getTargetFilePath($targetpath),
@@ -83,7 +77,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
     /**
      * @{inheritDoc}
      */
-    protected function write($localpath, $targetpath)
+    protected function write(string $localpath, string $targetpath)
     {
         $this->getSftp()->send(
             $localpath,
@@ -94,7 +88,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
     /**
      * @{inheritDoc}
      */
-    protected function read($path)
+    protected function read(string $path)
     {
         return $this->getSftp()->read(
             $this->getTargetFilePath($path)
@@ -104,7 +98,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
     /**
      * @{inheritDoc}
      */
-    protected function exists($path)
+    protected function exists(string $path)
     {
         return $this->getSftp()->exists(
             $this->getTargetFilePath($path)
@@ -114,7 +108,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
     /**
      * @{inheritDoc}
      */
-    protected function mkdir($path)
+    protected function mkdir(string $path)
     {
         $this->getSftp()->mkdir(
             $this->getTargetFilePath($path),
@@ -126,7 +120,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
     /**
      * @{inheritDoc}
      */
-    protected function size($path)
+    protected function size(string $path)
     {
         $stat = $this->getSftp()->lstat(
             $this->getTargetFilePath($path)
@@ -139,7 +133,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
      * @param $path
      * @return mixed
      */
-    protected function delete($path)
+    protected function delete(string $path)
     {
         $this->getSftp()->unlink(
             $this->getTargetFilePath($path)
@@ -147,18 +141,17 @@ class Sftp extends ManualChecksum implements DeploymentProvider
     }
 
     /**
-     * @param $path
-     * @return mixed|string
+     * @param string $path
      */
-    protected function getTargetFilePath($path)
+    protected function getTargetFilePath(string $path): string
     {
         return $this->getTargetPath() . '/' . $path;
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public function getTargetPath()
+    public function getTargetPath(): string
     {
         if (null === $this->targetPath) {
             $server = $this->beam->getServer();
@@ -172,7 +165,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
      * Return a string representation of the target
      * @return string
      */
-    public function getTargetAsText()
+    public function getTargetAsText(): string
     {
         return $this->getConfig('user') . '@' . $this->getConfig('host') . ':' . $this->getTargetPath();
     }
@@ -181,7 +174,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
      * @throws \Heyday\Beam\Exception\InvalidEnvironmentException
      * @return array
      */
-    public function getLimitations()
+    public function getLimitations(): array
     {
         Utils::checkExtension(
             'ssh2',
@@ -198,9 +191,8 @@ class Sftp extends ManualChecksum implements DeploymentProvider
      *
      * @return array
      */
-    public function getTargetPaths()
+    public function getTargetPaths(): array
     {
-        // @todo - support
         return [];
     }
 }

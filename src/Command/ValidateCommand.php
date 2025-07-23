@@ -21,12 +21,14 @@ class ValidateCommand extends Command
             ->addConfigOption()
             ->setDescription('Validate the nearest beam.json file');
     }
+
+
     /**
      * @param  InputInterface  $input
      * @param  OutputInterface $output
-     * @return int|null|void
+     * @return int
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $config = $this->getConfig($input);
 
@@ -47,6 +49,8 @@ class ValidateCommand extends Command
         } catch (\Exception $e) {
             $this->outputError($output, $e->getMessage());
         }
+
+        return 0;
     }
 
     protected function getConfigPath(InputInterface $input)

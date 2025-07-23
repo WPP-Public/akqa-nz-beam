@@ -3,6 +3,7 @@
 namespace Heyday\Beam\DeploymentProvider;
 
 use Heyday\Beam\Exception\RuntimeException;
+use FTP\Connection;
 
 /**
  * Class Ftp
@@ -12,45 +13,37 @@ use Heyday\Beam\Exception\RuntimeException;
  */
 class Ftp extends ManualChecksum
 {
-    /**
-     * @var
-     */
-    protected $ssl;
-    /**
-     * @var
-     */
-    protected $targetPath;
-    /**
-     * @var
-     */
-    protected $writeContext;
-    /**
-     * @var
-     */
-    protected $connection;
-    /**
-     * @var
-     */
-    protected $protocolString;
+    protected bool $ssl;
+
+    protected string $targetPath;
+
+    protected ?Connection $connection = null;
+
+    protected string $protocolString;
+
     /**
      * @var array
      */
     protected $listCache = [];
+
     /**
-     * @return resource
+     * @return Connection
      * @throws RuntimeException
      */
-    protected function getConnection()
+    protected function getConnection(): Connection
     {
         if (null === $this->connection) {
             if ($this->getConfig('ssl')) {
-                $this->connection = ftp_ssl_connect($this->getConfig('host'));
+                $connection = ftp_ssl_connect($this->getConfig('host'));
             } else {
-                $this->connection = ftp_connect($this->getConfig('host'));
+                $connection = ftp_connect($this->getConfig('host'));
             }
-            if (!$this->connection) {
+
+            if (!$connection) {
                 throw new RuntimeException("FTP connection failed\n");
             }
+
+            $this->connection = $connection;
 
             if (
                 !ftp_login(
@@ -180,7 +173,7 @@ class Ftp extends ManualChecksum
             $response = ftp_raw($connection, "MKD $path");
             $this->addToListCache($path);
 
-            if ($response && is_array($response)) {
+            if (is_array($response)) {
                 $code = substr($response[0], 0, 3);
 
                 if ($code !== '257' && $code !== '550') {
@@ -223,7 +216,7 @@ class Ftp extends ManualChecksum
      * @param $path
      * @return string
      */
-    protected function getTargetFilePath($path)
+    protected function getTargetFilePath($path): string
     {
         return $this->getTargetPath() . '/' . $path;
     }
@@ -261,11 +254,10 @@ class Ftp extends ManualChecksum
     }
     /**
      * @throws RuntimeException
-     * @return mixed
      */
-    public function getTargetPath()
+    public function getTargetPath(): string
     {
-        if (null === $this->targetPath) {
+        if (!$this->targetPath) {
             $webroot = $this->getConfig('webroot');
 
             $this->targetPath = rtrim($webroot, '/');
@@ -275,9 +267,8 @@ class Ftp extends ManualChecksum
     }
     /**
      * Return a string representation of the target
-     * @return string
      */
-    public function getTargetAsText()
+    public function getTargetAsText(): string
     {
         return $this->getConfig('user') . '@' . $this->getConfig('host') . ':' . $this->getTargetPath();
     }
@@ -287,7 +278,7 @@ class Ftp extends ManualChecksum
      *
      * @return array
      */
-    public function getTargetPaths()
+    public function getTargetPaths(): array
     {
         // @todo - support
         return [];

@@ -56,13 +56,14 @@ class DeploymentResultConfiguration extends Configuration implements Configurati
     public function getConfigTreeBuilder(): \Symfony\Component\Config\Definition\Builder\TreeBuilder
     {
         $treeBuilder = new TreeBuilder('deploymentresult');
+        /** @var \Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition $rootNode */
         $rootNode = $treeBuilder->getRootNode();
 
         $rootNode
-                ->children()
-                    ->scalarNode('update')->isRequired()
-                        ->validate()
-                            ->ifNotInArray($this->updates)
+            ->children()
+                ->scalarNode('update')->isRequired()
+                    ->validate()
+                        ->ifNotInArray($this->updates)
                             ->thenInvalid(
                                 'Update "%s" is not valid, options are: ' .
                                     $this->getFormattedOptions($this->updates)
@@ -92,7 +93,7 @@ class DeploymentResultConfiguration extends Configuration implements Configurati
                     ->scalarNode('filename')->isRequired()->end()
                     ->scalarNode('nodes')->end()
                     ->scalarNode('localfilename')->end()
-                ->end();
+            ->end();
 
         return $treeBuilder;
     }

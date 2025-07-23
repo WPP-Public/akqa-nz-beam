@@ -21,9 +21,9 @@ class BeamCompletionCommand extends CompletionCommand
     }
 
     /**
-     * @return string
+     * @return array<string>
      */
-    protected function runCompletion()
+    protected function runCompletion(): array
     {
         $application = $this->getApplication();
         $handler = $this->handler;
@@ -54,7 +54,6 @@ class BeamCompletionCommand extends CompletionCommand
             $config = $this->getConfig();
         } catch (\Exception $e) {
             $config = null;
-            $projectPath = null;
         }
 
         // Add argument handlers
