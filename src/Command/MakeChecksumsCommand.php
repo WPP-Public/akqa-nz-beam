@@ -51,9 +51,9 @@ class MakeChecksumsCommand extends Command
             Utils::getAllowedFilesFromDirectory($config['exclude'], $path),
             $path
         );
-        
+
         $jsonfile = rtrim($path, '/') . '/' . $input->getOption('checksumfile');
-        
+
         file_put_contents(
             $jsonfile . '.gz',
             Utils::checksumsToGz($checksums)

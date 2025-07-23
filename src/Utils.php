@@ -24,9 +24,10 @@ class Utils
             \RecursiveIteratorIterator::CHILD_FIRST
         );
         foreach ($iterator as $file) {
-            if (!in_array($file->getBasename(), ['.', '..']) && ($file->isFile() || $file->isLink()) && $condition(
-                $file
-            )
+            if (
+                !in_array($file->getBasename(), ['.', '..']) && ($file->isFile() || $file->isLink()) && $condition(
+                    $file
+                )
             ) {
                 $files[] = $file;
             }
@@ -172,10 +173,12 @@ class Utils
     {
         // Try to delete using rm if not running under Windows
         // Skip if a protocol is used as this is not supported by rm
-        if (!defined('PHP_WINDOWS_VERSION_BUILD')
-            && !preg_match('/^.+:\/\/.+/', $location)) {
+        if (
+            !defined('PHP_WINDOWS_VERSION_BUILD')
+            && !preg_match('/^.+:\/\/.+/', $location)
+        ) {
             try {
-                $process = Process::fromShellCommandline('rm -rf '. escapeshellarg($location));
+                $process = Process::fromShellCommandline('rm -rf ' . escapeshellarg($location));
                 $process->run();
 
                 return;
@@ -245,7 +248,8 @@ class Utils
      * @param string $command The command to check
      * @return bool True if the command has been found ; otherwise, false.
      */
-    public static function command_exists($command) {
+    public static function commandExists(string $command): bool
+    {
         $whereIsCommand = (PHP_OS == 'WINNT') ? 'where' : 'which';
 
         $process = proc_open(

@@ -90,10 +90,12 @@ abstract class TransferMethod
         }
 
         if (OutputInterface::VERBOSITY_VERBOSE === $output->getVerbosity()) {
-
             $formatterHelper = $this->formatterHelper;
 
-            $options['targetcommandoutputhandler'] = $options['localcommandoutputhandler'] = function ($type, $data) use (
+            $options['targetcommandoutputhandler'] = $options['localcommandoutputhandler'] = function (
+                $type,
+                $data
+            ) use (
                 $output,
                 $formatterHelper
             ) {
@@ -114,7 +116,6 @@ abstract class TransferMethod
                     );
                 }
             };
-
         }
 
         return $options;
@@ -183,7 +184,7 @@ abstract class TransferMethod
         $formatterHelper = $this->formatterHelper;
 
         return function ($command, \Exception $exception, Process $process = null)
-            use ($input, $output, $questionHelper, $formatterHelper) {
+ use ($input, $output, $questionHelper, $formatterHelper) {
 
             // Ensure the output of the failed command is shown
             if (OutputInterface::VERBOSITY_VERBOSE !== $output->getVerbosity()) {

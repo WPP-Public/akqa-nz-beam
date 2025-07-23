@@ -650,7 +650,10 @@ OUTPUT
         $rsync->setBeam($beamMock);
 
         $this->assertEquals(
-            'rsync /testfrom/ /testto -rlD --itemize-changes --checksum --compress --delay-updates --exclude-from="/test"',
+            sprintf(
+                'rsync %s -rlD --itemize-changes --checksum --compress --delay-updates --exclude-from="/test"',
+                '/testfrom/ /testto'
+            ),
             $this->getAccessibleMethod('buildCommand')->invoke(
                 $rsync,
                 '/testfrom',
@@ -661,7 +664,11 @@ OUTPUT
         $server['syncPermissions'] = true;
 
         $this->assertEquals(
-            'rsync /testfrom/ /testto -rlD --itemize-changes --perms --dry-run --checksum --compress --delay-updates --exclude-from="/test"',
+            sprintf(
+                'rsync %s -rlD --itemize-changes --perms --dry-run --checksum --compress --delay-updates %s',
+                '/testfrom/ /testto',
+                '--exclude-from="/test"'
+            ),
             $this->getAccessibleMethod('buildCommand')->invoke(
                 $rsync,
                 '/testfrom',
@@ -691,7 +698,11 @@ OUTPUT
         $rsync->method('getRsyncVersion')->willReturn('2.6.0');
 
         $this->assertEquals(
-            'rsync /testfrom/ /testto -rlD --itemize-changes --checksum --delete --compress --delay-updates --delete-after --exclude-from="/test"',
+            sprintf(
+                'rsync %s -rlD --itemize-changes --checksum --delete --compress --delay-updates --delete-after %s',
+                '/testfrom/ /testto',
+                '--exclude-from="/test"'
+            ),
             $this->getAccessibleMethod('buildCommand')->invoke(
                 $rsync,
                 '/testfrom',
@@ -714,7 +725,11 @@ OUTPUT
         $rsync->setBeam($beamMock);
 
         $this->assertEquals(
-            'rsync /testfrom/ /testto -rlD --itemize-changes --checksum --delete --compress --delay-updates --delete-delay --exclude-from="/test"',
+            sprintf(
+                'rsync %s -rlD --itemize-changes --checksum --delete --compress --delay-updates --delete-delay %s',
+                '/testfrom/ /testto',
+                '--exclude-from="/test"'
+            ),
             $this->getAccessibleMethod('buildCommand')->invoke(
                 $rsync,
                 '/testfrom',
@@ -734,6 +749,8 @@ OUTPUT
         $version = $this->getAccessibleMethod('getRsyncVersion')
             ->invoke($rsync);
 
-        $this->assertEquals(1, preg_match('/^\d+\.\d+\.\d+/', $version), 'Check retrieved rsync version number looks like a version');
+        $this->assertMatchesRegularExpression(
+            '/^\d+\.\d+\.\d+/', $version, 'Check retrieved rsync version number looks like a version'
+        );
     }
 }

@@ -95,7 +95,10 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             $serverName = $this->beam->getOption('target');
 
             if (!Utils::command_exists('sshpass')) {
-                throw new RuntimeException("$serverName is configured to use sshpass but the sshpass program wasn't found on your path.");
+                throw new RuntimeException(sprintf(
+                    "%s is configured to use sshpass but the sshpass program wasn't found on your path.",
+                    $serverName
+                ));
             }
 
             $question = new Question(
@@ -205,7 +208,7 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             $errorMessage = $process->getErrorOutput();
 
             if ($this->isUsingSshPass() && $process->getExitCode() == 12) {
-                $errorMessage .= "\n(This error can be caused by an incorrect password when using the sshpass option.)\n";
+                $errorMessage .= "\n(This error can be caused by an incorrect password when using sshpass.)\n";
             }
 
             throw new RuntimeException($errorMessage);
@@ -408,8 +411,9 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     {
         $change = [];
         $matches = [];
-        if (1 !== preg_match(
-            '/
+        if (
+            1 !== preg_match(
+                '/
                 (?:
                     (^\*\w+) # capture anything with a "*" then words e.g. "*deleting"
                     | # or
@@ -431,9 +435,10 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
                 [ ] # a space
                 (.*) # filename
             /x',
-            $line,
-            $matches
-        )) {
+                $line,
+                $matches
+            )
+        ) {
             return false;
         }
         if ($matches[1] == '*deleting') {

@@ -1,17 +1,18 @@
 # Beam
 
-Beam is a command line utility for deploying websites to servers. It allows you to sync files between a version control
-system and a remote host, and run shell commands at fixed stages to further automate the deployment process. Beam works
-best (and by default) using `rsync` over `ssh`, though it also has support for intelligent deployment through SFTP
-and FTP.
+Beam is a command line utility for deploying websites to servers. It allows you
+to sync files between a version control system and a remote host, and run shell
+commands at fixed stages to further automate the deployment process. Beam works
+best (and by default) using `rsync` over `ssh`, though it also has support for
+intelligent deployment through SFTP and FTP.
 
 ## Installation
 
 ```bash
-$ git clone git@github.com:heyday/beam.git
-$ cd beam
-$ composer install
-$ php ./bin/installer
+git clone git@github.com:heyday/beam.git
+cd beam
+composer install
+php ./bin/installer
 ```
 
 ## Updating
@@ -20,9 +21,11 @@ $ php ./bin/installer
 
 ## Configuration
 
-Beam requires a config file named `beam.json` to know where to sync your files. Typically, each project you use Beam
-with will have its own `beam.json` file, as each project will have its own deployment location(s). When a config file
-is not found in the current directory, Beam will backtrack through parent directories and use the first config it finds.
+Beam requires a config file named `beam.json` to know where to sync your files.
+Typically, each project you use Beam with will have its own `beam.json` file, as
+each project will have its own deployment location(s). When a config file is not
+found in the current directory, Beam will backtrack through parent directories
+and use the first config it finds.
 
 To generate a blank config with a valid schema run:
 
@@ -30,7 +33,8 @@ To generate a blank config with a valid schema run:
 $ beam init
 ```
 
-For further configuration, see the [documentation for the `beam.json` file](CONFIG.md).
+For further configuration, see the [documentation for the `beam.json`
+file](CONFIG.md).
 
 ### Basic `beam.json`
 
@@ -49,7 +53,8 @@ At a minimum, to use Beam at least one server needs to be defined.
 
 ## Usage examples
 
-Given a valid [configuration file](CONFIG.md) here are some common ways to use Beam:
+Given a valid [configuration file](CONFIG.md) here are some common ways to use
+Beam:
 
 ```bash
 $ beam up live                   # regular sync from git
@@ -73,13 +78,17 @@ $ beam down staging -p assets    # dowload a specific folder to working copy
 
 #### When I run `beam` I see something like "?? ???"
 
-This means that you have `detect_unicode=On` in your `php.ini`. To fix this, open your `php.ini` (ensure it is your
-cli one) and make sure `detect_unicode=Off` is present.
+This means that you have `detect_unicode=On` in your `php.ini`. To fix this,
+open your `php.ini` (ensure it is your cli one) and make sure
+`detect_unicode=Off` is present.
 
 #### When I run `beam` I see no output
 
-If you are using `suhosin`, you will need to add `phar` to the [whitelist of allowed executor url schemes](http://www.hardened-php.net/suhosin/configuration.html#suhosin.executor.include.whitelist). To fix this, open your
-`php.ini` (ensure it is your cli one) and make sure that `suhosin.executor.include.whitelist=phar` is present.
+If you are using `suhosin`, you will need to add `phar` to the [whitelist of
+allowed executor url
+schemes](http://www.hardened-php.net/suhosin/configuration.html#suhosin.executor.include.whitelist).
+To fix this, open your `php.ini` (ensure it is your cli one) and make sure that
+`suhosin.executor.include.whitelist=phar` is present.
 
 ### IRC
 

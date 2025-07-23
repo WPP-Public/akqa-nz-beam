@@ -60,7 +60,6 @@ class SelfUpdateCommand extends SymfonyCommand
         }
 
         if ($version !== trim($latest) || $input->getOption('force')) {
-
             $output->writeln(
                 sprintf(
                     'Updating from <info>%s</info> to <info>%s</info>',
@@ -88,7 +87,6 @@ class SelfUpdateCommand extends SymfonyCommand
             chmod($_SERVER['argv'][0], $permissions);
 
             $output->writeln('Beam updated');
-
         } else {
             $output->writeln('You are already using the latest version');
         }

@@ -185,7 +185,7 @@ class Sftp extends ManualChecksum implements DeploymentProvider
     {
         Utils::checkExtension(
             'ssh2',
-            "The PHP '%s' extension is required to use SFTP deployment, but it is not loaded. (You may need to install it)."
+            "The PHP '%s' extension is required to use SFTP deployment, but it is not loaded."
         );
 
         return [

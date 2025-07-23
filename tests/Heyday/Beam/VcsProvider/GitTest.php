@@ -33,10 +33,10 @@ class GitTest extends TestCase
         );
 
         $processMock->method('getOutput')->will($this->returnValue(
-                <<<OUTPUT
+            <<<OUTPUT
 master
 OUTPUT
-            ));
+        ));
 
         $this->gitMock->expects($this->once())
             ->method('process')
@@ -83,7 +83,6 @@ OUTPUT
             ],
             $this->gitMock->getAvailableBranches()
         );
-
     }
 
     public function testExists()

@@ -77,7 +77,6 @@ abstract class ManualChecksum extends Deployment implements DeploymentProvider
         $targetchecksums = $this->getTargetChecksums();
 
         if (null === $deploymentResult) {
-
             $result = [];
 
             if ($this->fullmode) {
@@ -129,9 +128,8 @@ abstract class ManualChecksum extends Deployment implements DeploymentProvider
                     }
                 }
             } else {
-
                 if (!$targetchecksums) {
-                    throw new RuntimeException('No checksums file found on target. Use --full mode to work without checksums.');
+                    throw new RuntimeException('No checksums file found on target. Use --full mode without checksums.');
                 }
 
                 foreach (array_diff_assoc($localchecksums, $targetchecksums) as $path => $checksum) {
@@ -309,9 +307,7 @@ abstract class ManualChecksum extends Deployment implements DeploymentProvider
 
                 $files = array_merge($files, $matchedFiles);
             }
-
         } else {
-
             $files = Utils::getAllowedFilesFromDirectory(
                 $this->beam->getConfig('exclude'),
                 $dir

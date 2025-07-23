@@ -65,7 +65,7 @@ class Compiler
             $this->rootDir,
             $this->pharFile
         );
-        $this->vendorDir = $this->rootDir.'/vendor';
+        $this->vendorDir = $this->rootDir . '/vendor';
         $this->chmod = $chmod;
         if (!in_array($compression, [Phar::GZ, Phar::NONE])) {
             throw new InvalidArgumentException("Unknown compression type");
@@ -97,7 +97,8 @@ class Compiler
 
         try {
             $this->version = trim($this->runCommand('git describe --tags HEAD', 'Failed')->getOutput());
-        } catch (RuntimeException $e) {}
+        } catch (RuntimeException $e) {
+        }
 
         // Remove previously compiled file
         if (file_exists($this->pharFile)) {
@@ -230,7 +231,7 @@ class Compiler
 
         $phar->addFromString(
             'vendor/autoload.php',
-<<<PHP
+            <<<PHP
 <?php
 require_once __DIR__ . '/composer/ClassLoader.php';
 \$dir = dirname(__DIR__);
@@ -238,10 +239,10 @@ require_once __DIR__ . '/composer/ClassLoader.php';
 \$loader->addClassMap($map);
 \$loader->register(true);
 return \$loader;
-PHP
+    PHP
         );
 
-        $this->addFile($phar, new SplFileInfo($this->vendorDir."/composer/ClassLoader.php"));
+        $this->addFile($phar, new SplFileInfo($this->vendorDir . "/composer/ClassLoader.php"));
     }
 
     /**

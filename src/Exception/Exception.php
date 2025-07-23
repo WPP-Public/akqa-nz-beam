@@ -8,5 +8,4 @@ namespace Heyday\Beam\Exception;
  */
 class Exception extends \Exception
 {
-
 }

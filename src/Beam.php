@@ -108,11 +108,16 @@ class Beam
 
         if (count($emptyKeys)) {
             $options = implode(', ', $emptyKeys);
-            throw new InvalidArgumentException("The server '{$this->options['target']}' has empty values for required options: $options");
+            throw new InvalidArgumentException(sprintf(
+                "The server '%s' has empty values for required options: %s",
+                $this->options['target'],
+                $options
+            ));
         }
 
         if ($this->options['ref']) {
-            // TODO: Allow refs from the same branch (ie master~1) when locked. Git can show what branches a ref is in by using: git branch --contains [ref]
+            // TODO: Allow refs from the same branch (ie master~1) when locked. Git can show what branches a ref is
+            // in by using: git branch --contains [ref]
             if ($this->isServerLocked() && $this->options['ref'] !== $this->getServerLockedBranch()) {
                 throw new InvalidArgumentException(
                     sprintf(
@@ -150,11 +155,12 @@ class Beam
         $limitations = $this->getDeploymentProvider()->getLimitations();
 
         if (is_array($limitations)) {
-
             // Check if remote commands defined when not available
             if ($this->hasRemoteCommands() && in_array(DeploymentProvider::LIMITATION_REMOTECOMMAND, $limitations)) {
-                throw new InvalidConfigurationException(
-                    "Commands are to run on the location 'target' but the deployment provider '{$server['type']}' cannot execute remote commands."
+                throw new InvalidConfigurationException(sprintf(
+                    "Commands are to run on the location 'target' but '%s' cannot execute remote commands.",
+                    $server['type']
+                ));
                 );
             }
         }
@@ -162,12 +168,12 @@ class Beam
 
     /**
      * @param \Heyday\Beam\DeploymentProvider\DeploymentResult $deploymentResult
-     * @param \Closure                                         $deploymentCallback - callback to run immediately after deployment, before commands
+     * @param \Closure
      * @return mixed
      * @throws Exception
      * @throws \Exception
      */
-    public function doRun(DeploymentResult $deploymentResult = null, $deploymentCallback = null)
+    public function doRun(?DeploymentResult $deploymentResult = null, $deploymentCallback = null)
     {
         if ($this->isUp()) {
             $this->prepareLocalPath();
@@ -768,7 +774,6 @@ class Beam
             $process = null;
 
             if ($command['tty']) {
-
                 passthru(sprintf(
                     '%s; %s 2>&1',
                     "cd {$this->getLocalPath()}",
@@ -790,7 +795,6 @@ class Beam
                 );
             }
         } catch (RuntimeException $exception) {
-
             if (!$this->promptCommandFailureContinue($command, $exception, $process)) {
                 exit(1);
             }
@@ -854,7 +858,6 @@ class Beam
      * @return OptionsResolver
      */
     protected function getOptionsResolver()
-
     {
         $resolver = new OptionsResolver();
         $resolver->setRequired(

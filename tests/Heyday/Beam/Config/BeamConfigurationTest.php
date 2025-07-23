@@ -168,7 +168,8 @@ class BeamConfigurationTest extends TestCase
 
         $loaded = BeamConfiguration::loadImports([$file1, $file2]);
 
-        $this->assertEquals([
+        $this->assertEquals(
+            [
                 $externalConfig,
                 $otherExternalConfig
             ],

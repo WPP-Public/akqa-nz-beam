@@ -47,7 +47,7 @@ class ValueInterpolator
     {
         $interpolations = $this->getInterpolationsWithCaching();
 
-        array_walk_recursive($config, function(&$value, $key) use ($interpolations) {
+        array_walk_recursive($config, function (&$value, $key) use ($interpolations) {
             foreach ($interpolations as $token => $replaceCallback) {
                 if (strpos($value, $token) !== false) {
                     $value = str_replace($token, $replaceCallback(), $value);
@@ -69,20 +69,20 @@ class ValueInterpolator
         $ref = $this->ref;
 
         $interpolations = [
-            '%%branch%%' => function() use ($vcs, $ref) {
+            '%%branch%%' => function () use ($vcs, $ref) {
                 return $vcs->getBranchForReference($ref);
             },
-            '%%branch_pathsafe%%' => function() use ($vcs, $ref) {
+            '%%branch_pathsafe%%' => function () use ($vcs, $ref) {
                 $branch = $vcs->getBranchForReference($ref);
                 return str_replace(DIRECTORY_SEPARATOR, '-', $branch);
             },
-            '%%commit%%' => function() use ($vcs, $ref) {
+            '%%commit%%' => function () use ($vcs, $ref) {
                 return $vcs->resolveReference($ref);
             },
-            '%%commit_abbrev%%' => function() use ($vcs, $ref) {
+            '%%commit_abbrev%%' => function () use ($vcs, $ref) {
                 return $vcs->resolveReference($ref, true);
             },
-            '%%user_identity%%' => function() use ($vcs) {
+            '%%user_identity%%' => function () use ($vcs) {
                 return $vcs->getUserIdentity();
             },
             '%%username%%' => get_current_user(),
@@ -109,7 +109,7 @@ class ValueInterpolator
         $cache = [];
 
         foreach ($this->getInterpolations() as $token => $value) {
-            $callbacks[$token] = function() use ($token, $value, &$cache) {
+            $callbacks[$token] = function () use ($token, $value, &$cache) {
                 if (is_callable($value)) {
                     if (!array_key_exists($token, $cache)) {
                         $cache[$token] = $value();

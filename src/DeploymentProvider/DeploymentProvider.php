@@ -13,7 +13,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 interface DeploymentProvider
 {
-    const LIMITATION_REMOTECOMMAND = 'remote-command';
+    public const LIMITATION_REMOTECOMMAND = 'remote-command';
 
     /**
      * @param  Beam $beam

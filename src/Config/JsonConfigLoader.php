@@ -29,9 +29,9 @@ class JsonConfigLoader extends FileLoader
         $parser = new JsonParser();
         $result = $parser->lint($json);
 
-        if($result !== null) {
+        if ($result !== null) {
             throw new InvalidConfigurationException(
-                "Failed to parse config $path:".PHP_EOL.PHP_EOL.$result->getMessage()
+                "Failed to parse config $path:" . PHP_EOL . PHP_EOL . $result->getMessage()
             );
         }
     }

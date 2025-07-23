@@ -13,7 +13,6 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class InitCommand extends SymfonyCommand
 {
-
     protected function configure()
     {
         $this
@@ -37,13 +36,11 @@ class InitCommand extends SymfonyCommand
 
         // Check a beam.json file doesn't already exist
         if (file_exists('beam.json') && !$input->getOption('replace')) {
-
             $output->writeln(
                 "<error>Error: beam.json file already exists in this directory, use '-r (or --replace)'
                 flag to overwrite file</error>"
             );
             exit;
-
         }
 
         $template = [
@@ -72,6 +69,5 @@ class InitCommand extends SymfonyCommand
             "<info>Success: beam.json file saved to " . getcwd() .
             "/beam.json - be sure to check the file before using it</info>"
         );
-
     }
 }

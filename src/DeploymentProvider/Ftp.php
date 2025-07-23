@@ -130,23 +130,23 @@ class Ftp extends ManualChecksum
         if (!isset($this->listCache[$dir])) {
             $this->listCache[$dir] = ftp_nlist($this->getConnection(), $dir);
 
-            if(!$this->listCache[$dir]) {
+            if (!$this->listCache[$dir]) {
                 return false;
             }
 
             array_walk(
                 $this->listCache[$dir],
-                function(&$value) {
+                function (&$value) {
                     $value = basename($value);
                 }
             );
         }
 
-        if(!$this->listCache[$dir]) {
+        if (!$this->listCache[$dir]) {
             return false;
-        } else if (($key = array_search(basename($path), $this->listCache[$dir])) !== false) {
+        } elseif (($key = array_search(basename($path), $this->listCache[$dir])) !== false) {
             return true;
-        } else if ($path == $dir && count($this->listCache[$dir])) {
+        } elseif ($path == $dir && count($this->listCache[$dir])) {
             return true;
         } else {
             return false;
@@ -180,11 +180,11 @@ class Ftp extends ManualChecksum
             $response = ftp_raw($connection, "MKD $path");
             $this->addToListCache($path);
 
-            if($response && is_array($response)) {
+            if ($response && is_array($response)) {
                 $code = substr($response[0], 0, 3);
 
                 if ($code !== '257' && $code !== '550') {
-                    throw new RuntimeException("Failed to mkdir '$path':\n" .implode("\n", $response));
+                    throw new RuntimeException("Failed to mkdir '$path':\n" . implode("\n", $response));
                 }
             }
         }
@@ -254,7 +254,7 @@ class Ftp extends ManualChecksum
         $parent = dirname($path);
 
         if (isset($this->listCache[$parent]) && $this->listCache[$parent]) {
-            if(($key = array_search(basename($path), $this->listCache[$parent]) !== false)) {
+            if (($key = array_search(basename($path), $this->listCache[$parent]) !== false)) {
                 unset($this->listCache[$parent][$key]);
             }
         }

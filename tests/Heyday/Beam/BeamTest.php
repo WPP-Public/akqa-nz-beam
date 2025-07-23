@@ -101,7 +101,9 @@ class BeamTest extends TestCase
     public function testBeamConstructInvalidOptionsDirectionException()
     {
         $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "direction" with value "fake" is invalid. Accepted values are: "up", "down".');
+        $this->expectExceptionMessage(
+            'The option "direction" with value "fake" is invalid. Accepted values are: "up", "down".'
+        );
 
         new Beam(
             $this->validConfig,
@@ -117,7 +119,9 @@ class BeamTest extends TestCase
     public function testBeamConstructInvalidOptionsRemoteException()
     {
         $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "target" with value "fake" is invalid. Accepted values are: "live".');
+        $this->expectExceptionMessage(
+            'The option "target" with value "fake" is invalid. Accepted values are: "live".'
+        );
 
         new Beam(
             $this->validConfig,

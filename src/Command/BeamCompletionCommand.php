@@ -31,11 +31,10 @@ class BeamCompletionCommand extends CompletionCommand
 
         // Trigger the merging of TransferMethod definition
         $commandName = $handler->getInput()->getFirstArgument();
-        if($application->has($commandName)){
+        if ($application->has($commandName)) {
             $command = $application->get($commandName);
 
             if ($command instanceof TransferCommand) {
-
                 try {
                     $words = $context->getWords();
                     unset($words[$context->getWordIndex()]);
@@ -100,7 +99,6 @@ class BeamCompletionCommand extends CompletionCommand
                         }
 
                         if (isset($config['commands']) && is_array($config['commands'])) {
-
                             $tags = [];
                             foreach ($config['commands'] as $command) {
                                 if (isset($command['tag'])) {

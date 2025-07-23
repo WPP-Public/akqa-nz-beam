@@ -207,7 +207,6 @@ class Git implements GitLikeVcsProvider
         $identity = false;
 
         try {
-
             $process = $this->process('git config --get user.name');
             $identity = trim($process->getOutput());
 
@@ -224,7 +223,6 @@ class Git implements GitLikeVcsProvider
 
             return $identity;
         } catch (RuntimeException $e) {
-
             // If no name/email is set in the user/project git config,
             // `git config` will exit with a non-zero code. In that case,
             // fall back to using the current username.

@@ -204,7 +204,6 @@ abstract class TransferCommand extends Command
 
             // Prompt the user with the affected files and a confirmation dialog
             if (!$input->getOption('no-prompt')) {
-
                 $output->writeln(
                     $this->formatterHelper->formatSection(
                         'info',
@@ -286,7 +285,6 @@ abstract class TransferCommand extends Command
                     exit(0);
                 }
             } else {
-
                 if ($input->getOption('dry-run')) {
                     $changedFiles = $beam->doDryrun();
                 } else {
@@ -300,7 +298,6 @@ abstract class TransferCommand extends Command
                 $this->deploymentResultHelper->outputChangesSummary($output, $changedFiles);
             }
         } catch (\Exception $e) {
-
             if ($output->getVerbosity() === OutputInterface::VERBOSITY_VERBOSE) {
                 throw $e;
             } else {
@@ -517,9 +514,9 @@ abstract class TransferCommand extends Command
      * This is used when the help command has taken over, since our initialize() method isn't called.
      * Where no input definition is available, see if $argv matches the definition for this command.
      *
-     * @param InputInterface $input - if null, an input will be created using argv
+     * @param InputInterface|null $input - if null, an input will be created using argv
      */
-    public function guessTarget(InputInterface $input = null)
+    public function guessTarget(?InputInterface $input = null)
     {
         if (!$this->transferMethod) {
             try {

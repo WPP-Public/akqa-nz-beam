@@ -8,5 +8,4 @@ namespace Heyday\Beam\Exception;
  */
 class InvalidConfigurationException extends Exception
 {
-
 }

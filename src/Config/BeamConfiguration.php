@@ -108,7 +108,6 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
         $configs = [];
 
         foreach ($imports as $import) {
-
             if (in_array($import, $imported)) {
                 continue;
             }

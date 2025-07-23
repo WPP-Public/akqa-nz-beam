@@ -1,6 +1,7 @@
 <?php
 
 namespace Heyday\Beam\Helper;
+
 use Symfony\Component\Console\Question\Question;
 
 /**
@@ -29,7 +30,7 @@ class YesNoQuestion extends Question
         parent::__construct($question, $default);
 
         // Force a 'yes', 'no' or boolean response. QuestionHelper converts blank responses to $default for us
-        $this->setValidator(function($answer) {
+        $this->setValidator(function ($answer) {
             $answer = $this->convertStringToBool($answer);
 
             if (!is_bool($answer)) {
