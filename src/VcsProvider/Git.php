@@ -85,6 +85,7 @@ class Git implements GitLikeVcsProvider
         if (!$parts) {
             throw new InvalidConfigurationException('The git vcs provider can only update remotes');
         }
+
         // TODO: Replace with git fetch --all ?
         $this->process(sprintf('git remote update --prune %s', $parts[0]));
     }
@@ -159,12 +160,21 @@ class Git implements GitLikeVcsProvider
      */
     public function getRemoteName($branch)
     {
-        $matches = [];
-        if (1 === preg_match('{^remotes/(.+)/(.+)}', $branch, $matches)) {
-            return array_slice($matches, 1);
-        } else {
+        if (strpos($branch, 'remotes/') !== 0) {
             return false;
         }
+
+        // Remove 'remotes/' prefix
+        $branch = substr($branch, 8);
+
+        // Split into remote and branch parts
+        $parts = explode('/', $branch, 2);
+
+        if (count($parts) !== 2) {
+            return false;
+        }
+
+        return $parts;
     }
 
 
@@ -213,7 +223,6 @@ class Git implements GitLikeVcsProvider
             }
 
             return $identity;
-
         } catch (RuntimeException $e) {
 
             // If no name/email is set in the user/project git config,
