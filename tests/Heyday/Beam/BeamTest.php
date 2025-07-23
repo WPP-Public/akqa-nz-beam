@@ -57,16 +57,16 @@ class BeamTest extends TestCase
         $vcsProviderStub = $this->createMock('Heyday\Beam\VcsProvider\GitLikeVcsProvider');
         $vcsProviderStub->expects($this->any())
             ->method('getCurrentBranch')
-            ->will($this->returnValue($current));
+            ->willReturn($current);
         $vcsProviderStub->expects($this->any())
             ->method('getAvailableBranches')
-            ->will($this->returnValue($available));
+            ->willReturn($available);
         $vcsProviderStub->expects($this->any())
             ->method('isValidRef')
-            ->will($this->returnValue(true));
+            ->willReturn(true);
         $vcsProviderStub->expects($this->any())
             ->method('exists')
-            ->will($this->returnValue($exists));
+            ->willReturn($exists);
 
         return $vcsProviderStub;
     }
@@ -174,7 +174,7 @@ class BeamTest extends TestCase
         $vcsProvider->expects($this->once())
             ->method('isRemote')
             ->with($this->equalTo('remotes/origin/master'))
-            ->will($this->returnValue(true));
+            ->willReturn(true);
 
         new Beam(
             [
@@ -374,7 +374,7 @@ class BeamTest extends TestCase
         $vcsProvider->expects($this->once())
             ->method('isRemote')
             ->with($this->equalTo('remotes/origin/master'))
-            ->will($this->returnValue(true));
+            ->willReturn(true);
         $beam = new Beam(
             [
                 'servers' => [

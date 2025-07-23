@@ -165,7 +165,7 @@ abstract class TransferCommand extends Command
      * @throws RuntimeException
      * @throws \Exception
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         if (!$this->transferMethod) {
             throw new RuntimeException('Transfer method must be set. Run initialize before execute.');

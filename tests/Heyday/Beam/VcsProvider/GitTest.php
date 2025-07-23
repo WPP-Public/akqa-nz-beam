@@ -32,11 +32,11 @@ class GitTest extends TestCase
             false
         );
 
-        $processMock->method('getOutput')->will($this->returnValue(
+        $processMock->method('getOutput')->willReturn(
             <<<OUTPUT
 master
 OUTPUT
-        ));
+        );
 
         $this->gitMock->expects($this->once())
             ->method('process')
@@ -57,7 +57,7 @@ OUTPUT
         );
         $processMock->expects($this->once())
             ->method('getOutput')
-            ->will($this->returnValue(
+            ->willReturn(
                 <<<OUTPUT
 * test
   master
@@ -65,13 +65,11 @@ OUTPUT
   remotes/origin/test
   remotes/origin/master
 OUTPUT
-            ));
+            );
 
         $this->gitMock->expects($this->once())
             ->method('process')
-            ->will(
-                $this->returnValue($processMock)
-            );
+            ->willReturn($processMock);
 
         $this->assertEquals(
             [
@@ -156,7 +154,7 @@ OUTPUT
         );
         $processMock->expects($this->once())
             ->method('getOutput')
-            ->will($this->returnValue(
+            ->willReturn(
                 <<<OUTPUT
 commit 4627bea545766a6a50abffa0512aa0c0a7c85158
 Merge: 1d25c4e 0c85469
@@ -165,16 +163,16 @@ Date:   Sun Apr 21 18:11:28 2013 -0700
 
     Test date
 OUTPUT
-            ));
+            );
 
         $this->gitMock->expects($this->once())
             ->method('process')
             ->with($this->equalTo('git log -1 --format=medium master'))
-            ->will($this->returnValue($processMock));
+            ->willReturn($processMock);
 
         $this->gitMock->expects($this->atLeastOnce())
             ->method('getUserIdentity')
-            ->will($this->returnValue('Joe Bloggs <joe.bloggs@example.com>'));
+            ->willReturn('Joe Bloggs <joe.bloggs@example.com>');
 
         $user = $this->gitMock->getUserIdentity();
         $this->assertEquals(

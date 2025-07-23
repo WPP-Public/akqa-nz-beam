@@ -161,7 +161,6 @@ class Beam
                     "Commands are to run on the location 'target' but '%s' cannot execute remote commands.",
                     $server['type']
                 ));
-                );
             }
         }
     }

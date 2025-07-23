@@ -34,7 +34,7 @@ class DeploymentResultHelper extends Helper
      *
      * @api
      */
-    public function getName()
+    public function getName(): string
     {
         return 'deploymentresult';
     }

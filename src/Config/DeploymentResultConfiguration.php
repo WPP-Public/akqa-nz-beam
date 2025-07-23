@@ -53,7 +53,7 @@ class DeploymentResultConfiguration extends Configuration implements Configurati
     /**
      * @return TreeBuilder
      */
-    public function getConfigTreeBuilder()
+    public function getConfigTreeBuilder(): \Symfony\Component\Config\Definition\Builder\TreeBuilder
     {
         $treeBuilder = new TreeBuilder('deploymentresult');
         $rootNode = $treeBuilder->getRootNode();

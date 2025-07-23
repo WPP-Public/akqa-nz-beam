@@ -72,7 +72,7 @@ class RsyncTest extends TestCase
                 $this->equalTo('topath'),
                 $this->equalTo(false)
             )
-            ->will($this->returnValue('test command'));
+            ->willReturn('test command');
 
         $rsync->expects($this->once())
             ->method('deploy')
@@ -80,7 +80,7 @@ class RsyncTest extends TestCase
                 $this->equalTo('test command'),
                 $this->equalTo($output)
             )
-            ->will($this->returnValue($this->getDeploymentResultMock()));
+            ->willReturn($this->getDeploymentResultMock());
 
         $rsync->method('getTargetPaths')
             ->willReturn(['topath']);
@@ -110,7 +110,7 @@ class RsyncTest extends TestCase
                 $this->equalTo('topath'),
                 $this->equalTo(true)
             )
-            ->will($this->returnValue('test command'));
+            ->willReturn('test command');
 
         $rsync->expects($this->once())
             ->method('deploy')
@@ -118,10 +118,10 @@ class RsyncTest extends TestCase
                 $this->equalTo('test command'),
                 $this->equalTo($output)
             )
-            ->will($this->returnValue($this->getDeploymentResultMock()));
+            ->willReturn($this->getDeploymentResultMock());
 
         $rsync->method('getTargetPaths')
-            ->will($this->returnValue(['topath']));
+            ->willReturn(['topath']);
 
         $beamMock = $this->getBeamMock([
             'getLocalPath',
@@ -150,7 +150,7 @@ class RsyncTest extends TestCase
                 $this->equalTo('frompath'),
                 $this->equalTo(false)
             )
-            ->will($this->returnValue('test command'));
+            ->willReturn('test command');
 
         $rsync->expects($this->once())
             ->method('deploy')
@@ -158,11 +158,11 @@ class RsyncTest extends TestCase
                 $this->equalTo('test command'),
                 $this->equalTo($output)
             )
-            ->will($this->returnValue($this->getDeploymentResultMock()));
+            ->willReturn($this->getDeploymentResultMock());
 
         $rsync->expects($this->once())
             ->method('getTargetPath')
-            ->will($this->returnValue('topath'));
+            ->willReturn('topath');
 
         $beamMock = $this->getBeamMock([
             'getLocalPath'
@@ -456,14 +456,14 @@ OUTPUT
             'getLocalPathname'
         ]);
 
-        $beamMock->expects($this->once())
+        $beamMock->expects($this->exactly(2))
             ->method('getLocalPathname')
             ->will($this->returnValue('test'));
 
         $rsync->setBeam($beamMock);
 
         $this->assertEquals(
-            '/tmp/test.excludes',
+            '/tmp/test/test.excludes',
             $this->getAccessibleMethod('getExcludesPath')->invoke($rsync)
         );
     }
@@ -750,7 +750,9 @@ OUTPUT
             ->invoke($rsync);
 
         $this->assertMatchesRegularExpression(
-            '/^\d+\.\d+\.\d+/', $version, 'Check retrieved rsync version number looks like a version'
+            '/^\d+\.\d+\.\d+/',
+            $version,
+            'Check retrieved rsync version number looks like a version'
         );
     }
 }
