@@ -9,7 +9,7 @@ intelligent deployment through SFTP and FTP.
 ## Installation
 
 ```bash
-git clone git@github.com:heyday/beam.git
+git@github.com:WPP-Public/akqa-nz-beam.git
 cd beam
 composer install
 php ./bin/installer
