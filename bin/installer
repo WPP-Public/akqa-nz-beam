@@ -207,7 +207,8 @@ function installBeam() {
             out("Could not create file $file", 'error');
             $error = true;
         }
-        if (!fwrite($fh, file_get_contents("https://getbeam.io/beam.phar"))) {
+        
+        if (!fwrite($fh, file_get_contents("https://github.com/WPP-Public/akqa-nz-beam/releases/latest/download/beam.phar"))) {
             out('Download failed', 'error');
             $error = true;
         }

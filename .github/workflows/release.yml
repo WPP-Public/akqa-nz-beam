@@ -1,0 +1,25 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: php-actions/composer@v6
+    - name: Build phar
+      run: php bin/compile
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          beam.phar
+          beam.phar.version
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

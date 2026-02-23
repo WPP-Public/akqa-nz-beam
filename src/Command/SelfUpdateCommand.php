@@ -24,13 +24,6 @@ class SelfUpdateCommand extends SymfonyCommand
                 'f',
                 InputOption::VALUE_NONE,
                 'Download even if the version is the same'
-            )
-            ->addOption(
-                'host',
-                null,
-                InputOption::VALUE_REQUIRED,
-                'The host to download from',
-                'https://getbeam.io'
             );
     }
 
@@ -43,12 +36,11 @@ class SelfUpdateCommand extends SymfonyCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $host = rtrim($input->getOption('host'), '/');
-        $url = "$host/beam.phar";
+        $url = 'https://github.com/WPP-Public/akqa-nz-beam/releases/latest/download/beam.phar';
         $version = trim($this->getApplication()->getVersion());
 
         if ($version === '~package_version~') {
-            throw new RuntimeException("This command is only available for compiled phar files which you can obtain at $url");
+            throw new RuntimeException("This command is only available for compiled phar files which you can obtain at https://github.com/WPP-Public/akqa-nz-beam/releases/latest");
         }
 
         $latest = @file_get_contents("$url.version");
