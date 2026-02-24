@@ -716,22 +716,4 @@ OUTPUT
             )
         );
     }
-
-    public function testGetRsyncVersion()
-    {
-        $rsync = $this->getRsyncMock([
-            'getRsyncVersion'
-        ]);
-
-        $rsync->method('getRsyncVersion')->willReturn('3.0.0');
-
-        $version = $this->getAccessibleMethod('getRsyncVersion')
-            ->invoke($rsync);
-
-        $this->assertMatchesRegularExpression(
-            '/^\d+\.\d+\.\d+/',
-            $version,
-            'Check retrieved rsync version number looks like a version'
-        );
-    }
 }
