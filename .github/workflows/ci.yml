@@ -22,7 +22,7 @@ jobs:
     - uses: actions/checkout@v3
     - uses: php-actions/composer@v6
     - name: Build phar
-      run: php bin/compile
+      run: php -d phar.readonly=0 bin/compile
     - name: Upload beam.phar
       uses: actions/upload-artifact@v4
       with:

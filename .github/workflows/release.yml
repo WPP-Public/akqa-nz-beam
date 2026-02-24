@@ -13,7 +13,7 @@ jobs:
     - uses: actions/checkout@v3
     - uses: php-actions/composer@v6
     - name: Build phar
-      run: php bin/compile
+      run: php -d phar.readonly=0 bin/compile
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
