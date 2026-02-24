@@ -301,6 +301,12 @@ abstract class ManualChecksum extends Deployment implements DeploymentProvider
 
                 $files = array_merge($files, $matchedFiles);
             }
+
+            // Always include .beamlog (deployment log) when using path mode
+            $beamlogPath = $dir . '/.beamlog';
+            if (file_exists($beamlogPath)) {
+                $files[] = new \SplFileInfo($beamlogPath);
+            }
         } else {
             $files = Utils::getAllowedFilesFromDirectory(
                 $this->beam->getConfig('exclude'),

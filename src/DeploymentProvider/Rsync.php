@@ -260,6 +260,9 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             $excludes = [];
             $includes = [];
 
+            // Always include .beamlog (deployment log) when using path mode
+            $includes[] = '.beamlog';
+
             foreach ($paths as $path) {
                 $steps = $this->parsePathSteps($path);
                 $last = count($steps) - 1;
