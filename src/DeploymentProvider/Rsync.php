@@ -21,6 +21,11 @@ use Symfony\Component\Process\Process;
 class Rsync extends Deployment implements DeploymentProvider, ResultStream
 {
     /**
+     * Assumed rsync version when `rsync --version` is unavailable or unparseable (pre-3.0 delete flag behaviour).
+     */
+    private const FALLBACK_RSYNC_VERSION = '2.6.9';
+
+    /**
      * @var array
      */
     protected $options = [];
@@ -34,6 +39,16 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
      * @var Closure
      */
     protected $resultStreamHandler;
+
+    /**
+     * @var OutputInterface|null
+     */
+    protected $configureOutput;
+
+    /**
+     * @var string|null
+     */
+    private $rsyncVersionCache;
 
     /**
      * @param array $options
@@ -88,6 +103,8 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
      */
     public function configure(InputInterface $input, OutputInterface $output)
     {
+        $this->configureOutput = $output;
+
         // Prompt for password if server config specifies to use sshpass
         if ($this->isUsingSshPass()) {
             $formatterHelper = new FormatterHelper();
@@ -345,20 +362,44 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
      * Get the version of the rsync program that will be used for transfer
      *
      * @return string
-     * @throws RuntimeException
      */
     public function getRsyncVersion(): string
     {
+        if ($this->rsyncVersionCache !== null) {
+            return $this->rsyncVersionCache;
+        }
+
         $process = new Process(['rsync', '--version']);
         $process->run();
 
-        list($version) = sscanf($process->getOutput(), 'rsync version %s');
-
-        if (!$version) {
-            throw new RuntimeException("Couldn't check rsync version. Is rsync installed and on your PATH?");
+        if (!$process->isSuccessful()) {
+            return $this->rsyncVersionCache = self::FALLBACK_RSYNC_VERSION;
         }
 
-        return $version;
+        $versionOutput = $process->getOutput();
+        list($version) = sscanf($versionOutput, 'rsync version %s');
+
+        if ($version) {
+            return $this->rsyncVersionCache = $version;
+        }
+
+        $this->warnUnparsedRsyncVersion();
+
+        return $this->rsyncVersionCache = self::FALLBACK_RSYNC_VERSION;
+    }
+
+    private function warnUnparsedRsyncVersion(): void
+    {
+        $message = 'Could not parse rsync version from `rsync --version` output; using conservative delete synchronization flags (--delete-after when applicable).';
+
+        if ($this->configureOutput instanceof OutputInterface) {
+            $formatterHelper = new FormatterHelper();
+            $this->configureOutput->writeln(
+                $formatterHelper->formatSection('warning', $message, 'comment')
+            );
+        } elseif (\defined('STDERR') && \is_resource(STDERR)) {
+            fwrite(STDERR, 'Warning: ' . $message . PHP_EOL);
+        }
     }
 
     /**
@@ -367,7 +408,6 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
      * @param string $comparison - see version_compare $operator argument docs
      * @param string $version
      * @return bool
-     * @throws RuntimeException
      */
     protected function rsyncVersionCompare($comparison, $version)
     {
