@@ -35,15 +35,28 @@ class DeploymentResult extends \ArrayObject
      */
     public function __construct(array $result)
     {
-        $processor = new Processor();
         $this->configuration = new DeploymentResultConfiguration();
+
+        // Processor::processConfiguration merges each fragment, then requires every child key present.
+        // No fragments ([]) or only empty fragments ([[]]) never satisfy that and falsely error.
+        $fragments = array_values(array_filter(
+            $result,
+            static fn ($row): bool => $row !== [],
+        ));
+
+        if ($fragments === []) {
+            parent::__construct([]);
+            return;
+        }
+
+        $processor = new Processor();
 
         $processor->processConfiguration(
             $this->configuration,
-            $result
+            $fragments
         );
 
-        parent::__construct($result);
+        parent::__construct($fragments);
     }
 
     /**
