@@ -5,6 +5,7 @@ namespace Heyday\Beam\DeploymentProvider;
 use Closure;
 use Heyday\Beam\Config\DeploymentResultConfiguration;
 use Heyday\Beam\Exception\RuntimeException;
+use Heyday\Beam\Helper\SshRemoteShell;
 use Heyday\Beam\Utils;
 use Symfony\Component\Console\Helper\FormatterHelper;
 use Symfony\Component\Console\Helper\QuestionHelper;
@@ -105,11 +106,32 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
     {
         $this->configureOutput = $output;
 
+        $server = $this->beam->getServer();
+        $serverName = $this->beam->getOption('target');
+
+        if ($this->isUsingSsm() && $this->isUsingSshPass()) {
+            throw new RuntimeException(sprintf(
+                '%s is configured with both "ssm" and "sshpass"; these options cannot be used together.',
+                $serverName
+            ));
+        }
+
+        // Tunnel rsync over AWS SSM Session Manager when configured
+        if ($this->isUsingSsm()) {
+            if (!Utils::commandExists('aws')) {
+                throw new RuntimeException(sprintf(
+                    "%s is configured to use AWS SSM but the aws CLI wasn't found on your path.",
+                    $serverName
+                ));
+            }
+
+            putenv('RSYNC_RSH=' . SshRemoteShell::build($server));
+        }
+
         // Prompt for password if server config specifies to use sshpass
         if ($this->isUsingSshPass()) {
             $formatterHelper = new FormatterHelper();
             $questionHelper = new QuestionHelper();
-            $serverName = $this->beam->getOption('target');
 
             if (!Utils::commandExists('sshpass')) {
                 throw new RuntimeException(sprintf(
@@ -422,6 +444,18 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
         if ($this->beam) {
             $server = $this->beam->getServer();
             return $server['sshpass'];
+        }
+
+        return false;
+    }
+
+    /**
+     * Return if AWS SSM SSH tunneling is to be used
+     */
+    protected function isUsingSsm(): bool
+    {
+        if ($this->beam) {
+            return SshRemoteShell::isEnabled($this->beam->getServer());
         }
 
         return false;

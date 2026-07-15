@@ -342,7 +342,14 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
                     ->scalarNode('user')->end()
                     ->scalarNode('syncPermissions')->defaultTrue()->end()
                     ->scalarNode('timeout')->end()
-                    ->scalarNode('sshpass')->defaultFalse()->end();
+                    ->scalarNode('sshpass')->defaultFalse()->end()
+                    ->arrayNode('ssm')
+                    ->canBeEnabled()
+                    ->children()
+                    ->scalarNode('region')->defaultNull()->end()
+                    ->scalarNode('profile')->defaultNull()->end()
+                    ->end()
+                    ->end();
                 break;
         }
 

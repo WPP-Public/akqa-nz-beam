@@ -8,6 +8,7 @@ use Heyday\Beam\DeploymentProvider\DeploymentResult;
 use Heyday\Beam\Exception\Exception;
 use Heyday\Beam\Exception\InvalidArgumentException;
 use Heyday\Beam\Exception\RuntimeException;
+use Heyday\Beam\Helper\SshRemoteShell;
 use Heyday\Beam\VcsProvider\Git;
 use Heyday\Beam\VcsProvider\GitLikeVcsProvider;
 use Heyday\Beam\VcsProvider\VcsProvider;
@@ -747,8 +748,8 @@ class Beam
 
         foreach ($this->getHosts() as $host) {
             $args = [
-                // SSHPASS is set in \Heyday\Beam\DeploymentProvider\Rsync
-                getenv('SSHPASS') === false ? 'ssh' : 'sshpass -e ssh',
+                // SSHPASS / RSYNC_RSH are set in \Heyday\Beam\DeploymentProvider\Rsync
+                SshRemoteShell::build($server),
                 $command['tty'] ? '-t' : '',
                 $userComponent . $host,
                 escapeshellcmd($remoteCmd)

@@ -70,7 +70,8 @@ Beam.
 
 **The following properties are required for each defined server:**
 
--   `host` - Host name or IP address of the server
+-   `host` - Host name or IP address of the server. When using `ssm`, this
+    should be the EC2 instance ID (for example `i-0abc123def456`).
 -   `webroot` - Path to the deployment directory on the server. Relative paths
     are relative to the user's home directory. A trailing slash is optional.
 
@@ -109,7 +110,34 @@ available:
     enabled, Beam will prompt for an SSH password once instead of an SSH client
     prompting for each new connection. Key-based authentication is reccommeded,
     though this may not suit everyone. To use this option you will need to have
-    the `sshpass` program accessible on your path.
+    the `sshpass` program accessible on your path. Cannot be combined with
+    `ssm`.
+-   `ssm` _(boolean|object: false)_ - Tunnel SSH/rsync through [AWS Systems
+    Manager Session
+    Manager](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager.html)
+    using `aws ssm start-session` as an OpenSSH `ProxyCommand`. Set `host` to
+    the EC2 instance ID (for example `i-0abc123def456`). Requires the AWS CLI
+    and Session Manager plugin on your `PATH`. Cannot be combined with
+    `sshpass`.
+
+    When `ssm` is `true`, Beam uses your default AWS credentials/region. When
+    set as an object, the following optional fields are available:
+
+    -   `region` _(string)_ - Passed to the AWS CLI as `--region`
+    -   `profile` _(string)_ - Passed to the AWS CLI as `--profile`
+
+    Example:
+
+        "live": {
+            "user": "ec2-user",
+            "host": "i-0abc123def456",
+            "webroot": "/var/www/html",
+            "ssm": {
+                "region": "ap-southeast-2",
+                "profile": "deploy"
+            }
+        }
+
 -   `syncPermissions` _(boolean: true)_ - Sync permissions (file mode) of
     transferred files and directories. Set this to `false` to let the target
     filesystem control file mode. This is on by default for backwards

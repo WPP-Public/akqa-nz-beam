@@ -47,6 +47,58 @@ At a minimum, to use Beam at least one server needs to be defined.
 }
 ```
 
+### AWS SSM SSH tunneling
+
+Beam can tunnel rsync and remote commands over [AWS Systems Manager Session
+Manager](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager.html)
+instead of opening a direct SSH port. Set `host` to the EC2 instance ID and
+enable `ssm` on an `rsync` server:
+
+```json
+{
+	"servers": {
+		"live": {
+			"user": "ec2-user",
+			"host": "i-0abc123def456",
+			"webroot": "/var/www/html",
+			"ssm": true
+		}
+	}
+}
+```
+
+Optional `region` and `profile` can be set when Beam should call the AWS CLI
+with explicit credentials context:
+
+```json
+{
+	"servers": {
+		"live": {
+			"user": "ec2-user",
+			"host": "i-0abc123def456",
+			"webroot": "/var/www/html",
+			"ssm": {
+				"region": "ap-southeast-2",
+				"profile": "deploy"
+			}
+		}
+	}
+}
+```
+
+Prerequisites on the machine running Beam:
+
+- AWS CLI v2 with the [Session Manager
+  plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
+- IAM permissions for `ssm:StartSession` on the target instance
+- An SSH key that the instance accepts (SSM only replaces the network path)
+
+Then deploy as usual:
+
+```bash
+$ beam up live
+```
+
 ## Usage examples
 
 Given a valid [configuration file](CONFIG.md) here are some common ways to use

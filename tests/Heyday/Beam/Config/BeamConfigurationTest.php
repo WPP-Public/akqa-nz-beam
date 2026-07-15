@@ -89,6 +89,11 @@ class BeamConfigurationTest extends TestCase
                     'sshpass' => false,
                     'syncPermissions' => false,
                     'hosts' => [],
+                    'ssm' => [
+                        'enabled' => false,
+                        'region' => null,
+                        'profile' => null,
+                    ],
                 ]
             ],
             $processedConfig['servers']
@@ -128,6 +133,11 @@ class BeamConfigurationTest extends TestCase
                         'sshpass' => false,
                         'syncPermissions' => true,
                         'hosts' => [],
+                        'ssm' => [
+                            'enabled' => false,
+                            'region' => null,
+                            'profile' => null,
+                        ],
                     ]
                 ],
                 'import' => [],
@@ -296,6 +306,11 @@ class BeamConfigurationTest extends TestCase
                         'sshpass' => false,
                         'syncPermissions' => true,
                         'hosts' => [],
+                        'ssm' => [
+                            'enabled' => false,
+                            'region' => null,
+                            'profile' => null,
+                        ],
                     ]
                 ]
             ],
