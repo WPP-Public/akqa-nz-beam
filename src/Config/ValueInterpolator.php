@@ -48,6 +48,10 @@ class ValueInterpolator
         $interpolations = $this->getInterpolationsWithCaching();
 
         array_walk_recursive($config, function (&$value, $key) use ($interpolations) {
+            if (!is_string($value)) {
+                return;
+            }
+
             foreach ($interpolations as $token => $replaceCallback) {
                 if (strpos($value, $token) !== false) {
                     $value = str_replace($token, $replaceCallback(), $value);
