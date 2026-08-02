@@ -5,6 +5,7 @@ namespace Heyday\Beam\DeploymentProvider;
 use Closure;
 use Heyday\Beam\Beam;
 use Heyday\Beam\Exception\RuntimeException;
+use Heyday\Beam\Helper\SshRemoteShell;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\Process\Process;
@@ -715,5 +716,45 @@ OUTPUT
                 '/testto'
             )
         );
+    }
+
+    public function testBuildCommandWithSsm(): void
+    {
+        $rsync = $this->getRsyncMock(['getExcludesPath']);
+        $rsync->method('getExcludesPath')->willReturn('/test');
+
+        $beamMock = $this->getBeamMock(['hasPath', 'getServer']);
+        $beamMock->method('hasPath')->willReturn(false);
+        $beamMock->method('getServer')->willReturn([
+            'syncPermissions' => false,
+            'sshpass' => false,
+            'ssm' => [
+                'enabled' => true,
+                'region' => 'ap-southeast-2',
+                'profile' => 'zoo-prod',
+            ],
+        ]);
+
+        $rsync->setBeam($beamMock);
+
+        $remoteShell = SshRemoteShell::build([
+            'sshpass' => false,
+            'ssm' => [
+                'enabled' => true,
+                'region' => 'ap-southeast-2',
+                'profile' => 'zoo-prod',
+            ],
+        ]);
+
+        $command = $this->getAccessibleMethod('buildCommand')->invoke(
+            $rsync,
+            '/testfrom',
+            '/testto'
+        );
+
+        $this->assertStringContainsString('-e ' . escapeshellarg($remoteShell), $command);
+        $this->assertStringContainsString('aws ssm start-session', $command);
+        $this->assertStringContainsString('--profile zoo-prod', $command);
+        $this->assertStringContainsString('--region ap-southeast-2', $command);
     }
 }

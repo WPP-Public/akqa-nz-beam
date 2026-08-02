@@ -116,6 +116,8 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             ));
         }
 
+        $formatterHelper = new FormatterHelper();
+
         // Tunnel rsync over AWS SSM Session Manager when configured
         if ($this->isUsingSsm()) {
             if (!Utils::commandExists('aws')) {
@@ -125,12 +127,28 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
                 ));
             }
 
-            putenv('RSYNC_RSH=' . SshRemoteShell::build($server));
+            $remoteShell = SshRemoteShell::build($server);
+            $this->setRemoteShellEnv($remoteShell);
+
+            $ssmDetails = sprintf(
+                'Tunneling SSH via AWS SSM for %s (host: %s',
+                $serverName,
+                $this->beam->getPrimaryHost($server)
+            );
+            if (!empty($server['ssm']['region'])) {
+                $ssmDetails .= ', region: ' . $server['ssm']['region'];
+            }
+            if (!empty($server['ssm']['profile'])) {
+                $ssmDetails .= ', profile: ' . $server['ssm']['profile'];
+            }
+            $ssmDetails .= ')';
+
+            $output->writeln($formatterHelper->formatSection('ssm', $ssmDetails, 'comment'));
+            $output->writeln($formatterHelper->formatSection('ssm', 'Remote shell: ' . $remoteShell, 'comment'));
         }
 
         // Prompt for password if server config specifies to use sshpass
         if ($this->isUsingSshPass()) {
-            $formatterHelper = new FormatterHelper();
             $questionHelper = new QuestionHelper();
 
             if (!Utils::commandExists('sshpass')) {
@@ -155,7 +173,8 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
 
             // Set the password variable for sshpass and the remote shell variable for rsync so sshpass is used
             putenv("SSHPASS={$password}");
-            putenv("RSYNC_RSH=sshpass -e ssh");
+            $_ENV['SSHPASS'] = $password;
+            $this->setRemoteShellEnv('sshpass -e ssh');
         }
     }
 
@@ -284,6 +303,12 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             '-' . $flags,
             '--itemize-changes'
         ];
+
+        // Pass the remote shell via -e so Symfony Process env filtering cannot drop RSYNC_RSH
+        $remoteShell = SshRemoteShell::build($server);
+        if ($remoteShell !== 'ssh') {
+            $command[] = '-e ' . escapeshellarg($remoteShell);
+        }
 
         // Sync permissions if enabled for the target
         if ($server['syncPermissions']) {
@@ -761,9 +786,32 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
      */
     public function getProcess($command): Process
     {
-        $process = Process::fromShellCommandline($command, null, null, null, $this->timeout);
+        // Symfony Process builds its env from $_ENV/$_SERVER and drops putenv-only
+        // values, so pass SSH/rsync vars explicitly when present.
+        $env = [];
+        foreach (['RSYNC_RSH', 'SSHPASS'] as $name) {
+            $value = getenv($name);
+            if ($value !== false) {
+                $env[$name] = $value;
+            }
+        }
 
-        return $process;
+        return Process::fromShellCommandline(
+            $command,
+            null,
+            $env ?: null,
+            null,
+            $this->timeout
+        );
+    }
+
+    /**
+     * Persist the rsync remote shell for child processes.
+     */
+    protected function setRemoteShellEnv(string $remoteShell): void
+    {
+        putenv('RSYNC_RSH=' . $remoteShell);
+        $_ENV['RSYNC_RSH'] = $remoteShell;
     }
 
     /**

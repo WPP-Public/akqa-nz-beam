@@ -519,10 +519,19 @@ class Beam
             $timeout = 3600;
         }
 
+        // Symfony Process drops putenv-only values; pass SSH helpers explicitly.
+        $env = [];
+        foreach (['RSYNC_RSH', 'SSHPASS'] as $name) {
+            $value = getenv($name);
+            if ($value !== false) {
+                $env[$name] = $value;
+            }
+        }
+
         return Process::fromShellCommandline(
             $commandline,
             $cwd ? $cwd : $this->options['srcdir'],
-            null,
+            $env ?: null,
             null,
             $timeout
         );
