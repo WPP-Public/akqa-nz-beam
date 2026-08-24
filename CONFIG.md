@@ -64,9 +64,9 @@ options, here's a high-level list:
     }
 
 Servers are individual, named deployment targets. When using `beam up` or `beam
-down`, a server name referencing a server config is required. You can only work
-with one server per beam command, and at least one server must be defined to use
-Beam.
+down`, pass a server name referencing a server config, or omit it to be prompted
+for one. You can only work with one server per beam command, and at least one
+server must be defined to use Beam.
 
 **The following properties are required for each defined server:**
 
@@ -119,6 +119,11 @@ available:
     the EC2 instance ID (for example `i-0abc123def456`). Requires the AWS CLI
     and Session Manager plugin on your `PATH`. Cannot be combined with
     `sshpass`.
+
+    Beam always passes `--document-name AWS-StartSSHSession` so the session can
+    be used as an OpenSSH `ProxyCommand`. IAM must allow `ssm:StartSession` on
+    that document as well as the instance — permission for interactive
+    `aws ssm start-session --target …` alone is not enough.
 
     When `ssm` is `true`, Beam uses your default AWS credentials/region. When
     set as an object, the following optional fields are available:

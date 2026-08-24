@@ -90,8 +90,15 @@ Prerequisites on the machine running Beam:
 
 - AWS CLI v2 with the [Session Manager
   plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
-- IAM permissions for `ssm:StartSession` on the target instance
+- IAM permission for `ssm:StartSession` on both:
+  - the target instance (`arn:aws:ec2:REGION:ACCOUNT:instance/i-…`)
+  - the SSH session document (`arn:aws:ssm:REGION::document/AWS-StartSSHSession`)
 - An SSH key that the instance accepts (SSM only replaces the network path)
+
+Beam uses `--document-name AWS-StartSSHSession` so Session Manager can act as an
+SSH `ProxyCommand` for rsync. A plain interactive session
+(`aws ssm start-session --target i-…` without that document) can succeed while
+SSH tunneling still fails if the document is missing from the IAM policy.
 
 Then deploy as usual:
 
@@ -105,6 +112,7 @@ Given a valid [configuration file](CONFIG.md) here are some common ways to use
 Beam:
 
 ```bash
+$ beam up                        # prompt for a target, then regular sync from git
 $ beam up live                   # regular sync from git
 $ beam up staging --dry-run      # don't offer to sync the files, just display changes
 $ beam up live --no-prompt       # skips the summary of files to be changed and doesn't prompt for confirmation

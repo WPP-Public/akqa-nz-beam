@@ -21,6 +21,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\ChoiceQuestion;
 
 /**
  * Class TransferCommand
@@ -70,8 +71,8 @@ abstract class TransferCommand extends Command
         $this
             ->addArgument(
                 'target',
-                InputArgument::REQUIRED,
-                'Config name of target location to be beamed from or to'
+                InputArgument::OPTIONAL,
+                'Config name of target location to be beamed from or to (prompted if omitted)'
             )
             ->addOption(
                 'ref',
@@ -131,17 +132,65 @@ abstract class TransferCommand extends Command
     protected function initialize(InputInterface $input, OutputInterface $output)
     {
         $this->config = BeamConfiguration::parseConfig($this->getConfig($input));
-        BeamConfiguration::validateArguments($input, $this->config);
 
-        // Set transfer method from config
-        if ($target = $input->getArgument('target')) {
-            $method = isset($this->config['servers'][$target]['type'])
-                ? $this->config['servers'][$target]['type']
-                : 'rsync';
-            $this->setTransferMethodByKey($method);
+        if ($input->getArgument('target')) {
+            $this->configureTarget($input);
+        }
+    }
+
+    /**
+     * Prompt for a target when one was not given on the command line
+     *
+     * @throws RuntimeException
+     */
+    protected function interact(InputInterface $input, OutputInterface $output)
+    {
+        if ($input->getArgument('target')) {
+            return;
         }
 
+        $targets = array_keys($this->config['servers']);
+        $preposition = $this->getDirection() === 'up' ? 'to' : 'from';
+
+        $question = new ChoiceQuestion(
+            $this->formatterHelper->formatSection(
+                'prompt',
+                Utils::getQuestion(
+                    sprintf('Which target do you want to beam %s?', $preposition),
+                    $targets[0]
+                ),
+                'comment'
+            ),
+            $targets,
+            0
+        );
+        $question->setErrorMessage('Target "%s" is invalid.');
+
+        $input->setArgument('target', $this->questionHelper->ask($input, $output, $question));
+        $this->configureTarget($input);
+    }
+
+    /**
+     * Validate the selected target and merge its TransferMethod options into the definition
+     *
+     * @throws InvalidConfigurationException
+     */
+    protected function configureTarget(InputInterface $input)
+    {
+        BeamConfiguration::validateArguments($input, $this->config);
+
+        $target = $input->getArgument('target');
+        $method = isset($this->config['servers'][$target]['type'])
+            ? $this->config['servers'][$target]['type']
+            : 'rsync';
+        $this->setTransferMethodByKey($method);
+
         $input->bind($this->getDefinition());
+
+        // Re-binding from argv drops a target chosen interactively
+        if (!$input->getArgument('target')) {
+            $input->setArgument('target', $target);
+        }
     }
 
     /**
@@ -170,7 +219,7 @@ abstract class TransferCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         if (!$this->transferMethod) {
-            throw new RuntimeException('Transfer method must be set. Run initialize before execute.');
+            throw new RuntimeException('The "target" argument is required.');
         }
 
         try {
