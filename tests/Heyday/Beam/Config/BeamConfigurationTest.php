@@ -94,6 +94,8 @@ class BeamConfigurationTest extends TestCase
                         'region' => null,
                         'profile' => null,
                     ],
+                    'identityFile' => null,
+                    'sshOptions' => [],
                 ]
             ],
             $processedConfig['servers']
@@ -138,6 +140,8 @@ class BeamConfigurationTest extends TestCase
                             'region' => null,
                             'profile' => null,
                         ],
+                        'identityFile' => null,
+                        'sshOptions' => [],
                     ]
                 ],
                 'import' => [],
@@ -311,6 +315,8 @@ class BeamConfigurationTest extends TestCase
                             'region' => null,
                             'profile' => null,
                         ],
+                        'identityFile' => null,
+                        'sshOptions' => [],
                     ]
                 ]
             ],

@@ -127,13 +127,26 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
                 ));
             }
 
+            // With SSM the host is an instance ID, so ~/.ssh/config Host blocks can't supply
+            // the login user. Without an explicit user SSH falls back to the local username
+            // and the connection fails with "Permission denied (publickey)".
+            if (empty($server['user'])) {
+                throw new RuntimeException(sprintf(
+                    '%s uses AWS SSM so it must set "user" — the instance ID host (%s) cannot '
+                        . 'inherit a user from ~/.ssh/config, and SSH would fall back to your local username.',
+                    $serverName,
+                    $this->beam->getPrimaryHost($server)
+                ));
+            }
+
             $remoteShell = SshRemoteShell::build($server);
             $this->setRemoteShellEnv($remoteShell);
 
             $ssmDetails = sprintf(
-                'Tunneling SSH via AWS SSM for %s (host: %s',
+                'Tunneling SSH via AWS SSM for %s (host: %s, user: %s',
                 $serverName,
-                $this->beam->getPrimaryHost($server)
+                $this->beam->getPrimaryHost($server),
+                $server['user']
             );
             if (!empty($server['ssm']['region'])) {
                 $ssmDetails .= ', region: ' . $server['ssm']['region'];

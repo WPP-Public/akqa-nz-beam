@@ -104,6 +104,15 @@ available:
 
 ### Rsync properties
 
+-   `identityFile` _(string)_ - Path to the SSH private key to authenticate
+    with, passed to SSH as `-i`. A leading `~` is expanded to your home
+    directory. Beam also sets `IdentitiesOnly=yes` so keys held by `ssh-agent`
+    are not offered ahead of this one. This is normally only needed with `ssm`,
+    where the `host` is an instance ID and so `Host` blocks in `~/.ssh/config`
+    can't supply a key.
+-   `sshOptions` _(array of string)_ - Extra OpenSSH options, each in
+    `Keyword=value` form, passed through as `-o`. For example
+    `["StrictHostKeyChecking=accept-new", "ServerAliveInterval=30"]`.
 -   `sshpass` _(boolean: false)_ - Use the program
     [`sshpass`](http://sourceforge.net/projects/sshpass/) to enter your SSH
     password automatically when using password authentication. With this option
@@ -125,6 +134,13 @@ available:
     that document as well as the instance — permission for interactive
     `aws ssm start-session --target …` alone is not enough.
 
+    Because `host` is an instance ID, `Host`/`HostName` blocks in
+    `~/.ssh/config` no longer match it, so SSH cannot inherit a login user or
+    key from there. `user` is therefore **required** when `ssm` is enabled —
+    Beam fails with a clear error rather than letting SSH fall back to your
+    local username and die with `Permission denied (publickey)`. Set
+    `identityFile` too unless the key is one of SSH's defaults.
+
     When `ssm` is `true`, Beam uses your default AWS credentials/region. When
     set as an object, the following optional fields are available:
 
@@ -136,6 +152,7 @@ available:
         "live": {
             "user": "ec2-user",
             "host": "i-0abc123def456",
+            "identityFile": "~/.ssh/id_ed25519",
             "webroot": "/var/www/html",
             "ssm": {
                 "region": "ap-southeast-2",

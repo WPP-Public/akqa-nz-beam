@@ -31,7 +31,7 @@ $ beam init
 
 For further configuration, see the [documentation for the `beam.json`
 file](CONFIG.md).
-
+la
 ### Basic `beam.json`
 
 At a minimum, to use Beam at least one server needs to be defined.
@@ -60,12 +60,23 @@ enable `ssm` on an `rsync` server:
 		"live": {
 			"user": "ec2-user",
 			"host": "i-0abc123def456",
+			"identityFile": "~/.ssh/id_ed25519",
 			"webroot": "/var/www/html",
 			"ssm": true
 		}
 	}
 }
 ```
+
+Because the `host` is an instance ID rather than a hostname, `Host` blocks in
+`~/.ssh/config` no longer match, so SSH cannot pick up the login user or key
+from there. Set them in `beam.json` instead:
+
+-   `user` is **required** with `ssm`. Without it SSH falls back to your local
+    username and the connection fails with `Permission denied (publickey)`.
+-   `identityFile` should point at the key the instance accepts. Beam passes it
+    as `ssh -i` along with `IdentitiesOnly=yes`, so agent keys aren't offered
+    ahead of it.
 
 Optional `region` and `profile` can be set when Beam should call the AWS CLI
 with explicit credentials context:
@@ -76,6 +87,7 @@ with explicit credentials context:
 		"live": {
 			"user": "ec2-user",
 			"host": "i-0abc123def456",
+			"identityFile": "~/.ssh/id_ed25519",
 			"webroot": "/var/www/html",
 			"ssm": {
 				"region": "ap-southeast-2",
@@ -84,6 +96,14 @@ with explicit credentials context:
 		}
 	}
 }
+```
+
+The first connection to a new instance ID prompts to accept its host key. To
+accept new host keys without prompting (while still rejecting changed ones),
+add `sshOptions`:
+
+```json
+"sshOptions": ["StrictHostKeyChecking=accept-new"]
 ```
 
 Prerequisites on the machine running Beam:
