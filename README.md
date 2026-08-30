@@ -146,6 +146,7 @@ $ beam up live -r HEAD~2         # sync 2 back from HEAD
 $ beam up live -r def3c6d57      # sync a specific commit
 $ beam down live                 # dowload to working copy
 $ beam down staging -p assets    # dowload a specific folder to working copy
+$ beam status live               # show deployed commit and local branches containing it
 ```
 
 ## Help
