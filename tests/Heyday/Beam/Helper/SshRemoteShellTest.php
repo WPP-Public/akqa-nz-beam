@@ -233,6 +233,7 @@ class SshRemoteShellTest extends TestCase
                             'ssm' => [
                                 'region' => 'ap-southeast-2',
                                 'profile' => 'deploy',
+                                'portalUrl' => 'https://example.awsapps.com/start/#/',
                             ],
                         ],
                     ],
@@ -245,7 +246,7 @@ class SshRemoteShellTest extends TestCase
                 'enabled' => true,
                 'region' => 'ap-southeast-2',
                 'profile' => 'deploy',
-                'portalUrl' => null,
+                'portalUrl' => 'https://example.awsapps.com/start/#/',
             ],
             $processed['servers']['live']['ssm']
         );

@@ -68,4 +68,17 @@ class AwsCredentialsTest extends TestCase
             vfsStream::url('root/credentials')
         );
     }
+
+    public function testWriteProfileRejectsInvalidProfileName(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        AwsCredentials::writeProfile(
+            'bad profile',
+            'AKIATEST',
+            'secret',
+            'token',
+            vfsStream::url('root/credentials')
+        );
+    }
 }

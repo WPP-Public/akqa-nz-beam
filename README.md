@@ -31,7 +31,7 @@ $ beam init
 
 For further configuration, see the [documentation for the `beam.json`
 file](CONFIG.md).
-la
+
 ### Basic `beam.json`
 
 At a minimum, to use Beam at least one server needs to be defined.
@@ -91,7 +91,8 @@ with explicit credentials context:
 			"webroot": "/var/www/html",
 			"ssm": {
 				"region": "ap-southeast-2",
-				"profile": "deploy"
+				"profile": "deploy",
+				"portalUrl": "https://example.awsapps.com/start/#/"
 			}
 		}
 	}
@@ -148,9 +149,52 @@ $ beam up vm -t sometag          # include commands tagged with "sometag"
 $ beam up live --working-copy    # sync from the working-copy not a vcs archive
 $ beam up live -r HEAD~2         # sync 2 back from HEAD
 $ beam up live -r def3c6d57      # sync a specific commit
-$ beam down live                 # dowload to working copy
-$ beam down staging -p assets    # dowload a specific folder to working copy
+$ beam down live                 # download to working copy
+$ beam down staging -p assets    # download a specific folder to working copy
+$ beam down prod --db            # dump remote DB, download, run importCommand
+$ beam down prod --assets        # pull configured assets directory
+$ beam down prod --db --assets   # pull database and assets
+$ beam up staging --assets       # push configured assets directory
 $ beam status live               # show deployed commit and local branches containing it
+$ beam ssm login live            # paste portal keys into ~/.aws/credentials
+$ beam ssm tunnel live           # interactive SSH via SSM
+```
+
+### Database credentials (`~/.mysql.cnf` on the server)
+
+`beam down --db` runs `mysqldump` on the remote host and lets MySQL read the
+deploy user's option file (`~/.mysql.cnf`) — never put passwords in
+`beam.json`. Create it on the server as the deploy user:
+
+```ini
+[client]
+user=dbuser
+password=secret
+```
+
+```bash
+chmod 600 ~/.mysql.cnf
+```
+
+Database name/host come from `servers.<target>.database` in `beam.json`, or
+from the remote `.env` (`SS_DATABASE_NAME` / `SS_DATABASE_SERVER`) when
+`database.name` is omitted.
+
+Example `beam.json`:
+
+```json
+{
+	"servers": {
+		"prod": {
+			"user": "deploy",
+			"host": "example.com",
+			"webroot": "/var/www/html",
+			"database": {
+				"importCommand": "ddev import-db --file=%s"
+			}
+		}
+	}
+}
 ```
 
 ## Help
