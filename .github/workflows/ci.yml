@@ -8,7 +8,20 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - uses: php-actions/composer@v6 # or alternative dependency management
+    - uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.4'
+        tools: composer:v2
+    - name: Install dependencies
+      run: |
+        for attempt in 1 2 3; do
+          composer install --no-interaction --no-progress && break
+          if [ "$attempt" -eq 3 ]; then
+            exit 1
+          fi
+          echo "composer install failed (attempt $attempt), retrying in 15 seconds..."
+          sleep 15
+        done
     - name: PHPUnit tests
       uses: php-actions/phpunit@v3
       with:
@@ -23,7 +36,17 @@ jobs:
     - uses: shivammathur/setup-php@v2
       with:
         php-version: '8.4'
-    - uses: php-actions/composer@v6
+        tools: composer:v2
+    - name: Install dependencies
+      run: |
+        for attempt in 1 2 3; do
+          composer install --no-interaction --no-progress && break
+          if [ "$attempt" -eq 3 ]; then
+            exit 1
+          fi
+          echo "composer install failed (attempt $attempt), retrying in 15 seconds..."
+          sleep 15
+        done
     - name: Build phar
       run: php -d phar.readonly=0 bin/compile
     - name: Upload beam.phar
