@@ -146,6 +146,9 @@ available:
 
     -   `region` _(string)_ - Passed to the AWS CLI as `--region`
     -   `profile` _(string)_ - Passed to the AWS CLI as `--profile`
+    -   `portalUrl` _(string)_ - AWS access portal URL opened by
+        `beam ssm login`. Required for login; set per environment in
+        `beam.json`.
 
     Example:
 
@@ -156,9 +159,64 @@ available:
             "webroot": "/var/www/html",
             "ssm": {
                 "region": "ap-southeast-2",
-                "profile": "deploy"
+                "profile": "deploy",
+                "portalUrl": "https://example.awsapps.com/start/#/"
             }
         }
+
+    Helpers:
+
+    -   `beam ssm login [target]` — opens `ssm.portalUrl`, prompts for
+        temporary access keys, and writes them to `~/.aws/credentials` under
+        `ssm.profile` (or `default`).
+    -   `beam ssm tunnel [target]` — opens an interactive SSH session using the
+        same SSM `ProxyCommand` as deployments. Omit `target` to choose from
+        SSM-enabled servers.
+
+-   `database` _(object)_ - Optional configuration for `beam down <target>
+    --db`. Pulls a MySQL dump over SSH/SSM. Authentication uses the remote
+    deploy user's `~/.mysql.cnf` (MySQL option file) — never store passwords in
+    `beam.json`.
+
+    -   `name` _(string)_ - Database name. When omitted, Beam reads
+        `SS_DATABASE_NAME` from the remote `.env` under `webroot`.
+    -   `host` _(string: localhost)_ - Database host as reachable from the
+        remote server. When `name` is omitted, `SS_DATABASE_SERVER` from the
+        remote `.env` is used when present.
+    -   `remoteDumpPath` _(string)_ - Remote path for the gzipped dump. Defaults
+        to `/tmp/beam-<target>-db.sql.gz`.
+    -   `localPath` _(string: .ddev/.downloads/%target%-db.sql.gz)_ - Where to
+        save the dump locally. `%target%` is replaced with the server name.
+        Relative paths are relative to the project (beam.json) directory.
+    -   `importCommand` _(string)_ - Optional local command run after download.
+        `%s` is replaced with a shell-escaped path to the dump file (for
+        example `ddev import-db --file=%s`).
+    -   `compatTransforms` _(boolean: true)_ - Rewrite utf8mb4 charset/
+        collation markers for older local MariaDB/MySQL compatibility.
+
+    Example remote `~/.mysql.cnf` on the deploy user:
+
+        [client]
+        user=dbuser
+        password=secret
+
+    Example `beam.json` fragment:
+
+        "database": {
+            "importCommand": "ddev import-db --file=%s"
+        }
+
+-   `assets` _(object)_ - Optional configuration for `beam down <target>
+    --assets` and `beam up <target> --assets`.
+
+    -   `path` _(string: public/assets)_ - Assets directory relative to
+        `webroot` on the remote.
+    -   `localPath` _(string)_ - Local directory relative to the project.
+        Defaults to the same value as `path`.
+    -   `ensureWritable` _(boolean: false)_ - When pushing, run
+        `sudo chmod -R 777` on the remote assets directory first.
+    -   `excludes` _(array)_ - Extra rsync `--exclude` patterns. Defaults to
+        common Silverstripe resampled image suffixes (`*__Fill*`, etc).
 
 -   `syncPermissions` _(boolean: true)_ - Sync permissions (file mode) of
     transferred files and directories. Set this to `false` to let the target

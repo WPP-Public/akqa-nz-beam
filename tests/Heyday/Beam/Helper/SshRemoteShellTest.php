@@ -207,6 +207,7 @@ class SshRemoteShellTest extends TestCase
         $this->assertTrue($processed['servers']['live']['ssm']['enabled']);
         $this->assertNull($processed['servers']['live']['ssm']['region']);
         $this->assertNull($processed['servers']['live']['ssm']['profile']);
+        $this->assertNull($processed['servers']['live']['ssm']['portalUrl']);
     }
 
     public function testProcessSsmObjectConfig(): void
@@ -224,6 +225,7 @@ class SshRemoteShellTest extends TestCase
                             'ssm' => [
                                 'region' => 'ap-southeast-2',
                                 'profile' => 'deploy',
+                                'portalUrl' => 'https://example.awsapps.com/start/#/',
                             ],
                         ],
                     ],
@@ -236,6 +238,7 @@ class SshRemoteShellTest extends TestCase
                 'enabled' => true,
                 'region' => 'ap-southeast-2',
                 'profile' => 'deploy',
+                'portalUrl' => 'https://example.awsapps.com/start/#/',
             ],
             $processed['servers']['live']['ssm']
         );

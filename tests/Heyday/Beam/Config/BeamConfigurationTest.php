@@ -46,6 +46,14 @@ class BeamConfigurationTest extends TestCase
                             'webroot' => 'test',
                             'branch' => 'test',
                             'syncPermissions' => false,
+                            'database' => [
+                                'name' => 'app',
+                                'importCommand' => 'ddev import-db --file=%s',
+                            ],
+                            'assets' => [
+                                'path' => 'public/assets',
+                                'ensureWritable' => true,
+                            ],
                         ]
                     ]
                 ]
@@ -93,9 +101,30 @@ class BeamConfigurationTest extends TestCase
                         'enabled' => false,
                         'region' => null,
                         'profile' => null,
+                        'portalUrl' => null,
                     ],
                     'identityFile' => null,
                     'sshOptions' => [],
+                    'database' => [
+                        'name' => 'app',
+                        'host' => 'localhost',
+                        'remoteDumpPath' => null,
+                        'localPath' => '.ddev/.downloads/%target%-db.sql.gz',
+                        'importCommand' => 'ddev import-db --file=%s',
+                        'compatTransforms' => true,
+                    ],
+                    'assets' => [
+                        'path' => 'public/assets',
+                        'localPath' => null,
+                        'ensureWritable' => true,
+                        'excludes' => [
+                            '*__Fill*',
+                            '*__Fit*',
+                            '*__Resized*',
+                            '*__ScaleWidth*',
+                            '*__ScaleHeight*',
+                        ],
+                    ],
                 ]
             ],
             $processedConfig['servers']
@@ -139,6 +168,7 @@ class BeamConfigurationTest extends TestCase
                             'enabled' => false,
                             'region' => null,
                             'profile' => null,
+                            'portalUrl' => null,
                         ],
                         'identityFile' => null,
                         'sshOptions' => [],
@@ -314,6 +344,7 @@ class BeamConfigurationTest extends TestCase
                             'enabled' => false,
                             'region' => null,
                             'profile' => null,
+                            'portalUrl' => null,
                         ],
                         'identityFile' => null,
                         'sshOptions' => [],

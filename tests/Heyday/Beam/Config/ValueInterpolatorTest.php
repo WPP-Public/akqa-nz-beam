@@ -30,6 +30,7 @@ class ValueInterpolatorTest extends TestCase
                         'enabled' => true,
                         'region' => null,
                         'profile' => null,
+                        'portalUrl' => null,
                     ],
                 ],
             ],
