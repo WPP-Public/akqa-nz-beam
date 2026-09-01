@@ -146,6 +146,9 @@ available:
 
     -   `region` _(string)_ - Passed to the AWS CLI as `--region`
     -   `profile` _(string)_ - Passed to the AWS CLI as `--profile`
+    -   `portalUrl` _(string)_ - AWS access portal URL opened by
+        `beam ssm login`. Required for login; set per environment in
+        `beam.json`.
 
     Example:
 
@@ -156,9 +159,19 @@ available:
             "webroot": "/var/www/html",
             "ssm": {
                 "region": "ap-southeast-2",
-                "profile": "deploy"
+                "profile": "deploy",
+                "portalUrl": "https://example.awsapps.com/start/#/"
             }
         }
+
+    Helpers (see `beam ssm --help`):
+
+    -   `beam ssm login [target]` — opens `ssm.portalUrl`, prompts for
+        temporary access keys, and writes them to `~/.aws/credentials` under
+        `ssm.profile` (or `default`).
+    -   `beam ssm tunnel [target]` — opens an interactive SSH session using the
+        same SSM `ProxyCommand` as deployments. Omit `target` to choose from
+        SSM-enabled servers.
 
 -   `syncPermissions` _(boolean: true)_ - Sync permissions (file mode) of
     transferred files and directories. Set this to `false` to let the target

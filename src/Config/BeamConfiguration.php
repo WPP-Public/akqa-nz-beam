@@ -352,6 +352,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
                     ->children()
                     ->scalarNode('region')->defaultNull()->end()
                     ->scalarNode('profile')->defaultNull()->end()
+                    ->scalarNode('portalUrl')->defaultNull()->end()
                     ->end()
                     ->end();
                 break;
