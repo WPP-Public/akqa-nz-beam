@@ -7,6 +7,14 @@ use PHPUnit\Framework\TestCase;
 
 class SshRemoteShellTest extends TestCase
 {
+    public function testDestinationHostIncludesUser(): void
+    {
+        $this->assertSame('deploy@i-0abc123', SshRemoteShell::destinationHost([
+            'user' => 'deploy',
+            'host' => 'i-0abc123',
+        ]));
+    }
+
     public function testBuildDefaultsToSsh(): void
     {
         $this->assertSame('ssh', SshRemoteShell::build([

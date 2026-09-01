@@ -166,9 +166,11 @@ available:
 
     Helpers (see `beam ssm --help`):
 
-    -   `beam ssm login [target]` — opens `ssm.portalUrl`, prompts for
-        temporary access keys, and writes them to `~/.aws/credentials` under
-        `ssm.profile` (or `default`).
+    -   `beam ssm login [target]` — opens `ssm.portalUrl`, then opens a temp
+        file in `$BEAM_EDITOR`, `$EDITOR`, or `$VISUAL` to paste
+        `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_SESSION_TOKEN`.
+        Writes them to `~/.aws/credentials` under `ssm.profile` (or `default`).
+        Use `--credentials-file` to read an existing file instead of an editor.
     -   `beam ssm tunnel [target]` — opens an interactive SSH session using the
         same SSM `ProxyCommand` as deployments. Omit `target` to choose from
         SSM-enabled servers.

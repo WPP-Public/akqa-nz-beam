@@ -6,14 +6,13 @@ use Heyday\Beam\Config\BeamConfiguration;
 use Heyday\Beam\Exception\InvalidArgumentException;
 use Heyday\Beam\Exception\RuntimeException;
 use Heyday\Beam\Helper\AwsCredentials;
-use Heyday\Beam\Helper\RemoteProcess;
+use Heyday\Beam\Helper\CredentialPrompt;
+use Heyday\Beam\Helper\InteractivePrompt;
 use Heyday\Beam\Helper\SshRemoteShell;
-use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Question\ChoiceQuestion;
-use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Process\Process;
 
 /**
@@ -31,15 +30,11 @@ class SsmCommand extends Command
      */
     protected $config;
 
-    /**
-     * @var QuestionHelper
-     */
-    protected $questionHelper;
+    private bool $cancelled = false;
 
     public function __construct($name = null)
     {
         parent::__construct($name);
-        $this->questionHelper = new QuestionHelper();
     }
 
     protected function configure()
@@ -56,6 +51,12 @@ class SsmCommand extends Command
                 InputArgument::OPTIONAL,
                 'SSM-enabled server from beam.json (prompted if omitted)'
             )
+            ->addOption(
+                'credentials-file',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Path to a file containing AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_SESSION_TOKEN'
+            )
             ->addConfigOption();
     }
 
@@ -71,6 +72,8 @@ class SsmCommand extends Command
 
     protected function interact(InputInterface $input, OutputInterface $output)
     {
+        $this->registerCancelHandler($output);
+
         if (!$input->getArgument('target')) {
             $targets = $this->ssmTargets();
 
@@ -80,23 +83,35 @@ class SsmCommand extends Command
                 );
             }
 
-            $question = new ChoiceQuestion(
-                $this->formatterHelper->formatSection(
-                    'prompt',
-                    'Which environment?',
-                    'comment'
-                ),
-                $targets,
-                0
-            );
-            $question->setErrorMessage('Target "%s" is invalid.');
+            $output->writeln($this->formatterHelper->formatSection(
+                'ssm',
+                'Ctrl+C or choose cancel to abort',
+                'comment'
+            ));
 
-            $input->setArgument('target', $this->questionHelper->ask($input, $output, $question));
+            $target = InteractivePrompt::choose(
+                $output,
+                $this->formatterHelper,
+                'Which environment?',
+                $targets
+            );
+
+            if ($target === null) {
+                $this->cancelled = true;
+                return;
+            }
+
+            $input->setArgument('target', $target);
         }
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        if ($this->cancelled) {
+            $this->outputError($output, 'Cancelled');
+            return 1;
+        }
+
         $action = $input->getArgument('action');
         $target = $input->getArgument('target');
 
@@ -119,6 +134,8 @@ class SsmCommand extends Command
      */
     private function runLogin(InputInterface $input, OutputInterface $output, string $target, array $server): int
     {
+        $this->registerCancelHandler($output);
+
         $portal = $this->resolvePortalUrl($server, $target);
         $profile = $server['ssm']['profile'] ?? null;
         if ($profile === null || $profile === '') {
@@ -135,18 +152,33 @@ class SsmCommand extends Command
         $output->writeln($this->formatterHelper->formatSection(
             'ssm',
             sprintf(
-                'Copy Access keys from the portal, then paste them below.'
-                . ' Credentials will be written to profile <info>%s</info> in ~/.aws/credentials.',
+                'Copy access keys from the portal. An editor will open to paste them'
+                . ' (profile <info>%s</info> in ~/.aws/credentials).',
                 $profile
             ),
             'comment'
         ));
 
-        $accessKeyId = $this->askSecret($input, $output, 'AWS_ACCESS_KEY_ID', false);
-        $secretAccessKey = $this->askSecret($input, $output, 'AWS_SECRET_ACCESS_KEY', true);
-        $sessionToken = $this->askSecret($input, $output, 'AWS_SESSION_TOKEN', true);
+        $credentialsFile = $input->getOption('credentials-file');
+        if ($credentialsFile !== null) {
+            $credentials = CredentialPrompt::parseCredentialsFile(
+                SshRemoteShell::expandHome($credentialsFile)
+            );
+        } else {
+            $output->writeln($this->formatterHelper->formatSection(
+                'ssm',
+                'Save and close the editor when all three values are set.',
+                'comment'
+            ));
+            $credentials = CredentialPrompt::collectViaEditor();
+        }
 
-        $path = AwsCredentials::writeProfile($profile, $accessKeyId, $secretAccessKey, $sessionToken);
+        $path = AwsCredentials::writeProfile(
+            $profile,
+            $credentials['accessKeyId'],
+            $credentials['secretAccessKey'],
+            $credentials['sessionToken']
+        );
 
         $output->writeln($this->formatterHelper->formatSection(
             'ssm',
@@ -175,7 +207,9 @@ class SsmCommand extends Command
      */
     private function runTunnel(OutputInterface $output, string $target, array $server): int
     {
-        $destination = RemoteProcess::destinationHost($server);
+        $this->registerCancelHandler($output);
+
+        $destination = SshRemoteShell::destinationHost($server);
         $ssh = SshRemoteShell::build($server);
         $command = sprintf('%s -t %s', $ssh, escapeshellarg($destination));
 
@@ -200,24 +234,11 @@ class SsmCommand extends Command
         return $process->getExitCode() ?? 1;
     }
 
-    private function askSecret(InputInterface $input, OutputInterface $output, string $label, bool $hidden): string
+    private function registerCancelHandler(OutputInterface $output): void
     {
-        $question = new Question(
-            $this->formatterHelper->formatSection('prompt', $label . ':', 'comment') . ' '
-        );
-        if ($hidden) {
-            $question->setHidden(true);
-            $question->setHiddenFallback(true);
-        }
-        $question->setValidator(function ($value) use ($label) {
-            $value = is_string($value) ? trim($value) : '';
-            if ($value === '') {
-                throw new RuntimeException($label . ' is required.');
-            }
-            return $value;
+        InteractivePrompt::enableCancelHandler(function () use ($output): void {
+            $this->outputError($output, 'Cancelled');
         });
-
-        return (string) $this->questionHelper->ask($input, $output, $question);
     }
 
     private function openUrl(string $url): void

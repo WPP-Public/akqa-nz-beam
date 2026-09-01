@@ -12,6 +12,39 @@ class SshRemoteShell
     private const SSM_DOCUMENT = 'AWS-StartSSHSession';
 
     /**
+     * Build user@host (or host) for SSH destinations.
+     */
+    public static function destinationHost(array $server): string
+    {
+        $host = self::primaryHost($server);
+        $user = $server['user'] ?? '';
+
+        if ($user !== '') {
+            return $user . '@' . $host;
+        }
+
+        return $host;
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public static function primaryHost(array $server): string
+    {
+        if (!empty($server['host'])) {
+            return $server['host'];
+        }
+
+        if (!empty($server['hosts'][0])) {
+            return $server['hosts'][0];
+        }
+
+        throw new InvalidArgumentException(
+            'Server config must define a host (or hosts) for remote operations.'
+        );
+    }
+
+    /**
      * Build the SSH command (and optional wrappers/options) for a server config.
      *
      * @param array $server Processed server configuration

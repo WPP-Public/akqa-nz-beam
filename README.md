@@ -124,7 +124,7 @@ Then deploy as usual:
 
 ```bash
 $ beam up live
-$ beam ssm login live    # write portal credentials to ~/.aws/credentials
+$ beam ssm login live    # open editor to paste portal keys into ~/.aws/credentials
 $ beam ssm tunnel live   # interactive SSH via SSM
 ```
 
