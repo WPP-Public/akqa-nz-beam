@@ -40,7 +40,7 @@ class DatabaseTransfer
         $this->writeln(sprintf(
             'Dumping database "%s" on %s -> %s (credentials from remote ~/.mysql.cnf)',
             $dbName,
-            RemoteProcess::destinationHost($this->server),
+            SshRemoteShell::destinationHost($this->server),
             $remoteDump
         ));
 
@@ -61,7 +61,7 @@ class DatabaseTransfer
             '-az',
             '--human-readable',
             '--progress',
-            RemoteProcess::destinationHost($this->server) . ':' . $remoteDump,
+            SshRemoteShell::destinationHost($this->server) . ':' . $remoteDump,
             $localDump,
         ], $this->timeout());
 

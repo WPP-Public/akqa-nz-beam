@@ -47,7 +47,7 @@ class AssetsTransfer
 
         $remotePath = rtrim($this->server['webroot'], '/') . '/' . $remoteRel . '/';
         $localPath = rtrim($this->srcDir, '/') . '/' . $localRel . '/';
-        $destination = RemoteProcess::destinationHost($this->server);
+        $destination = SshRemoteShell::destinationHost($this->server);
 
         if ($direction === 'down') {
             if (!is_dir($localPath) && !mkdir($localPath, 0755, true) && !is_dir($localPath)) {

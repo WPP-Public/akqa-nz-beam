@@ -11,37 +11,6 @@ use Symfony\Component\Process\Process;
 class RemoteProcess
 {
     /**
-     * Build user@host (or host) for SSH/rsync destinations.
-     */
-    public static function destinationHost(array $server): string
-    {
-        $host = self::primaryHost($server);
-        $user = $server['user'] ?? '';
-
-        if ($user !== '') {
-            return $user . '@' . $host;
-        }
-
-        return $host;
-    }
-
-    /**
-     * @throws RuntimeException
-     */
-    public static function primaryHost(array $server): string
-    {
-        if (!empty($server['host'])) {
-            return $server['host'];
-        }
-
-        if (!empty($server['hosts'][0])) {
-            return $server['hosts'][0];
-        }
-
-        throw new RuntimeException('Server config must define a host (or hosts) for remote operations.');
-    }
-
-    /**
      * Run a command on the remote host via SSH (honours SSM ProxyCommand).
      *
      * @param array<string, string> $env Extra environment variables for the remote command
@@ -61,7 +30,7 @@ class RemoteProcess
 
         $wrapped = $exports . $remoteCommand;
         $ssh = SshRemoteShell::build($server);
-        $destination = escapeshellarg(self::destinationHost($server));
+        $destination = escapeshellarg(SshRemoteShell::destinationHost($server));
         $ttyFlag = $tty ? '-t ' : '';
 
         $process = Process::fromShellCommandline(
