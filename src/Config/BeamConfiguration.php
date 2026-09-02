@@ -354,6 +354,33 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
                     ->scalarNode('profile')->defaultNull()->end()
                     ->scalarNode('portalUrl')->defaultNull()->end()
                     ->end()
+                    ->end()
+                    ->arrayNode('database')
+                    ->children()
+                    ->scalarNode('name')->defaultNull()->end()
+                    ->scalarNode('host')->defaultValue('localhost')->end()
+                    ->scalarNode('remoteDumpPath')->defaultNull()->end()
+                    ->scalarNode('localPath')->defaultValue('.ddev/.downloads/%target%-db.sql.gz')->end()
+                    ->scalarNode('importCommand')->defaultNull()->end()
+                    ->booleanNode('compatTransforms')->defaultTrue()->end()
+                    ->end()
+                    ->end()
+                    ->arrayNode('assets')
+                    ->children()
+                    ->scalarNode('path')->defaultValue('public/assets')->end()
+                    ->scalarNode('localPath')->defaultNull()->end()
+                    ->booleanNode('ensureWritable')->defaultFalse()->end()
+                    ->arrayNode('excludes')
+                    ->prototype('scalar')->end()
+                    ->defaultValue([
+                        '*__Fill*',
+                        '*__Fit*',
+                        '*__Resized*',
+                        '*__ScaleWidth*',
+                        '*__ScaleHeight*',
+                    ])
+                    ->end()
+                    ->end()
                     ->end();
                 break;
         }
