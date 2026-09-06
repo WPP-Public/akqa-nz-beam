@@ -16,6 +16,19 @@ class InteractivePrompt
 
     private static bool $cancelHandlerInstalled = false;
 
+    /** @var resource|null */
+    private static $inputStream = null;
+
+    /**
+     * Override stdin for tests. Pass null to restore the default.
+     *
+     * @param resource|null $stream
+     */
+    public static function setInputStream($stream): void
+    {
+        self::$inputStream = $stream;
+    }
+
     /**
      * Restore terminal settings after stty changes or interrupted reads.
      */
@@ -98,10 +111,10 @@ class InteractivePrompt
      */
     public static function readLine(bool $hidden = false): ?string
     {
-        $stdin = \STDIN;
+        $stdin = self::$inputStream ?? \STDIN;
         $sttyState = null;
 
-        if (\DIRECTORY_SEPARATOR !== '\\' && @stream_isatty($stdin)) {
+        if (self::$inputStream === null && \DIRECTORY_SEPARATOR !== '\\' && @stream_isatty($stdin)) {
             $sttyState = shell_exec('stty -g');
             shell_exec($hidden ? 'stty -echo icanon' : 'stty echo icanon');
         }

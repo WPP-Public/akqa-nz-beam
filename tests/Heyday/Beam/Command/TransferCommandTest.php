@@ -2,6 +2,7 @@
 
 namespace Heyday\Beam\Command;
 
+use Heyday\Beam\Helper\InteractivePrompt;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -14,6 +15,9 @@ class TransferCommandTest extends TestCase
     private string $cwd;
 
     private string $tmpDir;
+
+    /** @var resource|null */
+    private $promptStream;
 
     protected function setUp(): void
     {
@@ -40,6 +44,10 @@ class TransferCommandTest extends TestCase
 
     protected function tearDown(): void
     {
+        InteractivePrompt::setInputStream(null);
+        if (\is_resource($this->promptStream)) {
+            fclose($this->promptStream);
+        }
         chdir($this->cwd);
         unlink($this->tmpDir . '/beam.json');
         rmdir($this->tmpDir);
@@ -47,12 +55,22 @@ class TransferCommandTest extends TestCase
 
     public function testPromptsForTargetWhenOmitted()
     {
+        $this->feedPromptInput("staging\n");
         $tester = new CommandTester($this->createCommand());
-        $tester->setInputs(['staging']);
 
         $this->assertSame(0, $tester->execute([]));
         $this->assertSame('staging', $tester->getInput()->getArgument('target'));
         $this->assertStringContainsString('Which target do you want to beam to?', $tester->getDisplay());
+        $this->assertStringContainsString(InteractivePrompt::CANCEL_LABEL, $tester->getDisplay());
+    }
+
+    public function testCancelsTargetPrompt()
+    {
+        $this->feedPromptInput("cancel\n");
+        $tester = new CommandTester($this->createCommand(true));
+
+        $this->assertSame(1, $tester->execute([]));
+        $this->assertStringContainsString('Cancelled', $tester->getDisplay());
     }
 
     public function testDoesNotPromptWhenTargetIsProvided()
@@ -82,6 +100,14 @@ class TransferCommandTest extends TestCase
         $this->expectExceptionMessage('The "target" argument is required.');
 
         $tester->execute([], ['interactive' => false]);
+    }
+
+    private function feedPromptInput(string $input): void
+    {
+        $this->promptStream = fopen('php://memory', 'r+');
+        fwrite($this->promptStream, $input);
+        rewind($this->promptStream);
+        InteractivePrompt::setInputStream($this->promptStream);
     }
 
     /**

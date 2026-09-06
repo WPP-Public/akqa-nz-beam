@@ -10,6 +10,7 @@ use Heyday\Beam\Exception\InvalidConfigurationException;
 use Heyday\Beam\Exception\RuntimeException;
 use Heyday\Beam\Helper\ContentProgressHelper;
 use Heyday\Beam\Helper\DeploymentResultHelper;
+use Heyday\Beam\Helper\InteractivePrompt;
 use Heyday\Beam\Helper\YesNoQuestion;
 use Heyday\Beam\TransferMethod\TransferMethod;
 use Heyday\Beam\Utils;
@@ -21,7 +22,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Question\ChoiceQuestion;
 
 /**
  * Class TransferCommand
@@ -48,6 +48,8 @@ abstract class TransferCommand extends Command
      * @var QuestionHelper
      */
     protected $questionHelper;
+
+    private bool $cancelled = false;
 
     /**
      * @param null $name
@@ -145,6 +147,8 @@ abstract class TransferCommand extends Command
      */
     protected function interact(InputInterface $input, OutputInterface $output)
     {
+        $this->registerCancelHandler($output);
+
         if ($input->getArgument('target')) {
             return;
         }
@@ -152,21 +156,25 @@ abstract class TransferCommand extends Command
         $targets = array_keys($this->config['servers']);
         $preposition = $this->getDirection() === 'up' ? 'to' : 'from';
 
-        $question = new ChoiceQuestion(
-            $this->formatterHelper->formatSection(
-                'prompt',
-                Utils::getQuestion(
-                    sprintf('Which target do you want to beam %s?', $preposition),
-                    $targets[0]
-                ),
-                'comment'
-            ),
-            $targets,
-            0
-        );
-        $question->setErrorMessage('Target "%s" is invalid.');
+        $output->writeln($this->formatterHelper->formatSection(
+            'prompt',
+            'Ctrl+C or choose cancel to abort',
+            'comment'
+        ));
 
-        $input->setArgument('target', $this->questionHelper->ask($input, $output, $question));
+        $target = InteractivePrompt::choose(
+            $output,
+            $this->formatterHelper,
+            sprintf('Which target do you want to beam %s?', $preposition),
+            $targets
+        );
+
+        if ($target === null) {
+            $this->cancelled = true;
+            return;
+        }
+
+        $input->setArgument('target', $target);
         $this->configureTarget($input);
     }
 
@@ -218,6 +226,11 @@ abstract class TransferCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        if ($this->cancelled) {
+            $this->outputError($output, 'Cancelled');
+            return 1;
+        }
+
         if (!$this->transferMethod) {
             throw new RuntimeException('The "target" argument is required.');
         }
@@ -583,5 +596,12 @@ abstract class TransferCommand extends Command
                 // Guessing failed
             }
         }
+    }
+
+    private function registerCancelHandler(OutputInterface $output): void
+    {
+        InteractivePrompt::enableCancelHandler(function () use ($output): void {
+            $this->outputError($output, 'Cancelled');
+        });
     }
 }
