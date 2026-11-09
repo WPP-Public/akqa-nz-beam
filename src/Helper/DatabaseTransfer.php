@@ -38,10 +38,11 @@ class DatabaseTransfer
         $localDump = $this->resolveLocalPath();
 
         $this->writeln(sprintf(
-            'Dumping database "%s" on %s -> %s (credentials from remote ~/.mysql.cnf)',
+            'Dumping database "%s" on %s -> %s (credentials from remote %s)',
             $dbName,
             SshRemoteShell::destinationHost($this->server),
-            $remoteDump
+            $remoteDump,
+            $this->optionsFile()
         ));
 
         if ($dryRun) {
@@ -95,9 +96,12 @@ class DatabaseTransfer
     }
 
     /**
+     * Resolve the database name and host from beam.json, falling back to the remote .env.
+     *
      * @return array{0: string, 1: string}
+     * @throws RuntimeException
      */
-    private function resolveDatabaseIdentity(): array
+    public function resolveDatabaseIdentity(): array
     {
         $dbName = $this->config['name'] ?? null;
         $dbHost = $this->config['host'] ?? 'localhost';
@@ -132,13 +136,14 @@ class DatabaseTransfer
 
     private function dumpRemote(string $dbName, string $dbHost, string $remoteDump): void
     {
-        // mysqldump reads user/password from the remote deploy user's ~/.mysql.cnf
-        // ([client] section) — the same option file MySQL clients use by default.
+        // mysqldump reads user/password from the remote deploy user's option file
+        // ([client] section, database.optionsFile in beam.json).
         $lines = [
             'set -eu -o pipefail',
             'DUMP_SQL="${BEAM_DUMP_PATH%.gz}"',
+            'BEAM_DB_OPTIONS="${BEAM_DB_OPTIONS/#\~/$HOME}"',
             'mysqldump'
-                . ' --defaults-extra-file="${HOME}/.mysql.cnf"'
+                . ' --defaults-extra-file="${BEAM_DB_OPTIONS}"'
                 . ' --host="${BEAM_DB_HOST}"'
                 . ' --no-tablespaces'
                 . ' --single-transaction'
@@ -162,9 +167,19 @@ class DatabaseTransfer
                 'BEAM_DB_NAME' => $dbName,
                 'BEAM_DB_HOST' => $dbHost,
                 'BEAM_DUMP_PATH' => $remoteDump,
+                'BEAM_DB_OPTIONS' => $this->optionsFile(),
             ],
             timeout: $this->timeout()
         );
+    }
+
+    /**
+     * Remote MySQL option file holding the [client] credentials. A leading "~" is
+     * expanded on the remote host.
+     */
+    public function optionsFile(): string
+    {
+        return $this->config['optionsFile'] ?? '~/.mysql.cnf';
     }
 
     private function resolveLocalPath(): string

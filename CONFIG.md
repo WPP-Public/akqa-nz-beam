@@ -171,14 +171,19 @@ available:
         `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_SESSION_TOKEN`.
         Writes them to `~/.aws/credentials` under `ssm.profile` (or `default`).
         Use `--credentials-file` to read an existing file instead of an editor.
+    -   `beam ssm status [target]` — checks AWS credentials
+        (`aws sts get-caller-identity` with `ssm.profile`/`ssm.region`) and a
+        non-interactive SSH round trip over SSM. Checks every SSM-enabled
+        server when `target` is omitted, and exits non-zero if any fail.
     -   `beam ssm tunnel [target]` — opens an interactive SSH session using the
         same SSM `ProxyCommand` as deployments. Omit `target` to choose from
         SSM-enabled servers.
 
 -   `database` _(object)_ - Optional configuration for `beam down <target>
-    --db`. Pulls a MySQL dump over SSH/SSM. Authentication uses the remote
-    deploy user's `~/.mysql.cnf` (MySQL option file) — never store passwords in
-    `beam.json`.
+    --db` (pulls a MySQL dump over SSH/SSM) and `beam backup <target>` (dumps
+    on the server). Authentication uses a MySQL option file in the remote
+    deploy user's home (`optionsFile`) — never store passwords in `beam.json`.
+    The whole object is optional; without it the defaults below apply.
 
     -   `name` _(string)_ - Database name. When omitted, Beam reads
         `SS_DATABASE_NAME` from the remote `.env` under `webroot`.
@@ -194,7 +199,12 @@ available:
         `%s` is replaced with a shell-escaped path to the dump file (for
         example `ddev import-db --file=%s`).
     -   `compatTransforms` _(boolean: true)_ - Rewrite utf8mb4 charset/
-        collation markers for older local MariaDB/MySQL compatibility.
+        collation markers for older local MariaDB/MySQL compatibility. Applies
+        to `beam down --db` only; `beam backup` dumps are never rewritten.
+    -   `optionsFile` _(string: ~/.mysql.cnf)_ - MySQL option file on the
+        remote host holding the `[client]` user and password, passed to
+        `mysqldump --defaults-extra-file`. A leading `~` is the remote user's
+        home directory.
 
     Example remote `~/.mysql.cnf` on the deploy user:
 
@@ -209,7 +219,8 @@ available:
         }
 
 -   `assets` _(object)_ - Optional configuration for `beam down <target>
-    --assets` and `beam up <target> --assets`.
+    --assets`, `beam up <target> --assets`, and `beam backup <target>`
+    (`path` and `excludes` decide what is archived).
 
     -   `path` _(string: public/assets)_ - Assets directory relative to
         `webroot` on the remote.

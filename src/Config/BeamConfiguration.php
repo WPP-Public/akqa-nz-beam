@@ -363,6 +363,7 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
                     ->scalarNode('localPath')->defaultValue('.ddev/.downloads/%target%-db.sql.gz')->end()
                     ->scalarNode('importCommand')->defaultNull()->end()
                     ->booleanNode('compatTransforms')->defaultTrue()->end()
+                    ->scalarNode('optionsFile')->defaultValue('~/.mysql.cnf')->end()
                     ->end()
                     ->end()
                     ->arrayNode('assets')

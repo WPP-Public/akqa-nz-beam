@@ -23,6 +23,27 @@ class RemoteProcess
         bool $tty = false,
         ?float $timeout = 600
     ): string {
+        $process = self::process($server, $remoteCommand, $env, $tty, $timeout);
+        $process->run();
+
+        return self::assertSuccessful($process);
+    }
+
+    /**
+     * Build (without starting) the SSH process for a remote command, so callers can
+     * run it asynchronously, e.g. while rendering a progress indicator.
+     *
+     * @param array<string, string> $env Extra environment variables for the remote command
+     * @param list<string> $sshOptions Extra OpenSSH options in "Keyword=value" form
+     */
+    public static function process(
+        array $server,
+        string $remoteCommand,
+        array $env = [],
+        bool $tty = false,
+        ?float $timeout = 600,
+        array $sshOptions = []
+    ): Process {
         $exports = '';
         foreach ($env as $name => $value) {
             $exports .= sprintf('export %s=%s; ', $name, escapeshellarg($value));
@@ -30,6 +51,9 @@ class RemoteProcess
 
         $wrapped = $exports . $remoteCommand;
         $ssh = SshRemoteShell::build($server);
+        foreach ($sshOptions as $option) {
+            $ssh .= ' -o ' . escapeshellarg($option);
+        }
         $destination = escapeshellarg(SshRemoteShell::destinationHost($server));
         $ttyFlag = $tty ? '-t ' : '';
 
@@ -37,8 +61,17 @@ class RemoteProcess
             sprintf('%s %s%s %s', $ssh, $ttyFlag, $destination, escapeshellarg($wrapped))
         );
         $process->setTimeout($timeout);
-        $process->run();
 
+        return $process;
+    }
+
+    /**
+     * Return the output of a finished process, or throw with its error output.
+     *
+     * @throws RuntimeException
+     */
+    public static function assertSuccessful(Process $process): string
+    {
         if (!$process->isSuccessful()) {
             $error = trim($process->getErrorOutput() ?: $process->getOutput());
             throw new RuntimeException($error !== '' ? $error : 'Remote command failed');

@@ -112,6 +112,7 @@ class BeamConfigurationTest extends TestCase
                         'localPath' => '.ddev/.downloads/%target%-db.sql.gz',
                         'importCommand' => 'ddev import-db --file=%s',
                         'compatTransforms' => true,
+                        'optionsFile' => '~/.mysql.cnf',
                     ],
                     'assets' => [
                         'path' => 'public/assets',

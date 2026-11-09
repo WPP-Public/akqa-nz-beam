@@ -8,6 +8,7 @@ use Heyday\Beam\Exception\RuntimeException;
 use Heyday\Beam\Helper\AwsCredentials;
 use Heyday\Beam\Helper\CredentialPrompt;
 use Heyday\Beam\Helper\InteractivePrompt;
+use Heyday\Beam\Helper\RemoteProcess;
 use Heyday\Beam\Helper\SshRemoteShell;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -16,14 +17,17 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Process;
 
 /**
- * AWS access-portal login and interactive SSM tunnel helpers.
+ * AWS access-portal login, connectivity check, and interactive SSM tunnel helpers.
  *
  *   beam ssm login [target]
+ *   beam ssm status [target]
  *   beam ssm tunnel [target]
  */
 class SsmCommand extends Command
 {
-    private const ACTIONS = ['login', 'tunnel'];
+    private const ACTIONS = ['login', 'status', 'tunnel'];
+
+    private const STATUS_SSH_TIMEOUT = 45;
 
     /**
      * @var array
@@ -40,16 +44,16 @@ class SsmCommand extends Command
     protected function configure()
     {
         $this->setName('ssm')
-            ->setDescription('AWS SSM helpers: write portal credentials or open an interactive tunnel')
+            ->setDescription('AWS SSM helpers: write portal credentials, check connectivity, or open a tunnel')
             ->addArgument(
                 'action',
                 InputArgument::REQUIRED,
-                'Action to run: login or tunnel'
+                'Action to run: login, status, or tunnel'
             )
             ->addArgument(
                 'target',
                 InputArgument::OPTIONAL,
-                'SSM-enabled server from beam.json (prompted if omitted)'
+                'SSM-enabled server from beam.json (prompted if omitted; status checks all when omitted)'
             )
             ->addOption(
                 'credentials-file',
@@ -72,6 +76,10 @@ class SsmCommand extends Command
 
     protected function interact(InputInterface $input, OutputInterface $output)
     {
+        if ($input->getArgument('action') === 'status') {
+            return;
+        }
+
         $this->registerCancelHandler($output);
 
         if (!$input->getArgument('target')) {
@@ -114,6 +122,10 @@ class SsmCommand extends Command
 
         $action = $input->getArgument('action');
         $target = $input->getArgument('target');
+
+        if ($action === 'status') {
+            return $this->runStatus($output, $target ? [$target] : $this->ssmTargets());
+        }
 
         if (!$target) {
             throw new RuntimeException('The "target" argument is required.');
@@ -232,6 +244,152 @@ class SsmCommand extends Command
         });
 
         return $process->getExitCode() ?? 1;
+    }
+
+    /**
+     * Check AWS credentials and SSH-over-SSM for each target. Exits non-zero if any fail.
+     *
+     * @param list<string> $targets
+     */
+    private function runStatus(OutputInterface $output, array $targets): int
+    {
+        if ($targets === []) {
+            throw new RuntimeException(
+                'No SSM-enabled servers found in beam.json. Enable "ssm" on an rsync server first.'
+            );
+        }
+
+        $failed = [];
+
+        foreach ($targets as $target) {
+            $this->assertSsmTarget($target);
+            $server = $this->config['servers'][$target];
+            $profile = $server['ssm']['profile'] ?? null;
+
+            $output->writeln($this->formatterHelper->formatSection(
+                'ssm',
+                sprintf(
+                    '<info>%s</info> (%s%s)',
+                    $target,
+                    SshRemoteShell::destinationHost($server),
+                    $profile ? ', profile ' . $profile : ''
+                ),
+                'comment'
+            ));
+
+            [$credentialsOk, $credentialsDetail] = $this->checkAwsCredentials($server['ssm']);
+            $this->writeStatusLine($output, $credentialsOk, 'AWS credentials', $credentialsDetail);
+
+            if (!$credentialsOk) {
+                $this->writeStatusLine($output, null, 'SSH over SSM', 'skipped (no valid AWS credentials)');
+                $failed[] = $target;
+                continue;
+            }
+
+            [$sshOk, $sshDetail] = $this->checkSsh($server);
+            $this->writeStatusLine($output, $sshOk, 'SSH over SSM', $sshDetail);
+
+            if (!$sshOk) {
+                $failed[] = $target;
+            }
+        }
+
+        if ($failed === []) {
+            $output->writeln($this->formatterHelper->formatSection('ssm', 'All connections OK.', 'info'));
+            return 0;
+        }
+
+        foreach ($failed as $target) {
+            $this->outputError($output, sprintf(
+                'Cannot connect to "%s". Log in with: beam ssm login %s',
+                $target,
+                $target
+            ));
+        }
+
+        return 1;
+    }
+
+    /**
+     * @param array $ssm Processed ssm configuration node
+     * @return array{0: bool, 1: string}
+     */
+    protected function checkAwsCredentials(array $ssm): array
+    {
+        $command = ['aws', 'sts', 'get-caller-identity', '--query', 'Arn', '--output', 'text'];
+        if (!empty($ssm['profile'])) {
+            array_push($command, '--profile', $ssm['profile']);
+        }
+        if (!empty($ssm['region'])) {
+            array_push($command, '--region', $ssm['region']);
+        }
+
+        $process = new Process($command);
+        $process->setTimeout(30);
+
+        try {
+            $process->run();
+        } catch (\Throwable $e) {
+            return [false, $e->getMessage()];
+        }
+
+        if (!$process->isSuccessful()) {
+            return [false, $this->firstLine($process->getErrorOutput() ?: $process->getOutput())];
+        }
+
+        return [true, trim($process->getOutput())];
+    }
+
+    /**
+     * @param array $server Processed server configuration
+     * @return array{0: bool, 1: string}
+     */
+    protected function checkSsh(array $server): array
+    {
+        // BatchMode stops a host-key or passphrase prompt from hanging the check.
+        $process = RemoteProcess::process(
+            $server,
+            'echo "$(whoami)@$(hostname)"',
+            timeout: self::STATUS_SSH_TIMEOUT,
+            sshOptions: ['BatchMode=yes', 'ConnectTimeout=30']
+        );
+
+        try {
+            $process->run();
+        } catch (\Throwable $e) {
+            return [false, $e->getMessage()];
+        }
+
+        if (!$process->isSuccessful()) {
+            return [false, $this->firstLine($process->getErrorOutput() ?: $process->getOutput())];
+        }
+
+        return [true, 'connected as ' . trim($process->getOutput())];
+    }
+
+    private function writeStatusLine(OutputInterface $output, ?bool $ok, string $label, string $detail): void
+    {
+        $badge = match ($ok) {
+            true => '<info>✔ OK  </info>',
+            false => '<error>✖ FAIL</error>',
+            null => '<comment>- SKIP</comment>',
+        };
+
+        $output->writeln($this->formatterHelper->formatSection(
+            'ssm',
+            sprintf('  %s %-16s %s', $badge, $label, $detail)
+        ));
+    }
+
+    private function firstLine(string $text): string
+    {
+        foreach (preg_split('/\R/', trim($text)) as $line) {
+            if (trim($line) !== '') {
+                return trim($line);
+            }
+        }
+
+        return 'unknown error';
     }
 
     private function registerCancelHandler(OutputInterface $output): void

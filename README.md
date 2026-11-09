@@ -126,10 +126,26 @@ Then deploy as usual:
 ```bash
 $ beam up live
 $ beam ssm login live    # open editor to paste portal keys into ~/.aws/credentials
+$ beam ssm status        # check credentials and SSH for every SSM server
 $ beam ssm tunnel live   # interactive SSH via SSM
 ```
 
-Run `beam list` for all commands, or `beam ssm --help` for login/tunnel usage.
+`beam ssm status [target]` checks each SSM-enabled server (or just `target`) in two
+stages and prints a pass/fail line for each:
+
+1. **AWS credentials** — `aws sts get-caller-identity` with the server's `profile`
+   and `region`. Expired or invalid portal keys fail here.
+2. **SSH over SSM** — a non-interactive (`BatchMode=yes`) SSH round trip through the
+   SSM `ProxyCommand`, reporting the remote `user@hostname`.
+
+It exits non-zero if any server fails, with a `beam ssm login <target>` hint, so
+scripts can use it as a pre-flight check:
+
+```bash
+beam ssm status prod || exit 1
+```
+
+Run `beam list` for all commands, or `beam ssm --help` for login/status/tunnel usage.
 
 ## Usage examples
 
@@ -157,13 +173,52 @@ $ beam down prod --db --assets   # pull database and assets
 $ beam up staging --assets       # push configured assets directory
 $ beam status live               # show deployed commit and local branches containing it
 $ beam ssm login live            # paste portal keys into ~/.aws/credentials
+$ beam ssm status                # check AWS credentials + SSH for all SSM servers
 $ beam ssm tunnel live           # interactive SSH via SSM
+$ beam backup prod               # back up DB + assets on the server, then verify
+$ beam backup prod --db-only     # database only (or --assets-only)
+$ beam backup prod --verify      # re-verify the latest backup (or --verify=20261110-091500)
+$ beam backup prod --list        # list backups on the server
+$ beam backup prod --keep=5      # back up, then delete all but the newest 5
 ```
+
+### Server-side backups (`beam backup`)
+
+`beam backup <target>` snapshots a server's MySQL database and assets directory
+**on the server itself**, so nothing large is pulled over SSH/SSM. Each backup is
+written to `~/beam-backups/<target>/<YYYYMMDD-HHMMSS>/` in the deploy user's home
+directory (change with `--path`), and `~/beam-backups/<target>/latest` is pointed
+at the newest one:
+
+| File            | Contents                                                       |
+| --------------- | -------------------------------------------------------------- |
+| `db.sql.gz`     | `mysqldump --single-transaction` of the database               |
+| `assets.tar.gz` | The assets directory, minus `assets.excludes` (resampled images) |
+| `manifest.env`  | Target, host, timestamp, table count and file count            |
+| `SHA256SUMS`    | Checksums of the archives                                      |
+
+Before writing anything, Beam checks the required tools exist on the server, that
+the MySQL option file is readable, and that there is enough free disk space for
+the uncompressed database and assets size plus 10%.
+
+After creating a backup (unless `--no-verify` is passed), or on demand with
+`--verify[=NAME]`, Beam checks that:
+
+- the archives match `SHA256SUMS`
+- `db.sql.gz` decompresses cleanly and ends with mysqldump's `-- Dump completed` footer
+- the dump has a `CREATE TABLE` for every base table counted when the backup was made
+- `assets.tar.gz` lists cleanly and contains exactly the number of files archived
+
+Any failed check exits non-zero. Database name/host and credentials are resolved
+the same way as `beam down --db` (see `database` in [CONFIG.md](CONFIG.md)); assets
+use `servers.<target>.assets.path`/`excludes`, defaulting to `public/assets`.
+Backups are kept until you delete them or pass `--keep=N`.
 
 ### Database credentials (`~/.mysql.cnf` on the server)
 
-`beam down --db` runs `mysqldump` on the remote host and lets MySQL read the
-deploy user's option file (`~/.mysql.cnf`) — never put passwords in
+`beam down --db` and `beam backup` run `mysqldump` on the remote host and let
+MySQL read the deploy user's option file (`~/.mysql.cnf` by default, or
+`database.optionsFile` in `beam.json`, e.g. `~/.my.cnf`) — never put passwords in
 `beam.json`. Create it on the server as the deploy user:
 
 ```ini

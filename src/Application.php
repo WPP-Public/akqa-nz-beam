@@ -37,6 +37,7 @@ class Application extends BaseApplication
         $commands[] = new Command\StatusCommand();
         $commands[] = new Command\ValidateCommand();
         $commands[] = new Command\SsmCommand();
+        $commands[] = new Command\BackupCommand();
 
         return $commands;
     }
