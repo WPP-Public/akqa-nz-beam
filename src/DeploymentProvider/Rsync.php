@@ -3,6 +3,7 @@
 namespace Heyday\Beam\DeploymentProvider;
 
 use Closure;
+use Heyday\Beam\Config\BeamConfiguration;
 use Heyday\Beam\Config\DeploymentResultConfiguration;
 use Heyday\Beam\Exception\RuntimeException;
 use Heyday\Beam\Helper\SshRemoteShell;
@@ -403,6 +404,18 @@ class Rsync extends Deployment implements DeploymentProvider, ResultStream
             $command[] = '--timeout=' . $server['timeout'];
         }
 
+
+        // Excluded files on the receiver are protected from deletion, so a directory removed
+        // locally (e.g. a dev-only composer package) can never be deleted remotely while it still
+        // holds an excluded file such as .gitignore. Marking beam's built-in excludes as
+        // perishable lets rsync ignore them inside directories that are being deleted, while
+        // still protecting them everywhere else. These must precede --exclude-from because rsync
+        // uses the first matching rule.
+        if (isset($this->options['delete']) && $this->options['delete']) {
+            foreach (BeamConfiguration::getDefaultExcludes() as $pattern) {
+                $command[] = '--filter=' . escapeshellarg('-p ' . $pattern);
+            }
+        }
 
         $command[] = [
             '--exclude-from="%s"',

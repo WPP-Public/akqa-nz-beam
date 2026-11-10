@@ -57,6 +57,16 @@ class BeamConfiguration extends Configuration implements ConfigurationInterface
     ];
 
     /**
+     * Patterns that beam always excludes, regardless of project config
+     *
+     * @return string[]
+     */
+    public static function getDefaultExcludes(): array
+    {
+        return static::$defaultExcludes;
+    }
+
+    /**
      * Validate user input against a config
      * @param InputInterface $input
      * @param array $config

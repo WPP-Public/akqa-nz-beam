@@ -4,6 +4,7 @@ namespace Heyday\Beam\DeploymentProvider;
 
 use Closure;
 use Heyday\Beam\Beam;
+use Heyday\Beam\Config\BeamConfiguration;
 use Heyday\Beam\Exception\RuntimeException;
 use Heyday\Beam\Helper\SshRemoteShell;
 use org\bovigo\vfs\vfsStream;
@@ -679,8 +680,9 @@ OUTPUT
 
         $this->assertEquals(
             sprintf(
-                'rsync %s -rlD --itemize-changes --checksum --delete --compress --delay-updates --delete-after %s',
+                'rsync %s -rlD --itemize-changes --checksum --delete --compress --delay-updates --delete-after %s %s',
                 '/testfrom/ /testto',
+                $this->getPerishableDefaultExcludeFilters(),
                 '--exclude-from="/test"'
             ),
             $this->getAccessibleMethod('buildCommand')->invoke(
@@ -706,8 +708,9 @@ OUTPUT
 
         $this->assertEquals(
             sprintf(
-                'rsync %s -rlD --itemize-changes --checksum --delete --compress --delay-updates --delete-delay %s',
+                'rsync %s -rlD --itemize-changes --checksum --delete --compress --delay-updates --delete-delay %s %s',
                 '/testfrom/ /testto',
+                $this->getPerishableDefaultExcludeFilters(),
                 '--exclude-from="/test"'
             ),
             $this->getAccessibleMethod('buildCommand')->invoke(
@@ -716,6 +719,17 @@ OUTPUT
                 '/testto'
             )
         );
+    }
+
+    /**
+     * The --filter arguments rsync receives for beam's default excludes when deleting
+     */
+    private function getPerishableDefaultExcludeFilters(): string
+    {
+        return implode(' ', array_map(
+            static fn (string $pattern): string => '--filter=' . escapeshellarg('-p ' . $pattern),
+            BeamConfiguration::getDefaultExcludes()
+        ));
     }
 
     public function testBuildCommandWithSsm(): void
