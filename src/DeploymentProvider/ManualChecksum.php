@@ -21,7 +21,7 @@ abstract class ManualChecksum extends Deployment implements DeploymentProvider
 
     protected bool $delete = false;
 
-    protected ?array $server;
+    protected ?array $server = null;
 
     protected bool $force = false;
 

@@ -14,6 +14,11 @@ set_error_handler(
             return false;
         }
 
+        // Deprecations (often from vendor code on newer PHP) are not failures
+        if ($errno & (E_DEPRECATED | E_USER_DEPRECATED)) {
+            return true;
+        }
+
         throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
     }
 );
